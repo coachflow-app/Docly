@@ -55,49 +55,18 @@
 
   .hidden{ display: none !important; }
 
-  /* ============ AUTH SCREEN (centered card, no brand panel) ============ */
+  /* ============ AUTH SCREEN (centered card, plain white) ============ */
   #auth-screen{
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 32px 20px;
-    background: linear-gradient(160deg, #FFFDF3 0%, #FFF6CE 100%);
-    position: relative;
-    overflow: hidden;
-  }
-  #auth-screen .glow-1,
-  #auth-screen .glow-2{
-    position: absolute;
-    border-radius: 50%;
-    background: var(--primary-yellow);
-    filter: blur(60px);
-    opacity: 0.55;
-    z-index: 0;
-    pointer-events: none;
-  }
-  #auth-screen .glow-1{
-    width: 340px;
-    height: 340px;
-    top: -140px;
-    right: -100px;
-  }
-  #auth-screen .glow-2{
-    width: 220px;
-    height: 220px;
-    top: -40px;
-    right: 120px;
-    opacity: 0.35;
+    background: var(--secondary-white);
   }
   .auth-card{
-    position: relative;
-    z-index: 1;
     width: 100%;
     max-width: 380px;
-    background: var(--secondary-white);
-    border-radius: 20px;
-    padding: 36px 32px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.08);
   }
   .auth-accent-bar{
     width: 44px;
@@ -111,6 +80,13 @@
     font-family: var(--font-display);
     font-style: italic;
     font-size: 22px;
+    margin-bottom: 22px;
+  }
+  .auth-slogan{
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.3;
     margin-bottom: 28px;
   }
   .auth-heading{
@@ -135,6 +111,7 @@
     color: var(--ink);
     margin-bottom: 7px;
   }
+  .field-input-wrap{ position: relative; }
   .field input{
     width: 100%;
     max-width: 100%;
@@ -145,13 +122,26 @@
     background: var(--input-bg);
     color: var(--ink);
   }
+  .field-input-wrap input{ padding-right: 42px; }
   .field input::placeholder{ color: #9AA1AC; }
   .field input:focus{ border-color: var(--primary-yellow-deep); background: var(--secondary-white); }
+  .toggle-password{
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 600;
+  }
 
   .field-row{
     display: flex;
     align-items: center;
-    justify-content: space-between;
     margin-bottom: 20px;
     font-size: 14px;
   }
@@ -225,15 +215,6 @@
     font-size: 13px;
     margin-bottom: 16px;
   }
-  .auth-notice{
-    background: var(--primary-yellow-tint);
-    color: var(--ink);
-    border: 1px solid var(--primary-yellow-deep);
-    border-radius: var(--radius);
-    padding: 10px 12px;
-    font-size: 13px;
-    margin-bottom: 16px;
-  }
 
   .auth-switch-note{
     text-align: center;
@@ -250,17 +231,6 @@
     text-decoration: underline;
     cursor: pointer;
     font-size: 14px;
-  }
-  .auth-back{
-    display: inline-block;
-    margin-bottom: 18px;
-    font-size: 13px;
-    color: var(--ink-soft);
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    text-decoration: underline;
   }
 
   /* ============ APP SHELL ============ */
@@ -282,9 +252,22 @@
   .topbar .user-area{
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
     font-size: 13px;
     color: var(--ink-soft);
+  }
+  .user-avatar{
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--primary-yellow);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
   }
   .topbar .logout-btn{
     background: none;
@@ -350,6 +333,17 @@
     .step-node .label{ display: none; }
     .step-connector{ width: 18px; margin: 0 6px; }
   }
+  .step-progress-mobile{
+    display: none;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-top: 10px;
+  }
+  @media (max-width: 700px){
+    .step-progress-mobile{ display: block; }
+  }
 
   main{
     flex: 1;
@@ -403,8 +397,37 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 10px;
     font-size: 14px;
     background: var(--secondary-white);
+  }
+  .file-chosen .file-info{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .file-chosen .file-icon{
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--primary-yellow-tint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .file-chosen .file-text{ min-width: 0; }
+  .file-chosen .file-name{
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .file-chosen .file-size{
+    font-size: 12px;
+    color: var(--ink-soft);
   }
   .file-chosen .remove-file{
     background: none;
@@ -413,22 +436,37 @@
     cursor: pointer;
     font-size: 13px;
     text-decoration: underline;
+    flex-shrink: 0;
+  }
+  .file-error{
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--ink);
+    border-radius: var(--radius);
+    font-size: 13px;
+    color: var(--ink);
   }
 
   /* Step 2: action choice */
   .choice-grid{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: 10px;
+    justify-content: center;
   }
-  @media (max-width: 520px){ .choice-grid{ grid-template-columns: 1fr; } }
   .choice-card{
+    position: relative;
+    flex: 1 1 220px;
+    max-width: 260px;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     padding: 16px;
     background: var(--secondary-white);
     cursor: pointer;
     text-align: left;
+  }
+  @media (max-width: 560px){
+    .choice-card{ flex: 1 1 100%; max-width: 100%; }
   }
   .choice-card .choice-name{ font-weight: 500; font-size: 15px; margin-bottom: 3px; }
   .choice-card .choice-desc{ font-size: 12.5px; color: var(--ink-soft); }
@@ -437,6 +475,21 @@
     background: var(--primary-yellow-tint);
     box-shadow: inset 0 0 0 1px var(--ink);
   }
+  .choice-card .check-mark{
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--secondary-white);
+    font-size: 11px;
+    align-items: center;
+    justify-content: center;
+  }
+  .choice-card.selected .check-mark{ display: flex; }
 
   /* Step 3: customize */
   .field-group{ margin-bottom: 26px; }
@@ -461,8 +514,36 @@
     color: var(--ink);
     font-weight: 500;
   }
+  .pill.selected::before{
+    content: "✓";
+    margin-right: 5px;
+    font-weight: 700;
+  }
 
   /* Step 4: result */
+  .result-loading{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 48px 24px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  .spinner{
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 3px solid var(--line);
+    border-top-color: var(--primary-yellow-deep);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+  .result-loading p{
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
   .result-box{
     border: 1px solid var(--line);
     border-radius: var(--radius);
@@ -481,12 +562,17 @@
     color: var(--ink-soft);
     line-height: 1.6;
   }
-  .citation-tag{
-    display: inline-block;
-    margin-top: 14px;
+  .citation-preview-label{
     font-size: 12px;
     color: var(--ink-soft);
-    border: 1px solid var(--line);
+    margin-top: 16px;
+    margin-bottom: 6px;
+  }
+  .citation-tag{
+    display: inline-block;
+    font-size: 12px;
+    color: var(--ink-soft);
+    border: 1px dashed var(--line);
     border-radius: 999px;
     padding: 4px 10px;
   }
@@ -527,21 +613,15 @@
 
   <!-- ============ AUTH SCREEN ============ -->
   <div id="auth-screen">
-    <div class="glow-1"></div>
-    <div class="glow-2"></div>
     <div class="auth-card">
       <div class="auth-wordmark">Docly</div>
 
       <div id="auth-error" class="auth-error hidden"></div>
-      <div id="auth-notice" class="auth-notice hidden"></div>
 
       <!-- LOGIN VIEW -->
       <div id="view-login">
         <div class="auth-accent-bar"></div>
-        <div class="auth-heading">
-          <h1>Welcome back</h1>
-          <p>Please enter your details.</p>
-        </div>
+        <div class="auth-slogan">Your documents.<br>Finally understood.</div>
         <form id="login-form">
           <div class="field">
             <label for="login-email">Email</label>
@@ -549,11 +629,13 @@
           </div>
           <div class="field">
             <label for="login-password">Password</label>
-            <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password" />
+            <div class="field-input-wrap">
+              <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password" />
+              <button type="button" class="toggle-password" data-target="login-password">Show</button>
+            </div>
           </div>
           <div class="field-row">
             <label class="remember-me"><input type="checkbox" id="remember-me" /> Remember me</label>
-            <button type="button" class="link-btn" id="show-reset">Forgot password?</button>
           </div>
           <button type="submit" class="btn-primary" id="login-submit"><span>Log in</span><span aria-hidden="true">→</span></button>
         </form>
@@ -576,34 +658,16 @@
           </div>
           <div class="field">
             <label for="signup-password">Password</label>
-            <input type="password" id="signup-password" placeholder="••••••••" required autocomplete="new-password" minlength="6" />
-          </div>
-          <div class="field">
-            <label for="signup-password-confirm">Confirm password</label>
-            <input type="password" id="signup-password-confirm" placeholder="••••••••" required autocomplete="new-password" minlength="6" />
+            <div class="field-input-wrap">
+              <input type="password" id="signup-password" placeholder="••••••••" required autocomplete="new-password" minlength="6" />
+              <button type="button" class="toggle-password" data-target="signup-password">Show</button>
+            </div>
           </div>
           <button type="submit" class="btn-primary" id="signup-submit"><span>Create account</span><span aria-hidden="true">→</span></button>
         </form>
         <div class="auth-switch-note">
           Already have an account? <button type="button" id="switch-to-login">Log in</button>
         </div>
-      </div>
-
-      <!-- RESET PASSWORD VIEW -->
-      <div id="view-reset" class="hidden">
-        <button type="button" class="auth-back" id="back-to-login-from-reset">← Back to log in</button>
-        <div class="auth-accent-bar"></div>
-        <div class="auth-heading">
-          <h1>Reset your password</h1>
-          <p>We'll email you a link to reset it.</p>
-        </div>
-        <form id="reset-form">
-          <div class="field">
-            <label for="reset-email">Email</label>
-            <input type="email" id="reset-email" placeholder="you@company.com" required autocomplete="email" />
-          </div>
-          <button type="submit" class="btn-primary" id="reset-submit"><span>Send reset link</span><span aria-hidden="true">→</span></button>
-        </form>
       </div>
     </div>
   </div>
@@ -613,12 +677,14 @@
     <div class="topbar">
       <div class="wordmark">Docly</div>
       <div class="user-area">
+        <span class="user-avatar" id="user-avatar"></span>
         <span id="user-email-display"></span>
         <button class="logout-btn" id="logout-btn" type="button">Log out</button>
       </div>
     </div>
 
     <div class="step-tracker" id="step-tracker"></div>
+    <div class="step-progress-mobile" id="step-progress-mobile"></div>
 
     <main>
       <!-- STEP 1 -->
@@ -631,9 +697,16 @@
           <input type="file" id="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.epub,.csv,.md" />
         </div>
         <div class="file-chosen hidden" id="file-chosen">
-          <span id="file-chosen-name"></span>
+          <div class="file-info">
+            <span class="file-icon" id="file-icon">📄</span>
+            <div class="file-text">
+              <div class="file-name" id="file-chosen-name"></div>
+              <div class="file-size" id="file-chosen-size"></div>
+            </div>
+          </div>
           <button class="remove-file" id="remove-file" type="button">Remove</button>
         </div>
+        <div class="file-error hidden" id="file-error"></div>
         <div class="step-nav">
           <button class="btn-ghost" disabled>Back</button>
           <button class="btn-dark" id="to-step-2" disabled>Continue</button>
@@ -645,11 +718,11 @@
         <h2>What do you want to do?</h2>
         <div class="step-sub">Choose one action for this document.</div>
         <div class="choice-grid" id="action-grid">
-          <button class="choice-card" data-action="Summarize"><div class="choice-name">Summarize</div><div class="choice-desc">Get a synthesis of the content</div></button>
-          <button class="choice-card" data-action="Analyze"><div class="choice-name">Analyze</div><div class="choice-desc">Surface the key insights</div></button>
-          <button class="choice-card" data-action="Ask"><div class="choice-name">Ask</div><div class="choice-desc">Ask questions about the content</div></button>
-          <button class="choice-card" data-action="Extract"><div class="choice-name">Extract</div><div class="choice-desc">Pull out specific data or facts</div></button>
-          <button class="choice-card" data-action="Transform"><div class="choice-name">Transform</div><div class="choice-desc">Turn it into another format</div></button>
+          <button class="choice-card" data-action="Summarize"><span class="check-mark">✓</span><div class="choice-name">Summarize</div><div class="choice-desc">Get a synthesis of the content</div></button>
+          <button class="choice-card" data-action="Analyze"><span class="check-mark">✓</span><div class="choice-name">Analyze</div><div class="choice-desc">Surface the key insights</div></button>
+          <button class="choice-card" data-action="Ask"><span class="check-mark">✓</span><div class="choice-name">Ask</div><div class="choice-desc">Ask questions about the content</div></button>
+          <button class="choice-card" data-action="Extract"><span class="check-mark">✓</span><div class="choice-name">Extract</div><div class="choice-desc">Pull out specific data or facts</div></button>
+          <button class="choice-card" data-action="Transform"><span class="check-mark">✓</span><div class="choice-name">Transform</div><div class="choice-desc">Turn it into another format</div></button>
         </div>
         <div class="step-nav">
           <button class="btn-ghost" id="back-to-1">Back</button>
@@ -706,16 +779,25 @@
       <section class="step-panel hidden" data-step-panel="4">
         <h2>Result</h2>
         <div class="step-sub">Your result appears below, with sources you can trace back to the document.</div>
-        <div class="result-box">
-          <div class="result-meta" id="result-meta"></div>
-          <div class="result-placeholder">
-            The connection between Docly's interface and its document intelligence engine will be wired up in the next build phase. Once connected, this panel will show the real result, generated from your file with your chosen action, length, style and format.
-          </div>
-          <div class="citation-tag" id="citation-placeholder">Source — page — paragraph</div>
+
+        <div class="result-loading hidden" id="result-loading">
+          <div class="spinner"></div>
+          <p>Analyzing your document…</p>
         </div>
-        <div class="step-nav">
-          <button class="btn-ghost" id="back-to-3">Back</button>
-          <button class="btn-ghost" id="start-over">Start a new document</button>
+
+        <div id="result-content">
+          <div class="result-box">
+            <div class="result-meta" id="result-meta"></div>
+            <div class="result-placeholder">
+              The connection between Docly's interface and its document intelligence engine will be wired up in the next build phase. Once connected, this panel will show the real result, generated from your file with your chosen action, length, style and format.
+            </div>
+            <div class="citation-preview-label">Preview of how a source citation will look:</div>
+            <div class="citation-tag" id="citation-placeholder">Source — page — paragraph</div>
+          </div>
+          <div class="step-nav">
+            <button class="btn-ghost" id="back-to-3">Back</button>
+            <button class="btn-ghost" id="start-over">Start a new document</button>
+          </div>
         </div>
       </section>
     </main>
@@ -730,31 +812,21 @@
   const appShell = document.getElementById('app-shell');
   const authError = document.getElementById('auth-error');
 
-  const authNotice = document.getElementById('auth-notice');
-
   function showAuthError(message){
     authError.textContent = message;
     authError.classList.remove('hidden');
-    authNotice.classList.add('hidden');
   }
   function clearAuthError(){
     authError.classList.add('hidden');
     authError.textContent = '';
   }
-  function showAuthNotice(message){
-    authNotice.textContent = message;
-    authNotice.classList.remove('hidden');
-    authError.classList.add('hidden');
-  }
-  function clearAuthNotice(){
-    authNotice.classList.add('hidden');
-    authNotice.textContent = '';
-  }
 
   function showApp(user){
     authScreen.classList.add('hidden');
     appShell.classList.remove('hidden');
-    document.getElementById('user-email-display').textContent = user.get('email') || user.get('username') || '';
+    const email = user.get('email') || user.get('username') || '';
+    document.getElementById('user-email-display').textContent = email;
+    document.getElementById('user-avatar').textContent = email.charAt(0).toUpperCase();
   }
   function showAuth(){
     appShell.classList.add('hidden');
@@ -765,27 +837,34 @@
   const currentUser = Parse.User.current();
   if (currentUser) {
     showApp(currentUser);
+  } else {
+    document.getElementById('login-email').focus();
   }
 
-  /* ---- View switching (Log in / Sign up / Reset) ---- */
+  /* ---- View switching (Log in / Sign up) ---- */
   const loginForm = document.getElementById('login-form');
   const signupForm = document.getElementById('signup-form');
   const viewLogin = document.getElementById('view-login');
   const viewSignup = document.getElementById('view-signup');
-  const viewReset = document.getElementById('view-reset');
 
   function showView(view){
     viewLogin.classList.toggle('hidden', view !== 'login');
     viewSignup.classList.toggle('hidden', view !== 'signup');
-    viewReset.classList.toggle('hidden', view !== 'reset');
     clearAuthError();
-    clearAuthNotice();
   }
 
   document.getElementById('switch-to-signup').addEventListener('click', () => showView('signup'));
   document.getElementById('switch-to-login').addEventListener('click', () => showView('login'));
-  document.getElementById('show-reset').addEventListener('click', () => showView('reset'));
-  document.getElementById('back-to-login-from-reset').addEventListener('click', () => showView('login'));
+
+  /* ---- Show/hide password ---- */
+  document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      btn.textContent = isHidden ? 'Hide' : 'Show';
+    });
+  });
 
   /* ---- Sign up ---- */
   signupForm.addEventListener('submit', async function(e){
@@ -793,13 +872,7 @@
     clearAuthError();
     const email = document.getElementById('signup-email').value.trim();
     const password = document.getElementById('signup-password').value;
-    const confirm = document.getElementById('signup-password-confirm').value;
     const submitBtn = document.getElementById('signup-submit');
-
-    if (password !== confirm) {
-      showAuthError("Passwords don't match.");
-      return;
-    }
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Creating account…';
@@ -839,33 +912,6 @@
     }
   });
 
-  /* ---- Reset password ---- */
-  document.getElementById('reset-form').addEventListener('submit', async function(e){
-    e.preventDefault();
-    clearAuthError();
-    clearAuthNotice();
-    const email = document.getElementById('reset-email').value.trim();
-    const submitBtn = document.getElementById('reset-submit');
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Sending…';
-    try {
-      await Parse.User.requestPasswordReset(email);
-      showAuthNotice("If an account exists for that email, a reset link is on its way.");
-    } catch (err) {
-      // Don't reveal whether the email exists — show the same neutral message,
-      // unless it's a real connection/config problem.
-      if (err.code === 205) {
-        showAuthNotice("If an account exists for that email, a reset link is on its way.");
-      } else {
-        showAuthError("Something went wrong. Please try again in a moment.");
-      }
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Send reset link';
-    }
-  });
-
   /* ---- Log out ---- */
   document.getElementById('logout-btn').addEventListener('click', async function(){
     await Parse.User.logOut();
@@ -899,6 +945,8 @@
         tracker.appendChild(connector);
       }
     });
+    document.getElementById('step-progress-mobile').textContent =
+      'Step ' + currentStep + ' of ' + STEP_LABELS.length + ' — ' + STEP_LABELS[currentStep - 1];
   }
 
   function goToStep(step){
@@ -907,13 +955,13 @@
       panel.classList.toggle('hidden', panel.dataset.stepPanel !== String(step));
     });
     renderTracker();
-    if (step === 4) renderResultMeta();
   }
 
   function resetWizard(){
     wizardState.fileName = null;
     wizardState.action = null;
     document.getElementById('file-chosen').classList.add('hidden');
+    document.getElementById('file-error').classList.add('hidden');
     document.getElementById('to-step-2').disabled = true;
     document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
     document.getElementById('to-step-3').disabled = true;
@@ -941,9 +989,30 @@
     if (e.target.files.length) handleFile(e.target.files[0]);
   });
 
+  const ALLOWED_EXT = ['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','epub','csv','md'];
+  const FILE_ICONS = { pdf:'📕', doc:'📘', docx:'📘', xls:'📊', xlsx:'📊', ppt:'📙', pptx:'📙', txt:'📄', epub:'📖', csv:'📊', md:'📄' };
+
+  function formatBytes(bytes){
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
   function handleFile(file){
+    const ext = file.name.split('.').pop().toLowerCase();
+    const fileError = document.getElementById('file-error');
+    if (!ALLOWED_EXT.includes(ext)) {
+      fileError.textContent = 'This file type isn\'t supported. Please use one of: ' + ALLOWED_EXT.join(', ').toUpperCase() + '.';
+      fileError.classList.remove('hidden');
+      fileChosen.classList.add('hidden');
+      toStep2Btn.disabled = true;
+      return;
+    }
+    fileError.classList.add('hidden');
     wizardState.fileName = file.name;
+    document.getElementById('file-icon').textContent = FILE_ICONS[ext] || '📄';
     fileChosenName.textContent = file.name;
+    document.getElementById('file-chosen-size').textContent = formatBytes(file.size);
     fileChosen.classList.remove('hidden');
     toStep2Btn.disabled = false;
   }
@@ -980,7 +1049,18 @@
     });
   });
   document.getElementById('back-to-2').addEventListener('click', () => goToStep(2));
-  document.getElementById('to-step-4').addEventListener('click', () => goToStep(4));
+  document.getElementById('to-step-4').addEventListener('click', () => {
+    goToStep(4);
+    const loading = document.getElementById('result-loading');
+    const content = document.getElementById('result-content');
+    loading.classList.remove('hidden');
+    content.classList.add('hidden');
+    setTimeout(() => {
+      renderResultMeta();
+      loading.classList.add('hidden');
+      content.classList.remove('hidden');
+    }, 1200);
+  });
 
   /* ---- Step 4: result ---- */
   function renderResultMeta(){
@@ -990,8 +1070,10 @@
   }
   document.getElementById('back-to-3').addEventListener('click', () => goToStep(3));
   document.getElementById('start-over').addEventListener('click', () => {
-    fileInput.value = '';
-    resetWizard();
+    if (confirm('Start over? Your current selections will be cleared.')) {
+      fileInput.value = '';
+      resetWizard();
+    }
   });
 </script>
 </body>
