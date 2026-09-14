@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,10 +41,6 @@
     min-height: 100vh;
     display: grid;
     grid-template-columns: 1.1fr 1fr;
-  }
-  @media (max-width: 860px){
-    #authView{grid-template-columns: 1fr;}
-    #authHero{min-height: 260px;}
   }
   #authHero{
     background: var(--navy);
@@ -165,6 +161,11 @@
     outline-offset: 1px;
     border-color: var(--mint);
   }
+  .field-hint{
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 5px;
+  }
   .btn-primary{
     width: 100%;
     padding: 13px;
@@ -178,6 +179,17 @@
   }
   .btn-primary:hover{ filter: brightness(0.96); }
   .btn-primary:disabled{ opacity: 0.6; cursor: default; }
+  .forgot-link{
+    display:inline-block;
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  .forgot-link:hover{ color: var(--ink); }
   .auth-msg{
     font-size: 13.5px;
     margin-top: 14px;
@@ -187,6 +199,23 @@
   }
   .auth-msg.error{ display:block; background: #FDECEC; color: #B3261E; }
   .auth-msg.success{ display:block; background: #E7F8F1; color: #1E7D5F; }
+
+  @media (max-width: 860px){
+    #authView{
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+    }
+    #authHero{
+      padding: 22px 24px;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      min-height: auto;
+    }
+    #authHero::before, #authHero::after{ display:none; }
+    .hero-copy, .hero-formats{ display:none; }
+    #authPanel{ padding: 28px 24px 40px; align-items: flex-start; }
+  }
 
   /* ===================== DASHBOARD ===================== */
   #dashboardView{ min-height: 100vh; }
@@ -360,7 +389,6 @@
   .custom-group{ margin-bottom: 26px; }
   .custom-group h3{
     font-size: 13px;
-    text-transform: none;
     color: var(--ink-soft);
     margin: 0 0 10px;
     font-weight: 600;
@@ -440,7 +468,7 @@
     <div class="hero-mark">Docly<span>.</span></div>
     <div class="hero-copy">
       <h1>Your documents.<br>Finally understood.</h1>
-      <p>Déposez un document, posez vos questions, obtenez des réponses sourcées — sans jamais rouvrir le fichier original.</p>
+      <p>Upload a document, ask questions, get sourced answers — without ever reopening the original file.</p>
     </div>
     <div class="hero-formats">
       <span>PDF</span><span>DOCX</span><span>XLSX</span><span>PPTX</span><span>EPUB</span><span>CSV</span><span>MD</span>
@@ -450,8 +478,8 @@
   <div id="authPanel">
     <div class="auth-box">
       <div class="auth-tabs">
-        <button class="auth-tab active" data-tab="login" id="tabLogin">Connexion</button>
-        <button class="auth-tab" data-tab="signup" id="tabSignup">Inscription</button>
+        <button class="auth-tab active" data-tab="login" id="tabLogin">Log in</button>
+        <button class="auth-tab" data-tab="signup" id="tabSignup">Sign up</button>
       </div>
 
       <form id="loginForm">
@@ -460,26 +488,24 @@
           <input type="email" id="loginEmail" required autocomplete="email">
         </div>
         <div class="field">
-          <label for="loginPassword">Mot de passe</label>
+          <label for="loginPassword">Password</label>
           <input type="password" id="loginPassword" required autocomplete="current-password">
         </div>
-        <button type="submit" class="btn-primary" id="loginSubmit">Se connecter</button>
+        <button type="submit" class="btn-primary" id="loginSubmit">Log in</button>
+        <button type="button" class="forgot-link" id="forgotBtn">Forgot password?</button>
       </form>
 
       <form id="signupForm" class="visually-hidden">
-        <div class="field">
-          <label for="signupName">Nom complet</label>
-          <input type="text" id="signupName" required autocomplete="name">
-        </div>
         <div class="field">
           <label for="signupEmail">Email</label>
           <input type="email" id="signupEmail" required autocomplete="email">
         </div>
         <div class="field">
-          <label for="signupPassword">Mot de passe</label>
+          <label for="signupPassword">Password</label>
           <input type="password" id="signupPassword" required autocomplete="new-password" minlength="6">
+          <div class="field-hint">At least 6 characters</div>
         </div>
-        <button type="submit" class="btn-primary" id="signupSubmit">Créer mon compte</button>
+        <button type="submit" class="btn-primary" id="signupSubmit">Create account</button>
       </form>
 
       <div class="auth-msg" id="authMsg"></div>
@@ -493,29 +519,29 @@
     <div class="hero-mark">Docly<span>.</span></div>
     <div class="user-chip">
       <span id="userEmailLabel"></span>
-      <button class="logout-btn" id="logoutBtn">Déconnexion</button>
+      <button class="logout-btn" id="logoutBtn">Log out</button>
     </div>
   </div>
 
   <div id="wizard">
     <div class="stepper" id="stepper">
-      <div class="step-node active" data-step="1"><div class="step-num">1</div><div class="step-label">Déposer</div></div>
+      <div class="step-node active" data-step="1"><div class="step-num">1</div><div class="step-label">Upload</div></div>
       <div class="step-line"></div>
       <div class="step-node" data-step="2"><div class="step-num">2</div><div class="step-label">Action</div></div>
       <div class="step-line"></div>
-      <div class="step-node" data-step="3"><div class="step-num">3</div><div class="step-label">Résultat voulu</div></div>
+      <div class="step-node" data-step="3"><div class="step-num">3</div><div class="step-label">Output</div></div>
       <div class="step-line"></div>
-      <div class="step-node" data-step="4"><div class="step-num">4</div><div class="step-label">Résultat</div></div>
+      <div class="step-node" data-step="4"><div class="step-num">4</div><div class="step-label">Result</div></div>
     </div>
 
     <!-- STEP 1 -->
     <div class="panel active" id="panel1">
-      <h2>Déposez votre document</h2>
-      <p class="sub">Glissez un fichier ici, ou parcourez vos dossiers.</p>
+      <h2>Upload your document</h2>
+      <p class="sub">Drag a file here, or browse your folders.</p>
       <div class="dropzone" id="dropzone">
-        <p class="dz-title">Glissez-déposez votre fichier</p>
-        <p class="dz-sub">ou</p>
-        <button type="button" class="browse-btn" id="browseBtn">Parcourir mes fichiers</button>
+        <p class="dz-title">Drag and drop your file</p>
+        <p class="dz-sub">or</p>
+        <button type="button" class="browse-btn" id="browseBtn">Browse files</button>
         <input type="file" id="fileInput" class="visually-hidden">
         <div class="format-list">
           <span>PDF</span><span>DOC</span><span>DOCX</span><span>XLS</span><span>XLSX</span><span>PPT</span><span>PPTX</span><span>TXT</span><span>EPUB</span><span>CSV</span><span>MD</span>
@@ -526,36 +552,36 @@
           <div class="fname" id="fpName"></div>
           <div class="fmeta" id="fpMeta"></div>
         </div>
-        <button class="file-remove" id="fpRemove">Retirer</button>
+        <button class="file-remove" id="fpRemove">Remove</button>
       </div>
     </div>
 
     <!-- STEP 2 -->
     <div class="panel" id="panel2">
-      <h2>Que voulez-vous faire ?</h2>
-      <p class="sub">Choisissez une action à appliquer sur votre document.</p>
+      <h2>What do you want to do?</h2>
+      <p class="sub">Choose an action to apply to your document.</p>
       <div class="action-grid" id="actionGrid">
-        <button class="action-card" data-action="Résumer"><div class="a-title">Résumer</div><div class="a-desc">Obtenir une synthèse du contenu</div></button>
-        <button class="action-card" data-action="Analyser"><div class="a-title">Analyser</div><div class="a-desc">Faire ressortir les informations clés</div></button>
-        <button class="action-card" data-action="Questionner"><div class="a-title">Questionner</div><div class="a-desc">Poser des questions sur le document</div></button>
-        <button class="action-card" data-action="Extraire"><div class="a-title">Extraire</div><div class="a-desc">Récupérer des données précises</div></button>
-        <button class="action-card" data-action="Transformer"><div class="a-title">Transformer</div><div class="a-desc">Changer le format du contenu</div></button>
+        <button class="action-card" data-action="Summarize"><div class="a-title">Summarize</div><div class="a-desc">Get a synthesis of the content</div></button>
+        <button class="action-card" data-action="Analyze"><div class="a-title">Analyze</div><div class="a-desc">Surface the key information</div></button>
+        <button class="action-card" data-action="Ask"><div class="a-title">Ask</div><div class="a-desc">Ask questions about the document</div></button>
+        <button class="action-card" data-action="Extract"><div class="a-title">Extract</div><div class="a-desc">Pull out specific data</div></button>
+        <button class="action-card" data-action="Transform"><div class="a-title">Transform</div><div class="a-desc">Change the content's format</div></button>
       </div>
     </div>
 
     <!-- STEP 3 -->
     <div class="panel" id="panel3">
-      <h2>Quel résultat voulez-vous ?</h2>
-      <p class="sub">Ajustez la longueur, le style et le format du résultat.</p>
+      <h2>What output do you want?</h2>
+      <p class="sub">Adjust the length, style, and format of the result.</p>
 
       <div class="custom-group">
-        <h3>Longueur</h3>
+        <h3>Length</h3>
         <div class="pill-row" data-group="length">
-          <button class="pill" data-value="Très court">Très court</button>
-          <button class="pill" data-value="Court">Court</button>
-          <button class="pill" data-value="Moyen">Moyen</button>
-          <button class="pill" data-value="Détaillé">Détaillé</button>
-          <button class="pill" data-value="Très détaillé">Très détaillé</button>
+          <button class="pill" data-value="Very short">Very short</button>
+          <button class="pill" data-value="Short">Short</button>
+          <button class="pill" data-value="Medium">Medium</button>
+          <button class="pill" data-value="Detailed">Detailed</button>
+          <button class="pill" data-value="Very detailed">Very detailed</button>
         </div>
       </div>
 
@@ -563,44 +589,44 @@
         <h3>Style</h3>
         <div class="pill-row" data-group="style">
           <button class="pill" data-value="Simple">Simple</button>
-          <button class="pill" data-value="Professionnel">Professionnel</button>
-          <button class="pill" data-value="Académique">Académique</button>
-          <button class="pill" data-value="Exécutif">Exécutif</button>
-          <button class="pill" data-value="Technique">Technique</button>
+          <button class="pill" data-value="Professional">Professional</button>
+          <button class="pill" data-value="Academic">Academic</button>
+          <button class="pill" data-value="Executive">Executive</button>
+          <button class="pill" data-value="Technical">Technical</button>
         </div>
       </div>
 
       <div class="custom-group">
         <h3>Format</h3>
         <div class="pill-row" data-group="format">
-          <button class="pill" data-value="Paragraphes">Paragraphes</button>
+          <button class="pill" data-value="Paragraphs">Paragraphs</button>
           <button class="pill" data-value="Bullet points">Bullet points</button>
-          <button class="pill" data-value="Tableau">Tableau</button>
-          <button class="pill" data-value="Plan">Plan</button>
+          <button class="pill" data-value="Table">Table</button>
+          <button class="pill" data-value="Outline">Outline</button>
           <button class="pill" data-value="FAQ">FAQ</button>
-          <button class="pill" data-value="Brief exécutif">Brief exécutif</button>
+          <button class="pill" data-value="Executive brief">Executive brief</button>
         </div>
       </div>
     </div>
 
     <!-- STEP 4 -->
     <div class="panel" id="panel4">
-      <h2>Résultat</h2>
+      <h2>Result</h2>
       <p class="sub" id="resultSummaryLine"></p>
       <div class="result-box">
-        <p>Ceci est un aperçu de mise en page. Une fois l'intelligence documentaire connectée, le contenu généré à partir de votre fichier apparaîtra ici, avec ses sources.<span class="citation">p.14 §3</span></p>
-        <p>Chaque affirmation pourra être reliée à son emplacement exact dans le document d'origine, pour vérification rapide.<span class="citation">p.2 §1</span></p>
+        <p>This is a layout preview. Once document intelligence is connected, the content generated from your file will appear here, along with its sources.<span class="citation">p.14 §3</span></p>
+        <p>Every claim will be traceable back to its exact location in the original document, for quick verification.<span class="citation">p.2 §1</span></p>
         <div class="source-list">
           <div class="s-title">SOURCES</div>
-          <div class="source-item">Document — page 14, paragraphe 3</div>
-          <div class="source-item">Document — page 2, paragraphe 1</div>
+          <div class="source-item">Document — page 14, paragraph 3</div>
+          <div class="source-item">Document — page 2, paragraph 1</div>
         </div>
       </div>
     </div>
 
     <div class="wizard-nav">
-      <button class="btn-ghost" id="prevBtn">Précédent</button>
-      <button class="btn-next" id="nextBtn">Suivant</button>
+      <button class="btn-ghost" id="prevBtn">Back</button>
+      <button class="btn-next" id="nextBtn">Next</button>
     </div>
   </div>
 </div>
@@ -639,39 +665,49 @@
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
     const btn = document.getElementById('loginSubmit');
-    btn.disabled = true; btn.textContent = 'Connexion...';
+    btn.disabled = true; btn.textContent = 'Logging in...';
     try {
       await Parse.User.logIn(email, password);
-      setAuthMsg('Connecté avec succès.', 'success');
+      setAuthMsg('Logged in successfully.', 'success');
       enterDashboard();
     } catch (err) {
-      setAuthMsg(err.message || "Impossible de se connecter.", 'error');
+      setAuthMsg(err.message || "Couldn't log in.", 'error');
     } finally {
-      btn.disabled = false; btn.textContent = 'Se connecter';
+      btn.disabled = false; btn.textContent = 'Log in';
     }
   });
 
-  // ---------- Signup ----------
+  // ---------- Forgot password ----------
+  document.getElementById('forgotBtn').addEventListener('click', async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    if (!email) { setAuthMsg('Enter your email above first, then click "Forgot password?" again.', 'error'); return; }
+    try {
+      await Parse.User.requestPasswordReset(email);
+      setAuthMsg('Password reset email sent.', 'success');
+    } catch (err) {
+      setAuthMsg(err.message || "Couldn't send the reset email.", 'error');
+    }
+  });
+
+  // ---------- Signup (email + password only) ----------
   signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const fullName = document.getElementById('signupName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
     const btn = document.getElementById('signupSubmit');
-    btn.disabled = true; btn.textContent = 'Création...';
+    btn.disabled = true; btn.textContent = 'Creating...';
     try {
       const user = new Parse.User();
       user.set('username', email);
       user.set('email', email);
       user.set('password', password);
-      user.set('fullName', fullName);
       await user.signUp();
-      setAuthMsg('Compte créé avec succès.', 'success');
+      setAuthMsg('Account created successfully.', 'success');
       enterDashboard();
     } catch (err) {
-      setAuthMsg(err.message || "Impossible de créer le compte.", 'error');
+      setAuthMsg(err.message || "Couldn't create the account.", 'error');
     } finally {
-      btn.disabled = false; btn.textContent = 'Créer mon compte';
+      btn.disabled = false; btn.textContent = 'Create account';
     }
   });
 
@@ -724,7 +760,7 @@
       node.classList.toggle('done', n < currentStep);
     });
     prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
-    nextBtn.textContent = currentStep === 4 ? 'Recommencer' : 'Suivant';
+    nextBtn.textContent = currentStep === 4 ? 'Start over' : 'Next';
     updateNextState();
     if (currentStep === 4) {
       const parts = [chosenAction, custom.length, custom.style, custom.format].filter(Boolean);
@@ -762,7 +798,7 @@
   function handleFile(file){
     pickedFile = file;
     document.getElementById('fpName').textContent = file.name;
-    document.getElementById('fpMeta').textContent = (file.type || 'Fichier') + ' · ' + Math.round(file.size / 1024) + ' Ko';
+    document.getElementById('fpMeta').textContent = (file.type || 'File') + ' · ' + Math.round(file.size / 1024) + ' KB';
     filePicked.classList.add('show');
     updateNextState();
   }
