@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docly — Your documents. Finally understood.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+<style>
+  :root{
+    --yellow: #F5B400;
+    --yellow-soft: #FFE9AD;
+    --navy: #1E2338;
+    --navy-2: #262C47;
+    --mint: #2EC4B6;
+    --paper: #FBF9F4;
+    --ink: #1A1A1A;
+    --ink-soft: #6B6F80;
+    --line: #E4E1D8;
+    --radius: 10px;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--paper);
+    -webkit-font-smoothing: antialiased;
+  }
+  .visually-hidden{display:none !important;}
+  a{color:inherit;}
+  button{font-family: inherit; cursor:pointer;}
+  input{font-family: inherit;}
+
+  /* ===================== AUTH VIEW ===================== */
+  #authView{
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+  }
+  @media (max-width: 860px){
+    #authView{grid-template-columns: 1fr;}
+    #authHero{min-height: 260px;}
+  }
+  #authHero{
+    background: var(--navy);
+    color: var(--paper);
+    position: relative;
+    padding: 56px;
+    display:flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+  #authHero::before{
+    content:"";
+    position:absolute;
+    width: 520px; height: 520px;
+    border-radius: 50%;
+    background: var(--yellow);
+    opacity: 0.14;
+    right: -180px;
+    bottom: -220px;
+  }
+  #authHero::after{
+    content:"";
+    position:absolute;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: var(--mint);
+    opacity: 0.16;
+    left: -80px;
+    top: -100px;
+  }
+  .hero-mark{
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: 0.01em;
+    z-index: 1;
+  }
+  .hero-mark span{ color: var(--yellow); }
+  .hero-copy{ z-index:1; max-width: 460px; }
+  .hero-copy h1{
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(32px, 4vw, 46px);
+    line-height: 1.12;
+    margin: 0 0 18px;
+  }
+  .hero-copy p{
+    font-size: 16px;
+    line-height: 1.6;
+    color: #C7CAD9;
+    margin: 0;
+  }
+  .hero-formats{
+    z-index:1;
+    display:flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .hero-formats span{
+    font-size: 12px;
+    padding: 5px 10px;
+    border: 1px solid #3B4266;
+    border-radius: 999px;
+    color: #A9AEC4;
+  }
+
+  #authPanel{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 40px 32px;
+  }
+  .auth-box{
+    width: 100%;
+    max-width: 380px;
+  }
+  .auth-tabs{
+    display:flex;
+    gap: 24px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .auth-tab{
+    background:none;
+    border:none;
+    padding: 8px 2px 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .auth-tab.active{
+    color: var(--ink);
+    border-bottom-color: var(--yellow);
+  }
+  .field{
+    margin-bottom: 16px;
+  }
+  .field label{
+    display:block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .field input{
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-size: 14px;
+    background: #fff;
+  }
+  .field input:focus{
+    outline: 2px solid var(--mint);
+    outline-offset: 1px;
+    border-color: var(--mint);
+  }
+  .btn-primary{
+    width: 100%;
+    padding: 13px;
+    background: var(--yellow);
+    color: var(--navy);
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 14.5px;
+    margin-top: 6px;
+  }
+  .btn-primary:hover{ filter: brightness(0.96); }
+  .btn-primary:disabled{ opacity: 0.6; cursor: default; }
+  .auth-msg{
+    font-size: 13.5px;
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    display: none;
+  }
+  .auth-msg.error{ display:block; background: #FDECEC; color: #B3261E; }
+  .auth-msg.success{ display:block; background: #E7F8F1; color: #1E7D5F; }
+
+  /* ===================== DASHBOARD ===================== */
+  #dashboardView{ min-height: 100vh; }
+  #topbar{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--line);
+    background: #fff;
+  }
+  #topbar .hero-mark{ color: var(--navy); }
+  #topbar .hero-mark span{ color: var(--yellow); }
+  .user-chip{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+  .logout-btn{
+    background:none;
+    border: 1px solid var(--line);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .logout-btn:hover{ border-color: var(--navy); }
+
+  #wizard{
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .stepper{
+    display:flex;
+    align-items:center;
+    margin-bottom: 44px;
+  }
+  .step-node{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    color: var(--ink-soft);
+  }
+  .step-num{
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-size: 13px;
+    font-weight: 600;
+    background: #fff;
+  }
+  .step-node.active .step-num{
+    border-color: var(--yellow);
+    background: var(--yellow);
+    color: var(--navy);
+  }
+  .step-node.done .step-num{
+    border-color: var(--mint);
+    background: var(--mint);
+    color: #fff;
+  }
+  .step-node.active .step-label{ color: var(--ink); font-weight: 600; }
+  .step-label{ font-size: 13px; }
+  .step-line{
+    flex:1;
+    height: 1px;
+    background: var(--line);
+    margin: 0 12px;
+  }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+  .panel h2{
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 26px;
+    margin: 0 0 8px;
+  }
+  .panel .sub{
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    margin: 0 0 28px;
+  }
+
+  /* step 1: dropzone */
+  .dropzone{
+    border: 1.5px dashed var(--line);
+    border-radius: var(--radius);
+    padding: 48px 24px;
+    text-align: center;
+    background: #fff;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .dropzone.drag{
+    border-color: var(--mint);
+    background: #F1FBFA;
+  }
+  .dropzone p{ margin: 4px 0; }
+  .dropzone .dz-title{ font-weight: 600; font-size: 15.5px; }
+  .dropzone .dz-sub{ font-size: 13px; color: var(--ink-soft); }
+  .browse-btn{
+    margin-top: 16px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+  .format-list{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  .format-list span{
+    font-size: 11.5px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+  .file-picked{
+    margin-top: 20px;
+    display:none;
+    align-items:center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    text-align: left;
+  }
+  .file-picked.show{ display:flex; }
+  .file-picked .fname{ font-weight: 600; font-size: 13.5px; }
+  .file-picked .fmeta{ font-size: 12px; color: var(--ink-soft); }
+  .file-remove{
+    background:none; border:none; color: var(--ink-soft); font-size: 13px; text-decoration: underline;
+  }
+
+  /* step 2: actions */
+  .action-grid{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 520px){ .action-grid{ grid-template-columns: 1fr; } }
+  .action-card{
+    text-align:left;
+    padding: 18px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+  }
+  .action-card .a-title{ font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .action-card .a-desc{ font-size: 12.5px; color: var(--ink-soft); line-height: 1.4; }
+  .action-card.selected{
+    border-color: var(--yellow);
+    background: #FFFBEF;
+  }
+
+  /* step 3: customization */
+  .custom-group{ margin-bottom: 26px; }
+  .custom-group h3{
+    font-size: 13px;
+    text-transform: none;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+    font-weight: 600;
+  }
+  .pill-row{ display:flex; flex-wrap: wrap; gap: 8px; }
+  .pill{
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1.5px solid var(--line);
+    background: #fff;
+    font-size: 13px;
+  }
+  .pill.selected{
+    border-color: var(--mint);
+    background: var(--mint);
+    color: #fff;
+  }
+
+  /* step 4: result */
+  .result-box{
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    padding: 24px;
+  }
+  .result-box p{ line-height: 1.7; font-size: 14.5px; margin: 0 0 14px; }
+  .citation{
+    display:inline-flex;
+    align-items:center;
+    font-size: 11px;
+    color: var(--navy);
+    background: var(--yellow-soft);
+    padding: 1px 7px;
+    border-radius: 5px;
+    margin-left: 4px;
+    font-weight: 600;
+  }
+  .source-list{
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--line);
+  }
+  .source-list .s-title{ font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-bottom: 8px; }
+  .source-item{ font-size: 12.5px; color: var(--ink-soft); margin-bottom: 4px; }
+
+  /* nav buttons */
+  .wizard-nav{
+    display:flex;
+    justify-content: space-between;
+    margin-top: 32px;
+  }
+  .btn-ghost{
+    background:none;
+    border: 1px solid var(--line);
+    padding: 11px 20px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .btn-next{
+    background: var(--yellow);
+    color: var(--navy);
+    border: none;
+    padding: 11px 22px;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .btn-next:disabled{ opacity: 0.5; cursor: default; }
+</style>
+</head>
+<body>
+
+<!-- ===================== AUTH VIEW ===================== -->
+<div id="authView">
+  <div id="authHero">
+    <div class="hero-mark">Docly<span>.</span></div>
+    <div class="hero-copy">
+      <h1>Your documents.<br>Finally understood.</h1>
+      <p>Déposez un document, posez vos questions, obtenez des réponses sourcées — sans jamais rouvrir le fichier original.</p>
+    </div>
+    <div class="hero-formats">
+      <span>PDF</span><span>DOCX</span><span>XLSX</span><span>PPTX</span><span>EPUB</span><span>CSV</span><span>MD</span>
+    </div>
+  </div>
+
+  <div id="authPanel">
+    <div class="auth-box">
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login" id="tabLogin">Connexion</button>
+        <button class="auth-tab" data-tab="signup" id="tabSignup">Inscription</button>
+      </div>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="loginPassword">Mot de passe</label>
+          <input type="password" id="loginPassword" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-primary" id="loginSubmit">Se connecter</button>
+      </form>
+
+      <form id="signupForm" class="visually-hidden">
+        <div class="field">
+          <label for="signupName">Nom complet</label>
+          <input type="text" id="signupName" required autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="signupPassword">Mot de passe</label>
+          <input type="password" id="signupPassword" required autocomplete="new-password" minlength="6">
+        </div>
+        <button type="submit" class="btn-primary" id="signupSubmit">Créer mon compte</button>
+      </form>
+
+      <div class="auth-msg" id="authMsg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DASHBOARD ===================== -->
+<div id="dashboardView" class="visually-hidden">
+  <div id="topbar">
+    <div class="hero-mark">Docly<span>.</span></div>
+    <div class="user-chip">
+      <span id="userEmailLabel"></span>
+      <button class="logout-btn" id="logoutBtn">Déconnexion</button>
+    </div>
+  </div>
+
+  <div id="wizard">
+    <div class="stepper" id="stepper">
+      <div class="step-node active" data-step="1"><div class="step-num">1</div><div class="step-label">Déposer</div></div>
+      <div class="step-line"></div>
+      <div class="step-node" data-step="2"><div class="step-num">2</div><div class="step-label">Action</div></div>
+      <div class="step-line"></div>
+      <div class="step-node" data-step="3"><div class="step-num">3</div><div class="step-label">Résultat voulu</div></div>
+      <div class="step-line"></div>
+      <div class="step-node" data-step="4"><div class="step-num">4</div><div class="step-label">Résultat</div></div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="panel active" id="panel1">
+      <h2>Déposez votre document</h2>
+      <p class="sub">Glissez un fichier ici, ou parcourez vos dossiers.</p>
+      <div class="dropzone" id="dropzone">
+        <p class="dz-title">Glissez-déposez votre fichier</p>
+        <p class="dz-sub">ou</p>
+        <button type="button" class="browse-btn" id="browseBtn">Parcourir mes fichiers</button>
+        <input type="file" id="fileInput" class="visually-hidden">
+        <div class="format-list">
+          <span>PDF</span><span>DOC</span><span>DOCX</span><span>XLS</span><span>XLSX</span><span>PPT</span><span>PPTX</span><span>TXT</span><span>EPUB</span><span>CSV</span><span>MD</span>
+        </div>
+      </div>
+      <div class="file-picked" id="filePicked">
+        <div>
+          <div class="fname" id="fpName"></div>
+          <div class="fmeta" id="fpMeta"></div>
+        </div>
+        <button class="file-remove" id="fpRemove">Retirer</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="panel" id="panel2">
+      <h2>Que voulez-vous faire ?</h2>
+      <p class="sub">Choisissez une action à appliquer sur votre document.</p>
+      <div class="action-grid" id="actionGrid">
+        <button class="action-card" data-action="Résumer"><div class="a-title">Résumer</div><div class="a-desc">Obtenir une synthèse du contenu</div></button>
+        <button class="action-card" data-action="Analyser"><div class="a-title">Analyser</div><div class="a-desc">Faire ressortir les informations clés</div></button>
+        <button class="action-card" data-action="Questionner"><div class="a-title">Questionner</div><div class="a-desc">Poser des questions sur le document</div></button>
+        <button class="action-card" data-action="Extraire"><div class="a-title">Extraire</div><div class="a-desc">Récupérer des données précises</div></button>
+        <button class="action-card" data-action="Transformer"><div class="a-title">Transformer</div><div class="a-desc">Changer le format du contenu</div></button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="panel" id="panel3">
+      <h2>Quel résultat voulez-vous ?</h2>
+      <p class="sub">Ajustez la longueur, le style et le format du résultat.</p>
+
+      <div class="custom-group">
+        <h3>Longueur</h3>
+        <div class="pill-row" data-group="length">
+          <button class="pill" data-value="Très court">Très court</button>
+          <button class="pill" data-value="Court">Court</button>
+          <button class="pill" data-value="Moyen">Moyen</button>
+          <button class="pill" data-value="Détaillé">Détaillé</button>
+          <button class="pill" data-value="Très détaillé">Très détaillé</button>
+        </div>
+      </div>
+
+      <div class="custom-group">
+        <h3>Style</h3>
+        <div class="pill-row" data-group="style">
+          <button class="pill" data-value="Simple">Simple</button>
+          <button class="pill" data-value="Professionnel">Professionnel</button>
+          <button class="pill" data-value="Académique">Académique</button>
+          <button class="pill" data-value="Exécutif">Exécutif</button>
+          <button class="pill" data-value="Technique">Technique</button>
+        </div>
+      </div>
+
+      <div class="custom-group">
+        <h3>Format</h3>
+        <div class="pill-row" data-group="format">
+          <button class="pill" data-value="Paragraphes">Paragraphes</button>
+          <button class="pill" data-value="Bullet points">Bullet points</button>
+          <button class="pill" data-value="Tableau">Tableau</button>
+          <button class="pill" data-value="Plan">Plan</button>
+          <button class="pill" data-value="FAQ">FAQ</button>
+          <button class="pill" data-value="Brief exécutif">Brief exécutif</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="panel" id="panel4">
+      <h2>Résultat</h2>
+      <p class="sub" id="resultSummaryLine"></p>
+      <div class="result-box">
+        <p>Ceci est un aperçu de mise en page. Une fois l'intelligence documentaire connectée, le contenu généré à partir de votre fichier apparaîtra ici, avec ses sources.<span class="citation">p.14 §3</span></p>
+        <p>Chaque affirmation pourra être reliée à son emplacement exact dans le document d'origine, pour vérification rapide.<span class="citation">p.2 §1</span></p>
+        <div class="source-list">
+          <div class="s-title">SOURCES</div>
+          <div class="source-item">Document — page 14, paragraphe 3</div>
+          <div class="source-item">Document — page 2, paragraphe 1</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="btn-ghost" id="prevBtn">Précédent</button>
+      <button class="btn-next" id="nextBtn">Suivant</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------- Parse / Back4app init ----------
+  Parse.initialize("bEJVDXz07faSqrzKGtzpTSBMEiHb9eJTO4JLEcy7", "eP7o73XecwdmKxYLSRoyYcfQyJkKcWeqftUcNRha");
+  Parse.serverURL = "https://parseapi.back4app.com/";
+
+  // ---------- Auth tabs ----------
+  const tabLogin = document.getElementById('tabLogin');
+  const tabSignup = document.getElementById('tabSignup');
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  const authMsg = document.getElementById('authMsg');
+
+  function showTab(tab){
+    const isLogin = tab === 'login';
+    tabLogin.classList.toggle('active', isLogin);
+    tabSignup.classList.toggle('active', !isLogin);
+    loginForm.classList.toggle('visually-hidden', !isLogin);
+    signupForm.classList.toggle('visually-hidden', isLogin);
+    authMsg.className = 'auth-msg';
+  }
+  tabLogin.addEventListener('click', () => showTab('login'));
+  tabSignup.addEventListener('click', () => showTab('signup'));
+
+  function setAuthMsg(text, type){
+    authMsg.textContent = text;
+    authMsg.className = 'auth-msg ' + type;
+  }
+
+  // ---------- Login ----------
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('loginSubmit');
+    btn.disabled = true; btn.textContent = 'Connexion...';
+    try {
+      await Parse.User.logIn(email, password);
+      setAuthMsg('Connecté avec succès.', 'success');
+      enterDashboard();
+    } catch (err) {
+      setAuthMsg(err.message || "Impossible de se connecter.", 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Se connecter';
+    }
+  });
+
+  // ---------- Signup ----------
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fullName = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const btn = document.getElementById('signupSubmit');
+    btn.disabled = true; btn.textContent = 'Création...';
+    try {
+      const user = new Parse.User();
+      user.set('username', email);
+      user.set('email', email);
+      user.set('password', password);
+      user.set('fullName', fullName);
+      await user.signUp();
+      setAuthMsg('Compte créé avec succès.', 'success');
+      enterDashboard();
+    } catch (err) {
+      setAuthMsg(err.message || "Impossible de créer le compte.", 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Créer mon compte';
+    }
+  });
+
+  // ---------- Logout ----------
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await Parse.User.logOut();
+    document.getElementById('dashboardView').classList.add('visually-hidden');
+    document.getElementById('authView').classList.remove('visually-hidden');
+    resetWizard();
+  });
+
+  function enterDashboard(){
+    const user = Parse.User.current();
+    document.getElementById('userEmailLabel').textContent = user ? (user.get('email') || user.get('username')) : '';
+    document.getElementById('authView').classList.add('visually-hidden');
+    document.getElementById('dashboardView').classList.remove('visually-hidden');
+  }
+
+  // if already logged in on page load, skip straight to dashboard
+  if (Parse.User.current()) {
+    enterDashboard();
+  }
+
+  // ---------- Wizard state ----------
+  let currentStep = 1;
+  let pickedFile = null;
+  let chosenAction = null;
+  const custom = { length: null, style: null, format: null };
+
+  const panels = { 1: document.getElementById('panel1'), 2: document.getElementById('panel2'), 3: document.getElementById('panel3'), 4: document.getElementById('panel4') };
+  const stepNodes = document.querySelectorAll('.step-node');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  function resetWizard(){
+    currentStep = 1; pickedFile = null; chosenAction = null;
+    custom.length = null; custom.style = null; custom.format = null;
+    document.getElementById('filePicked').classList.remove('show');
+    document.getElementById('fileInput').value = '';
+    document.querySelectorAll('.action-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+    renderStep();
+  }
+
+  function renderStep(){
+    Object.keys(panels).forEach(k => panels[k].classList.toggle('active', Number(k) === currentStep));
+    stepNodes.forEach(node => {
+      const n = Number(node.dataset.step);
+      node.classList.toggle('active', n === currentStep);
+      node.classList.toggle('done', n < currentStep);
+    });
+    prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+    nextBtn.textContent = currentStep === 4 ? 'Recommencer' : 'Suivant';
+    updateNextState();
+    if (currentStep === 4) {
+      const parts = [chosenAction, custom.length, custom.style, custom.format].filter(Boolean);
+      document.getElementById('resultSummaryLine').textContent = parts.join(' · ');
+    }
+  }
+
+  function updateNextState(){
+    let ok = true;
+    if (currentStep === 1) ok = !!pickedFile;
+    if (currentStep === 2) ok = !!chosenAction;
+    if (currentStep === 3) ok = custom.length && custom.style && custom.format;
+    nextBtn.disabled = !ok;
+  }
+
+  prevBtn.addEventListener('click', () => { if (currentStep > 1) { currentStep--; renderStep(); } });
+  nextBtn.addEventListener('click', () => {
+    if (currentStep === 4) { resetWizard(); return; }
+    if (currentStep < 4) { currentStep++; renderStep(); }
+  });
+
+  // ---------- Step 1: file drop ----------
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const browseBtn = document.getElementById('browseBtn');
+  const filePicked = document.getElementById('filePicked');
+
+  browseBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+
+  ['dragenter','dragover'].forEach(evt => dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(evt => dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('drag'); }));
+  dropzone.addEventListener('drop', (e) => { const f = e.dataTransfer.files[0]; if (f) handleFile(f); });
+
+  function handleFile(file){
+    pickedFile = file;
+    document.getElementById('fpName').textContent = file.name;
+    document.getElementById('fpMeta').textContent = (file.type || 'Fichier') + ' · ' + Math.round(file.size / 1024) + ' Ko';
+    filePicked.classList.add('show');
+    updateNextState();
+  }
+  document.getElementById('fpRemove').addEventListener('click', () => {
+    pickedFile = null; fileInput.value = ''; filePicked.classList.remove('show'); updateNextState();
+  });
+
+  // ---------- Step 2: action cards ----------
+  document.getElementById('actionGrid').addEventListener('click', (e) => {
+    const card = e.target.closest('.action-card');
+    if (!card) return;
+    document.querySelectorAll('.action-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    chosenAction = card.dataset.action;
+    updateNextState();
+  });
+
+  // ---------- Step 3: pills ----------
+  document.querySelectorAll('.pill-row').forEach(row => {
+    row.addEventListener('click', (e) => {
+      const pill = e.target.closest('.pill');
+      if (!pill) return;
+      row.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+      pill.classList.add('selected');
+      custom[row.dataset.group] = pill.dataset.value;
+      updateNextState();
+    });
+  });
+
+  renderStep();
+</script>
+</body>
+</html>
