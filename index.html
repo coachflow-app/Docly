@@ -367,26 +367,64 @@
 
   /* Step 1: upload */
   .dropzone{
-    border: 1.5px dashed var(--line);
-    border-radius: var(--radius);
-    padding: 48px 24px;
+    border: 1.5px dashed var(--input-border);
+    border-radius: 12px;
+    padding: 44px 24px 32px;
     text-align: center;
     cursor: pointer;
-    background: var(--secondary-white);
+    background: var(--input-bg);
   }
+  .dropzone:hover{ border-color: var(--primary-yellow-deep); background: var(--primary-yellow-tint); }
   .dropzone.dragover{
     border-color: var(--primary-yellow-deep);
     background: var(--primary-yellow-tint);
   }
+  .dropzone .dz-icon{
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background: var(--primary-yellow-tint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
   .dropzone .dz-title{
     font-size: 16px;
     font-weight: 500;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
-  .dropzone .dz-formats{
-    font-size: 12.5px;
+  .dropzone .dz-hint{
+    font-size: 13px;
     color: var(--ink-soft);
+    margin-bottom: 18px;
+  }
+  .dropzone .dz-hint .dz-browse{
+    color: var(--primary-yellow-text);
+    font-weight: 600;
+    text-decoration: underline;
+  }
+  .dz-format-badges{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  .dz-format-badges .badge{
+    font-size: 11px;
+    font-weight: 600;
     letter-spacing: 0.02em;
+    color: var(--ink-soft);
+    background: var(--secondary-white);
+    border: 1px solid var(--input-border);
+    border-radius: 999px;
+    padding: 3px 9px;
+  }
+  .dropzone .dz-maxsize{
+    font-size: 12px;
+    color: var(--ink-soft);
   }
   #file-input{ display: none; }
   .file-chosen{
@@ -467,6 +505,17 @@
   }
   @media (max-width: 560px){
     .choice-card{ flex: 1 1 100%; max-width: 100%; }
+  }
+  .choice-card .choice-icon{
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--primary-yellow-tint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    margin-bottom: 10px;
   }
   .choice-card .choice-name{ font-weight: 500; font-size: 15px; margin-bottom: 3px; }
   .choice-card .choice-desc{ font-size: 12.5px; color: var(--ink-soft); }
@@ -634,8 +683,9 @@
               <button type="button" class="toggle-password" data-target="login-password">Show</button>
             </div>
           </div>
-          <div class="field-row">
+          <div class="field-row" style="justify-content: space-between;">
             <label class="remember-me"><input type="checkbox" id="remember-me" /> Remember me</label>
+            <button type="button" class="link-btn" id="forgot-password">Forgot password?</button>
           </div>
           <button type="submit" class="btn-primary" id="login-submit"><span>Log in</span><span aria-hidden="true">→</span></button>
         </form>
@@ -691,9 +741,14 @@
       <section class="step-panel" data-step-panel="1">
         <h2>Upload your document</h2>
         <div class="step-sub">Docly works with the formats below.</div>
-        <div class="dropzone" id="dropzone">
-          <div class="dz-title">Drop a file here, or click to browse</div>
-          <div class="dz-formats">PDF · DOC · DOCX · XLS · XLSX · PPT · PPTX · TXT · EPUB · CSV · MD</div>
+        <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Drop a file here, or press Enter to browse your computer">
+          <div class="dz-icon" aria-hidden="true">📤</div>
+          <div class="dz-title">Drop a file here</div>
+          <div class="dz-hint">or <span class="dz-browse">click to browse</span></div>
+          <div class="dz-format-badges" aria-hidden="true">
+            <span class="badge">PDF</span><span class="badge">DOC</span><span class="badge">DOCX</span><span class="badge">XLS</span><span class="badge">XLSX</span><span class="badge">PPT</span><span class="badge">PPTX</span><span class="badge">TXT</span><span class="badge">EPUB</span><span class="badge">CSV</span><span class="badge">MD</span>
+          </div>
+          <div class="dz-maxsize">Maximum file size: 50 MB</div>
           <input type="file" id="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.epub,.csv,.md" />
         </div>
         <div class="file-chosen hidden" id="file-chosen">
@@ -718,11 +773,11 @@
         <h2>What do you want to do?</h2>
         <div class="step-sub">Choose one action for this document.</div>
         <div class="choice-grid" id="action-grid">
-          <button class="choice-card" data-action="Summarize"><span class="check-mark">✓</span><div class="choice-name">Summarize</div><div class="choice-desc">Get a synthesis of the content</div></button>
-          <button class="choice-card" data-action="Analyze"><span class="check-mark">✓</span><div class="choice-name">Analyze</div><div class="choice-desc">Surface the key insights</div></button>
-          <button class="choice-card" data-action="Ask"><span class="check-mark">✓</span><div class="choice-name">Ask</div><div class="choice-desc">Ask questions about the content</div></button>
-          <button class="choice-card" data-action="Extract"><span class="check-mark">✓</span><div class="choice-name">Extract</div><div class="choice-desc">Pull out specific data or facts</div></button>
-          <button class="choice-card" data-action="Transform"><span class="check-mark">✓</span><div class="choice-name">Transform</div><div class="choice-desc">Turn it into another format</div></button>
+          <button class="choice-card" data-action="Summarize" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">📝</div><div class="choice-name">Summarize</div><div class="choice-desc">Get a synthesis of the content</div></button>
+          <button class="choice-card" data-action="Analyze" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">🔍</div><div class="choice-name">Analyze</div><div class="choice-desc">Surface the key insights</div></button>
+          <button class="choice-card" data-action="Ask" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">💬</div><div class="choice-name">Ask</div><div class="choice-desc">Ask questions about the content</div></button>
+          <button class="choice-card" data-action="Extract" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">📌</div><div class="choice-name">Extract</div><div class="choice-desc">Pull out specific data or facts</div></button>
+          <button class="choice-card" data-action="Transform" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">🔄</div><div class="choice-name">Transform</div><div class="choice-desc">Turn it into another format</div></button>
         </div>
         <div class="step-nav">
           <button class="btn-ghost" id="back-to-1">Back</button>
@@ -738,34 +793,34 @@
         <div class="field-group">
           <div class="fg-label">Length</div>
           <div class="pill-row" data-group="length">
-            <button class="pill" data-value="Very short">Very short</button>
-            <button class="pill" data-value="Short">Short</button>
-            <button class="pill selected" data-value="Medium">Medium</button>
-            <button class="pill" data-value="Detailed">Detailed</button>
-            <button class="pill" data-value="Very detailed">Very detailed</button>
+            <button class="pill" data-value="Very short" aria-pressed="false">Very short</button>
+            <button class="pill" data-value="Short" aria-pressed="false">Short</button>
+            <button class="pill selected" data-value="Medium" aria-pressed="true">Medium</button>
+            <button class="pill" data-value="Detailed" aria-pressed="false">Detailed</button>
+            <button class="pill" data-value="Very detailed" aria-pressed="false">Very detailed</button>
           </div>
         </div>
 
         <div class="field-group">
           <div class="fg-label">Style</div>
           <div class="pill-row" data-group="style">
-            <button class="pill selected" data-value="Simple">Simple</button>
-            <button class="pill" data-value="Professional">Professional</button>
-            <button class="pill" data-value="Academic">Academic</button>
-            <button class="pill" data-value="Executive">Executive</button>
-            <button class="pill" data-value="Technical">Technical</button>
+            <button class="pill selected" data-value="Simple" aria-pressed="true">Simple</button>
+            <button class="pill" data-value="Professional" aria-pressed="false">Professional</button>
+            <button class="pill" data-value="Academic" aria-pressed="false">Academic</button>
+            <button class="pill" data-value="Executive" aria-pressed="false">Executive</button>
+            <button class="pill" data-value="Technical" aria-pressed="false">Technical</button>
           </div>
         </div>
 
         <div class="field-group">
           <div class="fg-label">Format</div>
           <div class="pill-row" data-group="format">
-            <button class="pill selected" data-value="Paragraphs">Paragraphs</button>
-            <button class="pill" data-value="Bullet points">Bullet points</button>
-            <button class="pill" data-value="Table">Table</button>
-            <button class="pill" data-value="Outline">Outline</button>
-            <button class="pill" data-value="FAQ">FAQ</button>
-            <button class="pill" data-value="Executive brief">Executive brief</button>
+            <button class="pill selected" data-value="Paragraphs" aria-pressed="true">Paragraphs</button>
+            <button class="pill" data-value="Bullet points" aria-pressed="false">Bullet points</button>
+            <button class="pill" data-value="Table" aria-pressed="false">Table</button>
+            <button class="pill" data-value="Outline" aria-pressed="false">Outline</button>
+            <button class="pill" data-value="FAQ" aria-pressed="false">FAQ</button>
+            <button class="pill" data-value="Executive brief" aria-pressed="false">Executive brief</button>
           </div>
         </div>
 
@@ -856,6 +911,23 @@
   document.getElementById('switch-to-signup').addEventListener('click', () => showView('signup'));
   document.getElementById('switch-to-login').addEventListener('click', () => showView('login'));
 
+  /* ---- Forgot password ---- */
+  document.getElementById('forgot-password').addEventListener('click', async () => {
+    clearAuthError();
+    const email = document.getElementById('login-email').value.trim();
+    if (!email) {
+      showAuthError('Enter your email above first, then click "Forgot password?" again.');
+      document.getElementById('login-email').focus();
+      return;
+    }
+    try {
+      await Parse.User.requestPasswordReset(email);
+      showAuthError('If an account exists for ' + email + ', a reset link has been sent.');
+    } catch (err) {
+      showAuthError(err.message || 'Could not send the reset link.');
+    }
+  });
+
   /* ---- Show/hide password ---- */
   document.querySelectorAll('.toggle-password').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -935,9 +1007,10 @@
     tracker.innerHTML = '';
     STEP_LABELS.forEach((label, i) => {
       const stepNum = i + 1;
+      const isDone = stepNum < currentStep;
       const node = document.createElement('div');
-      node.className = 'step-node' + (stepNum === currentStep ? ' active' : (stepNum < currentStep ? ' done' : ''));
-      node.innerHTML = '<div class="dot">' + stepNum + '</div><div class="label">' + label + '</div>';
+      node.className = 'step-node' + (stepNum === currentStep ? ' active' : (isDone ? ' done' : ''));
+      node.innerHTML = '<div class="dot">' + (isDone ? '✓' : stepNum) + '</div><div class="label">' + label + '</div>';
       tracker.appendChild(node);
       if (stepNum < STEP_LABELS.length) {
         const connector = document.createElement('div');
@@ -963,7 +1036,7 @@
     document.getElementById('file-chosen').classList.add('hidden');
     document.getElementById('file-error').classList.add('hidden');
     document.getElementById('to-step-2').disabled = true;
-    document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.choice-card').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
     document.getElementById('to-step-3').disabled = true;
     goToStep(1);
   }
@@ -978,6 +1051,12 @@
   const toStep2Btn = document.getElementById('to-step-2');
 
   dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      fileInput.click();
+    }
+  });
   dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
   dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
   dropzone.addEventListener('drop', (e) => {
@@ -991,6 +1070,7 @@
 
   const ALLOWED_EXT = ['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','epub','csv','md'];
   const FILE_ICONS = { pdf:'📕', doc:'📘', docx:'📘', xls:'📊', xlsx:'📊', ppt:'📙', pptx:'📙', txt:'📄', epub:'📖', csv:'📊', md:'📄' };
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
   function formatBytes(bytes){
     if (bytes < 1024) return bytes + ' B';
@@ -1003,6 +1083,13 @@
     const fileError = document.getElementById('file-error');
     if (!ALLOWED_EXT.includes(ext)) {
       fileError.textContent = 'This file type isn\'t supported. Please use one of: ' + ALLOWED_EXT.join(', ').toUpperCase() + '.';
+      fileError.classList.remove('hidden');
+      fileChosen.classList.add('hidden');
+      toStep2Btn.disabled = true;
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      fileError.textContent = 'This file is too large (' + formatBytes(file.size) + '). Maximum size is 50 MB.';
       fileError.classList.remove('hidden');
       fileChosen.classList.add('hidden');
       toStep2Btn.disabled = true;
@@ -1030,8 +1117,9 @@
   actionGrid.addEventListener('click', (e) => {
     const card = e.target.closest('.choice-card');
     if (!card) return;
-    document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.choice-card').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
     card.classList.add('selected');
+    card.setAttribute('aria-pressed', 'true');
     wizardState.action = card.dataset.action;
     toStep3Btn.disabled = false;
   });
@@ -1043,8 +1131,9 @@
     row.addEventListener('click', (e) => {
       const pill = e.target.closest('.pill');
       if (!pill) return;
-      row.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+      row.querySelectorAll('.pill').forEach(p => { p.classList.remove('selected'); p.setAttribute('aria-pressed', 'false'); });
       pill.classList.add('selected');
+      pill.setAttribute('aria-pressed', 'true');
       wizardState[row.dataset.group] = pill.dataset.value;
     });
   });
