@@ -414,34 +414,34 @@
     background: var(--primary-yellow-tint);
   }
   .dropzone .dz-icon{
-    width: 38px;
-    height: 38px;
-    margin: 0 auto 10px;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 16px;
     border-radius: 50%;
     background: var(--primary-yellow-tint);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 17px;
+    color: var(--ink);
   }
-  .dropzone .dz-title{
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 12px;
-  }
+  .dropzone .dz-icon svg{ width: 20px; height: 20px; }
   .dz-browse-btn{
-    display: inline-block;
-    background: var(--ink);
-    color: var(--secondary-white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--primary-yellow);
+    color: var(--ink);
     border-radius: 999px;
-    padding: 9px 22px;
-    font-size: 13.5px;
-    font-weight: 600;
+    padding: 13px 26px;
+    font-size: 15px;
+    font-weight: 700;
   }
+  .dz-browse-btn svg{ width: 18px; height: 18px; flex-shrink: 0; }
   .dropzone .dz-hint{
     font-size: 12.5px;
     color: var(--ink-soft);
-    margin: 10px 0 14px;
+    margin: 12px 0 16px;
   }
   .dz-format-badges{
     display: flex;
@@ -791,10 +791,14 @@
         <h2>Upload your document</h2>
         <div class="step-sub">Docly works with the formats below.</div>
         <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Drop a file here, or press Enter to browse your computer">
-          <div class="dz-icon" aria-hidden="true">📤</div>
-          <div class="dz-title">Choose a file to upload</div>
-          <span class="dz-browse-btn">Browse files</span>
-          <div class="dz-hint">or drag and drop</div>
+          <div class="dz-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/></svg>
+          </div>
+          <span class="dz-browse-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/></svg>
+            Choose a file
+          </span>
+          <div class="dz-hint">or drag and drop here</div>
           <div class="dz-format-badges" aria-hidden="true">
             <span class="badge">PDF</span><span class="badge">DOC</span><span class="badge">DOCX</span><span class="badge">XLS</span><span class="badge">XLSX</span><span class="badge">PPT</span><span class="badge">PPTX</span><span class="badge">TXT</span><span class="badge">EPUB</span><span class="badge">CSV</span><span class="badge">MD</span>
           </div>
