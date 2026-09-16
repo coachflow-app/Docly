@@ -379,7 +379,7 @@
     .step-progress-mobile{ display: block; }
   }
 
-  main{
+  #wizard-view > main{
     flex: 1;
     display: flex;
     justify-content: center;
@@ -695,6 +695,232 @@
   .btn-dark:hover{ background: #000; }
   .btn-dark:disabled{ opacity: 0.4; cursor: not-allowed; }
 
+  /* ============ DASHBOARD ============ */
+  .dash-back-link{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    padding: 14px 20px 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .dash-back-link:hover{ color: var(--ink); }
+  .dash-back-link svg{ width: 15px; height: 15px; }
+
+  .dash-tabs{
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 18px 20px 0;
+    scrollbar-width: none;
+  }
+  .dash-tabs::-webkit-scrollbar{ display: none; }
+  .dash-tab{
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .dash-tab.active{
+    background: var(--ink);
+    color: var(--secondary-white);
+    font-weight: 600;
+  }
+
+  .dash-toolbar{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 20px 0;
+  }
+  @media (min-width: 640px){
+    .dash-toolbar{ flex-direction: row; align-items: center; }
+  }
+  .dash-search{
+    position: relative;
+    flex: 1;
+  }
+  .dash-search svg{
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--ink-soft);
+  }
+  .dash-search input{
+    width: 100%;
+    padding: 10px 14px 10px 36px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    font-size: 14px;
+    background: var(--input-bg);
+    color: var(--ink);
+  }
+  .dash-search input:focus{ border-color: var(--primary-yellow-deep); background: var(--secondary-white); }
+  .dash-new-btn{
+    width: 100%;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 0;
+  }
+  @media (min-width: 640px){
+    .dash-new-btn{ width: auto; flex-shrink: 0; }
+  }
+
+  .dash-list{
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 16px 20px 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .dash-card{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--secondary-white);
+    cursor: pointer;
+  }
+  .dash-card:hover{ border-color: var(--ink); }
+  .dash-card-select{ flex-shrink: 0; display: flex; }
+  .dash-card-select input[type="checkbox"]{
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    appearance: none;
+    border: 1.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--secondary-white);
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .dash-card-select input[type="checkbox"]:checked{ background: var(--primary-yellow); border-color: var(--primary-yellow-deep); }
+  .dash-card-select input[type="checkbox"]:checked::after{
+    content: ""; position: absolute; left: 5px; top: 1px; width: 5px; height: 9px;
+    border: solid var(--ink); border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
+  .dash-card-icon{
+    width: 36px; height: 36px; flex-shrink: 0;
+    border-radius: 8px;
+    background: var(--primary-yellow-tint);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .dash-card-info{ flex: 1; min-width: 0; }
+  .dash-card-name{
+    font-size: 14.5px; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .dash-card-date{ font-size: 12.5px; color: var(--ink-soft); margin-top: 1px; }
+
+  .transform-menu, .card-menu{ position: relative; flex-shrink: 0; }
+  .transform-trigger{
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 13px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .transform-trigger:hover{ border-color: var(--ink); }
+  .menu-trigger{
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; border-radius: 8px;
+    font-size: 17px; color: var(--ink-soft); cursor: pointer;
+  }
+  .menu-trigger:hover{ background: var(--input-bg); color: var(--ink); }
+  .menu-panel{
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 170px;
+    background: var(--secondary-white);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    padding: 6px;
+    z-index: 20;
+  }
+  .menu-item{
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none; border: none; border-radius: 6px;
+    padding: 8px 10px; font-size: 13px; color: var(--ink); cursor: pointer;
+  }
+  .menu-item:hover{ background: var(--input-bg); }
+  .menu-item.danger{ color: #B3261E; }
+
+  .dash-compare-bar{
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--ink);
+    color: var(--secondary-white);
+    border-radius: 999px;
+    padding: 10px 10px 10px 18px;
+    font-size: 13.5px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    z-index: 30;
+  }
+  .dash-compare-bar .btn-dark{
+    background: var(--primary-yellow);
+    color: var(--ink);
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .dash-empty{
+    text-align: center;
+    padding: 64px 20px;
+    color: var(--ink-soft);
+  }
+  .dash-empty-icon{ font-size: 28px; margin-bottom: 10px; }
+  .dash-empty p{ margin: 0 0 16px; font-size: 14px; }
+
+  /* ============ DETAIL VIEW ============ */
+  .detail-main{ max-width: 640px; margin: 0 auto; padding: 20px 20px 60px; }
+  .detail-main h2{ font-size: 22px; margin-bottom: 4px; }
+  .detail-subtabs{ padding: 18px 0 0; margin-bottom: 16px; }
+  .detail-panel .result-box{ margin-top: 0; }
+  .detail-notes{
+    width: 100%;
+    min-height: 160px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    background: var(--input-bg);
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: var(--font-ui);
+    color: var(--ink);
+    resize: vertical;
+  }
+  .detail-notes:focus{ border-color: var(--primary-yellow-deep); background: var(--secondary-white); }
 </style>
 </head>
 <body>
@@ -782,8 +1008,71 @@
       </div>
     </div>
 
-    <div class="step-tracker" id="step-tracker"></div>
-    <div class="step-progress-mobile" id="step-progress-mobile"></div>
+    <!-- ============ DASHBOARD VIEW ============ -->
+    <div id="dashboard-view">
+      <div class="dash-tabs" id="dash-tabs">
+        <button class="dash-tab active" data-tab="documents" type="button">All documents</button>
+        <button class="dash-tab" data-tab="summaries" type="button">Summaries</button>
+        <button class="dash-tab" data-tab="conversations" type="button">Conversations</button>
+        <button class="dash-tab" data-tab="analyses" type="button">Analyses</button>
+        <button class="dash-tab" data-tab="exports" type="button">Exports</button>
+      </div>
+
+      <div class="dash-toolbar">
+        <div class="dash-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="dash-search-input" placeholder="Search your work…" />
+        </div>
+        <button class="btn-primary dash-new-btn" id="new-document-btn" type="button">
+          <span aria-hidden="true">+</span><span>New document</span>
+        </button>
+      </div>
+
+      <div class="dash-list" id="dash-list"></div>
+
+      <div class="dash-compare-bar hidden" id="dash-compare-bar">
+        <span id="dash-compare-count">0 selected</span>
+        <button class="btn-dark" id="dash-compare-btn" type="button">Compare</button>
+      </div>
+    </div>
+
+    <!-- ============ DOCUMENT DETAIL VIEW ============ -->
+    <div id="detail-view" class="hidden">
+      <button class="dash-back-link" id="detail-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to dashboard
+      </button>
+      <main class="detail-main">
+        <h2 id="detail-title">Document name</h2>
+        <div class="step-sub" id="detail-sub">Uploaded on —</div>
+        <div class="dash-tabs detail-subtabs" id="detail-subtabs">
+          <button class="dash-tab active" data-subtab="summary" type="button">Summary</button>
+          <button class="dash-tab" data-subtab="conversations" type="button">Conversations</button>
+          <button class="dash-tab" data-subtab="notes" type="button">Notes</button>
+        </div>
+        <div class="detail-panel" data-detail-panel="summary">
+          <div class="result-box"><div class="result-placeholder" id="detail-summary-text"></div></div>
+        </div>
+        <div class="detail-panel hidden" data-detail-panel="conversations">
+          <div class="dash-empty">
+            <div class="dash-empty-icon" aria-hidden="true">💬</div>
+            <p>No questions asked yet for this document.</p>
+          </div>
+        </div>
+        <div class="detail-panel hidden" data-detail-panel="notes">
+          <textarea class="detail-notes" id="detail-notes-input" placeholder="Write a note about this document…"></textarea>
+        </div>
+      </main>
+    </div>
+
+    <!-- ============ WIZARD VIEW ============ -->
+    <div id="wizard-view" class="hidden">
+      <button class="dash-back-link" id="wizard-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to dashboard
+      </button>
+      <div class="step-tracker" id="step-tracker"></div>
+      <div class="step-progress-mobile" id="step-progress-mobile"></div>
 
     <main>
       <!-- STEP 1 -->
@@ -905,11 +1194,12 @@
           </div>
           <div class="step-nav">
             <button class="btn-ghost" id="back-to-3">Back</button>
-            <button class="btn-ghost" id="start-over">Start a new document</button>
+            <button class="btn-ghost" id="start-over">Back to dashboard</button>
           </div>
         </div>
       </section>
     </main>
+    </div>
   </div>
 
 <script>
@@ -936,10 +1226,241 @@
     const email = user.get('email') || user.get('username') || '';
     document.getElementById('user-email-display').textContent = email;
     document.getElementById('user-avatar').textContent = email.charAt(0).toUpperCase();
+    showDashboardView();
   }
   function showAuth(){
     appShell.classList.add('hidden');
     authScreen.classList.remove('hidden');
+  }
+
+  /* ============ VIEW SWITCHING (Dashboard / Wizard / Detail) ============ */
+  const dashboardView = document.getElementById('dashboard-view');
+  const wizardView = document.getElementById('wizard-view');
+  const detailView = document.getElementById('detail-view');
+
+  function showDashboardView(){
+    wizardView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    dashboardView.classList.remove('hidden');
+    renderDashboardList();
+  }
+  function showWizardView(){
+    dashboardView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    wizardView.classList.remove('hidden');
+  }
+  function showDetailView(){
+    dashboardView.classList.add('hidden');
+    wizardView.classList.add('hidden');
+    detailView.classList.remove('hidden');
+  }
+
+  /* ============ DASHBOARD MOCK DATA ============ */
+  const FILE_TYPE_ICONS = { pdf:'📕', doc:'📘', docx:'📘', xls:'📊', xlsx:'📊', ppt:'📙', pptx:'📙', txt:'📄', epub:'📖', csv:'📊', md:'📄' };
+  const TAB_ICONS = { summaries:'📝', conversations:'💬', analyses:'🔍', exports:'⬇️' };
+  const TAB_EMPTY_TEXT = {
+    conversations: 'No conversations yet. Ask a question about one of your documents to start one.',
+    analyses: 'No analyses yet. Run "Analyze" on a document to see it here.'
+  };
+  const TAB_LABELS = { documents: 'All documents', summaries: 'Summaries', conversations: 'Conversations', analyses: 'Analyses', exports: 'Exports' };
+
+  const dashboardData = {
+    documents: [
+      { id: 'd1', name: 'Q3 Board Report.pdf', ext: 'pdf', date: 'Sep 12, 2026' },
+      { id: 'd2', name: 'Client Contract — Acme.docx', ext: 'docx', date: 'Sep 10, 2026' },
+      { id: 'd3', name: 'Sales Data.xlsx', ext: 'xlsx', date: 'Sep 8, 2026' }
+    ],
+    summaries: [
+      { id: 's1', name: 'Q3 Board Report — Summary', date: 'Sep 12, 2026' }
+    ],
+    conversations: [],
+    analyses: [],
+    exports: [
+      { id: 'e1', name: 'Q3 Board Report — Summary.pdf', date: 'Sep 12, 2026' }
+    ]
+  };
+  const notesStore = {};
+  let currentTab = 'documents';
+  let selectedDocIds = new Set();
+
+  /* ---- Tabs ---- */
+  document.getElementById('dash-tabs').addEventListener('click', (e) => {
+    const tab = e.target.closest('.dash-tab');
+    if (!tab) return;
+    document.querySelectorAll('#dash-tabs .dash-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentTab = tab.dataset.tab;
+    selectedDocIds.clear();
+    document.getElementById('dash-search-input').value = '';
+    renderDashboardList();
+  });
+
+  /* ---- Search ---- */
+  document.getElementById('dash-search-input').addEventListener('input', renderDashboardList);
+
+  /* ---- New document ---- */
+  document.getElementById('new-document-btn').addEventListener('click', () => {
+    resetWizard();
+    showWizardView();
+  });
+
+  /* ---- Back to dashboard from wizard ---- */
+  document.getElementById('wizard-back').addEventListener('click', () => {
+    if (currentStep > 1 || wizardState.fileName) {
+      if (!confirm('Leave without finishing? Your progress on this document will be lost.')) return;
+    }
+    resetWizard();
+    showDashboardView();
+  });
+
+  /* ---- Back to dashboard from detail view ---- */
+  document.getElementById('detail-back').addEventListener('click', showDashboardView);
+
+  function closeAllMenus(except){
+    document.querySelectorAll('.menu-panel').forEach(p => { if (p !== except) p.classList.add('hidden'); });
+  }
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.menu-trigger')) closeAllMenus(null);
+  });
+
+  function renderDashboardList(){
+    const list = document.getElementById('dash-list');
+    const query = document.getElementById('dash-search-input').value.trim().toLowerCase();
+    const items = (dashboardData[currentTab] || []).filter(item => item.name.toLowerCase().includes(query));
+    list.innerHTML = '';
+
+    if (items.length === 0){
+      const empty = document.createElement('div');
+      empty.className = 'dash-empty';
+      empty.innerHTML = '<div class="dash-empty-icon" aria-hidden="true">' + (TAB_ICONS[currentTab] || '📁') + '</div>' +
+        '<p>' + (query ? 'No results for “' + query + '”.' : (TAB_EMPTY_TEXT[currentTab] || 'Nothing here yet.')) + '</p>' +
+        (query ? '' : '<button class="btn-dark" id="dash-empty-new-btn" type="button">New document</button>');
+      list.appendChild(empty);
+      const emptyBtn = document.getElementById('dash-empty-new-btn');
+      if (emptyBtn) emptyBtn.addEventListener('click', () => { resetWizard(); showWizardView(); });
+      updateCompareBar();
+      return;
+    }
+
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'dash-card';
+      card.dataset.id = item.id;
+
+      let html = '';
+      if (currentTab === 'documents'){
+        html += '<span class="dash-card-select"><input type="checkbox" data-id="' + item.id + '" ' + (selectedDocIds.has(item.id) ? 'checked' : '') + ' aria-label="Select ' + item.name + '"></span>';
+      }
+      const icon = currentTab === 'documents' ? (FILE_TYPE_ICONS[item.ext] || '📄') : (TAB_ICONS[currentTab] || '📄');
+      html += '<div class="dash-card-icon" aria-hidden="true">' + icon + '</div>';
+      html += '<div class="dash-card-info"><div class="dash-card-name">' + item.name + '</div><div class="dash-card-date">' + item.date + '</div></div>';
+      if (currentTab === 'summaries'){
+        html += '<div class="transform-menu"><button class="transform-trigger" type="button">Transform</button>' +
+          '<div class="menu-panel hidden">' +
+          '<button class="menu-item" data-transform="presentation">Turn into presentation</button>' +
+          '<button class="menu-item" data-transform="studysheet">Turn into study sheet</button>' +
+          '<button class="menu-item" data-transform="report">Turn into professional report</button>' +
+          '</div></div>';
+      }
+      html += '<div class="card-menu"><button class="menu-trigger" type="button" aria-label="More actions">⋯</button>' +
+        '<div class="menu-panel hidden">' +
+        '<button class="menu-item" data-action="resume">Resume</button>' +
+        '<button class="menu-item" data-action="rename">Rename</button>' +
+        '<button class="menu-item" data-action="download">Download</button>' +
+        '<button class="menu-item" data-action="share">Share</button>' +
+        '<button class="menu-item danger" data-action="delete">Delete</button>' +
+        '</div></div>';
+      card.innerHTML = html;
+      list.appendChild(card);
+    });
+    updateCompareBar();
+  }
+
+  document.getElementById('dash-list').addEventListener('click', (e) => {
+    const checkbox = e.target.closest('input[type="checkbox"]');
+    if (checkbox){
+      const id = checkbox.dataset.id;
+      if (checkbox.checked) selectedDocIds.add(id); else selectedDocIds.delete(id);
+      updateCompareBar();
+      return;
+    }
+    const trigger = e.target.closest('.menu-trigger, .transform-trigger');
+    if (trigger){
+      const panel = trigger.nextElementSibling;
+      const isHidden = panel.classList.contains('hidden');
+      closeAllMenus(panel);
+      panel.classList.toggle('hidden', !isHidden);
+      return;
+    }
+    const menuItem = e.target.closest('.menu-item');
+    if (menuItem){
+      const card = menuItem.closest('.dash-card');
+      const id = card.dataset.id;
+      if (menuItem.dataset.action === 'delete'){
+        if (confirm('Delete this item? This cannot be undone.')){
+          dashboardData[currentTab] = dashboardData[currentTab].filter(i => i.id !== id);
+          renderDashboardList();
+        }
+      } else if (menuItem.dataset.action === 'rename'){
+        const item = dashboardData[currentTab].find(i => i.id === id);
+        const newName = prompt('Rename to:', item.name);
+        if (newName && newName.trim()){ item.name = newName.trim(); renderDashboardList(); }
+      }
+      closeAllMenus(null);
+      return;
+    }
+    const card = e.target.closest('.dash-card');
+    if (card) openDetailView(card.dataset.id);
+  });
+
+  function updateCompareBar(){
+    const bar = document.getElementById('dash-compare-bar');
+    if (currentTab === 'documents' && selectedDocIds.size >= 2){
+      document.getElementById('dash-compare-count').textContent = selectedDocIds.size + ' selected';
+      bar.classList.remove('hidden');
+    } else {
+      bar.classList.add('hidden');
+    }
+  }
+
+  /* ---- Detail view ---- */
+  function openDetailView(id){
+    const item = (dashboardData[currentTab] || []).find(i => i.id === id);
+    if (!item) return;
+    document.getElementById('detail-title').textContent = item.name;
+    document.getElementById('detail-sub').textContent = 'Added on ' + item.date;
+    document.getElementById('detail-summary-text').textContent =
+      'This is where the generated content for “' + item.name + '” will appear, with sources you can trace back to the original document.';
+    document.getElementById('detail-notes-input').value = notesStore[id] || '';
+    document.querySelectorAll('#detail-subtabs .dash-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+    document.querySelectorAll('.detail-panel').forEach((p, i) => p.classList.toggle('hidden', i !== 0));
+    detailView.dataset.currentId = id;
+    showDetailView();
+  }
+  document.getElementById('detail-subtabs').addEventListener('click', (e) => {
+    const tab = e.target.closest('.dash-tab');
+    if (!tab) return;
+    document.querySelectorAll('#detail-subtabs .dash-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.detail-panel').forEach(p => p.classList.toggle('hidden', p.dataset.detailPanel !== tab.dataset.subtab));
+  });
+  document.getElementById('detail-notes-input').addEventListener('input', (e) => {
+    notesStore[detailView.dataset.currentId] = e.target.value;
+  });
+
+  function addResultToDashboard(state){
+    const stamp = 'g' + Date.now();
+    const dateLabel = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const ext = (state.fileName || '').split('.').pop().toLowerCase();
+    const baseName = state.fileName || 'Untitled document';
+    dashboardData.documents.unshift({ id: 'doc_' + stamp, name: baseName, ext: ext, date: dateLabel });
+    if (state.action === 'Summarize'){
+      dashboardData.summaries.unshift({ id: 'sum_' + stamp, name: baseName + ' — Summary', date: dateLabel });
+    } else if (state.action === 'Ask'){
+      dashboardData.conversations.unshift({ id: 'conv_' + stamp, name: baseName + ' — Conversation', date: dateLabel });
+    } else if (state.action === 'Analyze'){
+      dashboardData.analyses.unshift({ id: 'an_' + stamp, name: baseName + ' — Analysis', date: dateLabel });
+    }
   }
 
   // On load, check if a user session already exists
@@ -1217,6 +1738,7 @@
     content.classList.add('hidden');
     setTimeout(() => {
       renderResultMeta();
+      addResultToDashboard(wizardState);
       loading.classList.add('hidden');
       content.classList.remove('hidden');
     }, 1200);
@@ -1230,10 +1752,9 @@
   }
   document.getElementById('back-to-3').addEventListener('click', () => goToStep(3));
   document.getElementById('start-over').addEventListener('click', () => {
-    if (confirm('Start over? Your current selections will be cleared.')) {
-      fileInput.value = '';
-      resetWizard();
-    }
+    fileInput.value = '';
+    resetWizard();
+    showDashboardView();
   });
 </script>
 </body>
