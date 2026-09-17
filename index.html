@@ -737,6 +737,94 @@
     font-weight: 600;
   }
 
+  /* ---- Dashboard body layout: sidebar (desktop/tablet) + drawer (mobile) ---- */
+  .dash-body{
+    display: flex;
+    align-items: flex-start;
+  }
+  .dash-main{
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dash-tab-trigger-mobile{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: calc(100% - 40px);
+    margin: 16px 20px 0;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .dash-tab-trigger-mobile svg{ width: 16px; height: 16px; color: var(--ink-soft); flex-shrink: 0; }
+
+  .dash-sidebar-overlay{
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20,20,20,0.4);
+    z-index: 39;
+  }
+  .dash-sidebar-overlay.open{ display: block; }
+
+  #dash-tabs.dash-sidebar{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: -260px;
+    width: 240px;
+    background: var(--secondary-white);
+    border-right: 1px solid var(--line);
+    padding: 18px 12px;
+    z-index: 40;
+    overflow-y: auto;
+    transition: left 0.25s ease;
+  }
+  #dash-tabs.dash-sidebar.open{ left: 0; }
+  #dash-tabs.dash-sidebar .dash-tab{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    white-space: normal;
+    text-align: left;
+  }
+  #dash-tabs.dash-sidebar .dash-tab svg{ width: 17px; height: 17px; flex-shrink: 0; }
+  #dash-tabs.dash-sidebar .dash-tab.active{
+    background: var(--primary-yellow-tint);
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  @media (min-width: 768px){
+    .dash-tab-trigger-mobile{ display: none; }
+    .dash-sidebar-overlay{ display: none !important; }
+    #dash-tabs.dash-sidebar{
+      position: sticky;
+      top: 0;
+      left: 0;
+      width: 208px;
+      flex-shrink: 0;
+      height: calc(100vh - 54px);
+      transition: none;
+      padding: 20px 12px;
+    }
+  }
+
   .dash-toolbar{
     display: flex;
     flex-direction: column;
@@ -1010,29 +1098,54 @@
 
     <!-- ============ DASHBOARD VIEW ============ -->
     <div id="dashboard-view">
-      <div class="dash-tabs" id="dash-tabs">
-        <button class="dash-tab active" data-tab="documents" type="button">All documents</button>
-        <button class="dash-tab" data-tab="summaries" type="button">Summaries</button>
-        <button class="dash-tab" data-tab="conversations" type="button">Conversations</button>
-        <button class="dash-tab" data-tab="analyses" type="button">Analyses</button>
-        <button class="dash-tab" data-tab="exports" type="button">Exports</button>
-      </div>
+      <button class="dash-tab-trigger-mobile" id="dash-tab-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+        <span id="dash-tab-trigger-label">All documents</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="dash-sidebar-overlay" id="dash-sidebar-overlay"></div>
 
-      <div class="dash-toolbar">
-        <div class="dash-search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="dash-search-input" placeholder="Search your work…" />
+      <div class="dash-body">
+        <nav class="dash-sidebar" id="dash-tabs" aria-label="Dashboard sections">
+          <button class="dash-tab active" data-tab="documents" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+            All documents
+          </button>
+          <button class="dash-tab" data-tab="summaries" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-5Z"/><path d="M9 13h6M9 17h6M9 9h1"/></svg>
+            Summaries
+          </button>
+          <button class="dash-tab" data-tab="conversations" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-8.9 8.37 8.5 8.5 0 0 1-3.8-1L3 20l1.13-5.3a8.5 8.5 0 0 1 12.79-9.9 8.38 8.38 0 0 1 4.08 6.7Z"/></svg>
+            Conversations
+          </button>
+          <button class="dash-tab" data-tab="analyses" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="20" x2="6" y2="13"/><line x1="12" y1="20" x2="12" y2="8"/><line x1="18" y1="20" x2="18" y2="4"/></svg>
+            Analyses
+          </button>
+          <button class="dash-tab" data-tab="exports" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            Exports
+          </button>
+        </nav>
+
+        <div class="dash-main">
+          <div class="dash-toolbar">
+            <div class="dash-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="dash-search-input" placeholder="Search your work…" />
+            </div>
+            <button class="btn-primary dash-new-btn" id="new-document-btn" type="button">
+              <span aria-hidden="true">+</span><span>New document</span>
+            </button>
+          </div>
+
+          <div class="dash-list" id="dash-list"></div>
+
+          <div class="dash-compare-bar hidden" id="dash-compare-bar">
+            <span id="dash-compare-count">0 selected</span>
+            <button class="btn-dark" id="dash-compare-btn" type="button">Compare</button>
+          </div>
         </div>
-        <button class="btn-primary dash-new-btn" id="new-document-btn" type="button">
-          <span aria-hidden="true">+</span><span>New document</span>
-        </button>
-      </div>
-
-      <div class="dash-list" id="dash-list"></div>
-
-      <div class="dash-compare-bar hidden" id="dash-compare-bar">
-        <span id="dash-compare-count">0 selected</span>
-        <button class="btn-dark" id="dash-compare-btn" type="button">Compare</button>
       </div>
     </div>
 
@@ -1242,6 +1355,7 @@
     wizardView.classList.add('hidden');
     detailView.classList.add('hidden');
     dashboardView.classList.remove('hidden');
+    closeDashSidebar();
     renderDashboardList();
   }
   function showWizardView(){
@@ -1283,6 +1397,27 @@
   let currentTab = 'documents';
   let selectedDocIds = new Set();
 
+  /* ---- Sidebar / mobile drawer ---- */
+  const dashSidebar = document.getElementById('dash-tabs');
+  const dashSidebarOverlay = document.getElementById('dash-sidebar-overlay');
+  const dashTabTrigger = document.getElementById('dash-tab-trigger');
+  const dashTabTriggerLabel = document.getElementById('dash-tab-trigger-label');
+
+  function openDashSidebar(){
+    dashSidebar.classList.add('open');
+    dashSidebarOverlay.classList.add('open');
+    dashTabTrigger.setAttribute('aria-expanded', 'true');
+  }
+  function closeDashSidebar(){
+    dashSidebar.classList.remove('open');
+    dashSidebarOverlay.classList.remove('open');
+    dashTabTrigger.setAttribute('aria-expanded', 'false');
+  }
+  dashTabTrigger.addEventListener('click', () => {
+    dashSidebar.classList.contains('open') ? closeDashSidebar() : openDashSidebar();
+  });
+  dashSidebarOverlay.addEventListener('click', closeDashSidebar);
+
   /* ---- Tabs ---- */
   document.getElementById('dash-tabs').addEventListener('click', (e) => {
     const tab = e.target.closest('.dash-tab');
@@ -1290,8 +1425,10 @@
     document.querySelectorAll('#dash-tabs .dash-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     currentTab = tab.dataset.tab;
+    dashTabTriggerLabel.textContent = TAB_LABELS[currentTab];
     selectedDocIds.clear();
     document.getElementById('dash-search-input').value = '';
+    closeDashSidebar();
     renderDashboardList();
   });
 
