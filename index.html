@@ -522,6 +522,13 @@
     font-size: 13px;
     color: var(--ink);
   }
+  .file-upload-status{
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+  .file-upload-status.is-error{ color: #B3261E; }
 
   /* Step 2: action choice */
   .choice-grid{
@@ -1217,6 +1224,7 @@
           </div>
           <button class="remove-file" id="remove-file" type="button">Remove</button>
         </div>
+        <div class="file-upload-status hidden" id="file-upload-status"></div>
         <div class="file-error hidden" id="file-error"></div>
         <div class="step-nav">
           <button class="btn-ghost" disabled>Back</button>
@@ -1369,7 +1377,7 @@
     detailView.classList.remove('hidden');
   }
 
-  /* ============ DASHBOARD MOCK DATA ============ */
+  /* ============ DASHBOARD: real Back4app data ============ */
   const FILE_TYPE_ICONS = { pdf:'📕', doc:'📘', docx:'📘', xls:'📊', xlsx:'📊', ppt:'📙', pptx:'📙', txt:'📄', epub:'📖', csv:'📊', md:'📄' };
   const TAB_ICONS = { summaries:'📝', conversations:'💬', analyses:'🔍', exports:'⬇️' };
   const TAB_EMPTY_TEXT = {
@@ -1378,24 +1386,81 @@
   };
   const TAB_LABELS = { documents: 'All documents', summaries: 'Summaries', conversations: 'Conversations', analyses: 'Analyses', exports: 'Exports' };
 
-  const dashboardData = {
-    documents: [
-      { id: 'd1', name: 'Q3 Board Report.pdf', ext: 'pdf', date: 'Sep 12, 2026' },
-      { id: 'd2', name: 'Client Contract — Acme.docx', ext: 'docx', date: 'Sep 10, 2026' },
-      { id: 'd3', name: 'Sales Data.xlsx', ext: 'xlsx', date: 'Sep 8, 2026' }
-    ],
-    summaries: [
-      { id: 's1', name: 'Q3 Board Report — Summary', date: 'Sep 12, 2026' }
-    ],
-    conversations: [],
-    analyses: [],
-    exports: [
-      { id: 'e1', name: 'Q3 Board Report — Summary.pdf', date: 'Sep 12, 2026' }
-    ]
-  };
+  function formatDashDate(d){
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  async function fetchTabItems(tab){
+    const owner = Parse.User.current();
+    if (!owner) return [];
+
+    if (tab === 'documents'){
+      const q = new Parse.Query('Document');
+      q.equalTo('owner', owner);
+      q.descending('createdAt');
+      const docs = await q.find();
+      return docs.map(d => ({
+        id: d.id,
+        name: d.get('fileName') || 'Untitled',
+        ext: (d.get('fileType') || '').toLowerCase(),
+        date: formatDashDate(d.createdAt),
+        parseObject: d
+      }));
+    }
+    if (tab === 'summaries' || tab === 'analyses'){
+      const wantedType = tab === 'summaries' ? 'résumé' : 'analyse';
+      const q = new Parse.Query('Result');
+      q.equalTo('owner', owner);
+      q.equalTo('type', wantedType);
+      q.include('document');
+      q.descending('createdAt');
+      const results = await q.find();
+      return results.map(r => {
+        const docObj = r.get('document');
+        const baseName = (docObj && docObj.get('fileName')) || 'Untitled document';
+        return {
+          id: r.id,
+          name: baseName + (tab === 'summaries' ? ' — Summary' : ' — Analysis'),
+          date: formatDashDate(r.createdAt),
+          parseObject: r
+        };
+      });
+    }
+    if (tab === 'conversations'){
+      const q = new Parse.Query('Conversation');
+      q.equalTo('owner', owner);
+      q.descending('createdAt');
+      const convs = await q.find();
+      return convs.map(c => ({
+        id: c.id,
+        name: c.get('title') || 'Conversation',
+        date: formatDashDate(c.get('lastMessageAt') || c.createdAt),
+        parseObject: c
+      }));
+    }
+    if (tab === 'exports'){
+      const q = new Parse.Query('Export');
+      q.equalTo('owner', owner);
+      q.descending('createdAt');
+      const exps = await q.find();
+      return exps.map(e => {
+        const file = e.get('fileUrl');
+        return {
+          id: e.id,
+          name: (file && file.name && file.name()) || ('Export.' + (e.get('format') || '').toLowerCase()),
+          date: formatDashDate(e.createdAt),
+          parseObject: e
+        };
+      });
+    }
+    return [];
+  }
+
   const notesStore = {};
   let currentTab = 'documents';
   let selectedDocIds = new Set();
+  let dashCache = [];
 
   /* ---- Sidebar / mobile drawer ---- */
   const dashSidebar = document.getElementById('dash-tabs');
@@ -1442,12 +1507,14 @@
   });
 
   /* ---- Back to dashboard from wizard ---- */
-  document.getElementById('wizard-back').addEventListener('click', () => {
+  document.getElementById('wizard-back').addEventListener('click', async () => {
     if (currentStep > 1 || wizardState.fileName) {
       if (!confirm('Leave without finishing? Your progress on this document will be lost.')) return;
     }
+    const orphanDoc = wizardState.documentObj;
     resetWizard();
     showDashboardView();
+    if (orphanDoc) { try { await orphanDoc.destroy(); } catch (e) { /* ignore */ } }
   });
 
   /* ---- Back to dashboard from detail view ---- */
@@ -1460,10 +1527,24 @@
     if (!e.target.closest('.menu-trigger')) closeAllMenus(null);
   });
 
-  function renderDashboardList(){
+  async function renderDashboardList(){
     const list = document.getElementById('dash-list');
+    const tabAtRequest = currentTab;
+    list.innerHTML = '<div class="dash-empty"><p>Loading…</p></div>';
+
+    let items;
+    try {
+      items = await fetchTabItems(tabAtRequest);
+    } catch (err) {
+      if (tabAtRequest !== currentTab) return;
+      list.innerHTML = '<div class="dash-empty"><p>Could not load your work. Check your connection and try again.</p></div>';
+      return;
+    }
+    if (tabAtRequest !== currentTab) return; // user switched tabs while this was loading
+
     const query = document.getElementById('dash-search-input').value.trim().toLowerCase();
-    const items = (dashboardData[currentTab] || []).filter(item => item.name.toLowerCase().includes(query));
+    items = items.filter(item => item.name.toLowerCase().includes(query));
+    dashCache = items;
     list.innerHTML = '';
 
     if (items.length === 0){
@@ -1479,6 +1560,7 @@
       return;
     }
 
+    const canRename = (currentTab === 'documents' || currentTab === 'conversations');
     items.forEach(item => {
       const card = document.createElement('div');
       card.className = 'dash-card';
@@ -1502,7 +1584,7 @@
       html += '<div class="card-menu"><button class="menu-trigger" type="button" aria-label="More actions">⋯</button>' +
         '<div class="menu-panel hidden">' +
         '<button class="menu-item" data-action="resume">Resume</button>' +
-        '<button class="menu-item" data-action="rename">Rename</button>' +
+        (canRename ? '<button class="menu-item" data-action="rename">Rename</button>' : '') +
         '<button class="menu-item" data-action="download">Download</button>' +
         '<button class="menu-item" data-action="share">Share</button>' +
         '<button class="menu-item danger" data-action="delete">Delete</button>' +
@@ -1513,7 +1595,7 @@
     updateCompareBar();
   }
 
-  document.getElementById('dash-list').addEventListener('click', (e) => {
+  document.getElementById('dash-list').addEventListener('click', async (e) => {
     const checkbox = e.target.closest('input[type="checkbox"]');
     if (checkbox){
       const id = checkbox.dataset.id;
@@ -1533,17 +1615,32 @@
     if (menuItem){
       const card = menuItem.closest('.dash-card');
       const id = card.dataset.id;
+      const item = dashCache.find(i => i.id === id);
+      closeAllMenus(null);
+      if (!item) return;
       if (menuItem.dataset.action === 'delete'){
         if (confirm('Delete this item? This cannot be undone.')){
-          dashboardData[currentTab] = dashboardData[currentTab].filter(i => i.id !== id);
-          renderDashboardList();
+          try {
+            await item.parseObject.destroy();
+            selectedDocIds.delete(id);
+            renderDashboardList();
+          } catch (err) {
+            alert('Could not delete this item. Please try again.');
+          }
         }
       } else if (menuItem.dataset.action === 'rename'){
-        const item = dashboardData[currentTab].find(i => i.id === id);
-        const newName = prompt('Rename to:', item.name);
-        if (newName && newName.trim()){ item.name = newName.trim(); renderDashboardList(); }
+        const newName = prompt('Rename to:', item.name.replace(/ — (Summary|Analysis|Conversation)$/, ''));
+        if (newName && newName.trim()){
+          try {
+            if (currentTab === 'documents') item.parseObject.set('fileName', newName.trim());
+            else if (currentTab === 'conversations') item.parseObject.set('title', newName.trim());
+            await item.parseObject.save();
+            renderDashboardList();
+          } catch (err) {
+            alert('Could not rename this item. Please try again.');
+          }
+        }
       }
-      closeAllMenus(null);
       return;
     }
     const card = e.target.closest('.dash-card');
@@ -1562,16 +1659,22 @@
 
   /* ---- Detail view ---- */
   function openDetailView(id){
-    const item = (dashboardData[currentTab] || []).find(i => i.id === id);
+    const item = dashCache.find(i => i.id === id);
     if (!item) return;
+    const isResultLike = (currentTab === 'summaries' || currentTab === 'analyses');
+    const isDoc = currentTab === 'documents';
     document.getElementById('detail-title').textContent = item.name;
     document.getElementById('detail-sub').textContent = 'Added on ' + item.date;
-    document.getElementById('detail-summary-text').textContent =
-      'This is where the generated content for “' + item.name + '” will appear, with sources you can trace back to the original document.';
-    document.getElementById('detail-notes-input').value = notesStore[id] || '';
+    document.getElementById('detail-summary-text').textContent = isResultLike
+      ? (item.parseObject.get('content') || 'No content yet.')
+      : 'Open this item to see its generated content and sources here.';
+    document.getElementById('detail-notes-input').value = isDoc
+      ? (item.parseObject.get('notes') || '')
+      : (notesStore[id] || '');
     document.querySelectorAll('#detail-subtabs .dash-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
     document.querySelectorAll('.detail-panel').forEach((p, i) => p.classList.toggle('hidden', i !== 0));
     detailView.dataset.currentId = id;
+    detailView.dataset.currentTab = currentTab;
     showDetailView();
   }
   document.getElementById('detail-subtabs').addEventListener('click', (e) => {
@@ -1584,21 +1687,15 @@
   document.getElementById('detail-notes-input').addEventListener('input', (e) => {
     notesStore[detailView.dataset.currentId] = e.target.value;
   });
-
-  function addResultToDashboard(state){
-    const stamp = 'g' + Date.now();
-    const dateLabel = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const ext = (state.fileName || '').split('.').pop().toLowerCase();
-    const baseName = state.fileName || 'Untitled document';
-    dashboardData.documents.unshift({ id: 'doc_' + stamp, name: baseName, ext: ext, date: dateLabel });
-    if (state.action === 'Summarize'){
-      dashboardData.summaries.unshift({ id: 'sum_' + stamp, name: baseName + ' — Summary', date: dateLabel });
-    } else if (state.action === 'Ask'){
-      dashboardData.conversations.unshift({ id: 'conv_' + stamp, name: baseName + ' — Conversation', date: dateLabel });
-    } else if (state.action === 'Analyze'){
-      dashboardData.analyses.unshift({ id: 'an_' + stamp, name: baseName + ' — Analysis', date: dateLabel });
-    }
-  }
+  document.getElementById('detail-notes-input').addEventListener('blur', async (e) => {
+    if (detailView.dataset.currentTab !== 'documents') return;
+    const item = dashCache.find(i => i.id === detailView.dataset.currentId);
+    if (!item) return;
+    try {
+      item.parseObject.set('notes', e.target.value);
+      await item.parseObject.save();
+    } catch (err) { /* keep the typed value locally even if the save failed */ }
+  });
 
   // On load, check if a user session already exists
   const currentUser = Parse.User.current();
@@ -1725,6 +1822,7 @@
   let currentStep = 1;
   const wizardState = {
     fileName: null,
+    documentObj: null,
     action: null,
     length: 'Medium',
     style: 'Simple',
@@ -1761,8 +1859,10 @@
 
   function resetWizard(){
     wizardState.fileName = null;
+    wizardState.documentObj = null;
     wizardState.action = null;
     document.getElementById('file-chosen').classList.add('hidden');
+    document.getElementById('file-upload-status').classList.add('hidden');
     document.getElementById('file-error').classList.add('hidden');
     document.getElementById('to-step-2').disabled = true;
     document.querySelectorAll('.choice-card').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
@@ -1826,17 +1926,52 @@
     }
     fileError.classList.add('hidden');
     wizardState.fileName = file.name;
+    wizardState.documentObj = null;
     document.getElementById('file-icon').textContent = FILE_ICONS[ext] || '📄';
     fileChosenName.textContent = file.name;
     document.getElementById('file-chosen-size').textContent = formatBytes(file.size);
     fileChosen.classList.remove('hidden');
-    toStep2Btn.disabled = false;
+    toStep2Btn.disabled = true;
+    uploadDocument(file, ext);
   }
-  document.getElementById('remove-file').addEventListener('click', () => {
+
+  async function uploadDocument(file, ext){
+    const statusEl = document.getElementById('file-upload-status');
+    statusEl.classList.remove('hidden', 'is-error');
+    statusEl.textContent = 'Uploading… 0%';
+    try {
+      const parseFile = new Parse.File(file.name, file);
+      await parseFile.save({
+        progress: (value) => { statusEl.textContent = 'Uploading… ' + Math.round(value * 100) + '%'; }
+      });
+      const DocumentClass = Parse.Object.extend('Document');
+      const doc = new DocumentClass();
+      doc.set('fileName', file.name);
+      doc.set('fileType', ext);
+      doc.set('fileUrl', parseFile);
+      doc.set('fileSize', file.size);
+      doc.set('owner', Parse.User.current());
+      doc.set('status', 'ready');
+      const savedDoc = await doc.save();
+      wizardState.documentObj = savedDoc;
+      statusEl.textContent = 'Uploaded ✓';
+      toStep2Btn.disabled = false;
+    } catch (err) {
+      statusEl.textContent = 'Upload failed. Please try removing the file and adding it again.';
+      statusEl.classList.add('is-error');
+      toStep2Btn.disabled = true;
+    }
+  }
+
+  document.getElementById('remove-file').addEventListener('click', async () => {
+    const doc = wizardState.documentObj;
     wizardState.fileName = null;
+    wizardState.documentObj = null;
     fileInput.value = '';
     fileChosen.classList.add('hidden');
+    document.getElementById('file-upload-status').classList.add('hidden');
     toStep2Btn.disabled = true;
+    if (doc) { try { await doc.destroy(); } catch (e) { /* ignore */ } }
   });
   toStep2Btn.addEventListener('click', () => goToStep(2));
 
@@ -1873,13 +2008,57 @@
     const content = document.getElementById('result-content');
     loading.classList.remove('hidden');
     content.classList.add('hidden');
-    setTimeout(() => {
-      renderResultMeta();
-      addResultToDashboard(wizardState);
-      loading.classList.add('hidden');
-      content.classList.remove('hidden');
-    }, 1200);
+    generateResult()
+      .then(() => {
+        renderResultMeta();
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+      })
+      .catch(() => {
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+        document.getElementById('result-meta').textContent = 'Something went wrong while saving your result. Please try again.';
+      });
   });
+
+  const RESULT_TYPE_MAP = { Summarize: 'résumé', Analyze: 'analyse', Extract: 'extraction', Transform: 'transformation' };
+  async function generateResult(){
+    const doc = wizardState.documentObj;
+    const owner = Parse.User.current();
+    if (!doc || !owner) return;
+    const placeholderText = 'This is a placeholder result — real AI-generated content will be connected in the next build step.';
+
+    if (wizardState.action === 'Ask'){
+      const ConversationClass = Parse.Object.extend('Conversation');
+      const conv = new ConversationClass();
+      conv.set('document', doc);
+      conv.set('owner', owner);
+      conv.set('title', (wizardState.fileName || 'Document') + ' — Conversation');
+      conv.set('lastMessageAt', new Date());
+      const savedConv = await conv.save();
+      const MessageClass = Parse.Object.extend('Message');
+      const msg = new MessageClass();
+      msg.set('conversation', savedConv);
+      msg.set('role', 'assistant');
+      msg.set('content', placeholderText);
+      msg.set('sources', []);
+      await msg.save();
+      return;
+    }
+
+    const ResultClass = Parse.Object.extend('Result');
+    const result = new ResultClass();
+    result.set('document', doc);
+    result.set('owner', owner);
+    result.set('type', RESULT_TYPE_MAP[wizardState.action] || wizardState.action);
+    result.set('content', placeholderText);
+    result.set('lengths', wizardState.length);
+    result.set('style', wizardState.style);
+    result.set('format', wizardState.format);
+    result.set('sources', []);
+    result.set('language', 'French');
+    await result.save();
+  }
 
   /* ---- Step 4: result ---- */
   function renderResultMeta(){
