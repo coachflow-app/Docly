@@ -1957,7 +1957,7 @@
       statusEl.textContent = 'Uploaded ✓';
       toStep2Btn.disabled = false;
     } catch (err) {
-      statusEl.textContent = 'Upload failed. Please try removing the file and adding it again.';
+      statusEl.textContent = 'Upload failed — ' + (err.code !== undefined ? '[' + err.code + '] ' : '') + (err.message || err);
       statusEl.classList.add('is-error');
       toStep2Btn.disabled = true;
     }
