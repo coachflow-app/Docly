@@ -248,13 +248,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 20px;
-    border-bottom: 1.5px solid var(--primary-yellow);
+    padding: 12px 20px;
+    border-bottom: 2px solid var(--primary-yellow);
     background: var(--secondary-white);
   }
   .topbar .wordmark{
     font-family: var(--font-display);
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 600;
   }
 
@@ -269,22 +269,17 @@
     border-radius: 50%;
   }
   .user-avatar{
-    width: 26px;
-    height: 26px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background: var(--primary-yellow);
     color: var(--ink);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     flex-shrink: 0;
-  }
-  @media (min-width: 640px){
-    .topbar{ padding: 13px 32px; }
-    .topbar .wordmark{ font-size: 20px; }
-    .user-avatar{ width: 30px; height: 30px; font-size: 12px; }
   }
   .user-dropdown{
     position: absolute;
@@ -325,7 +320,7 @@
     align-items: center;
     justify-content: center;
     gap: 0;
-    padding: 12px 16px 0;
+    padding: 16px 16px 0;
   }
   .step-node{
     display: flex;
@@ -333,14 +328,14 @@
     gap: 8px;
   }
   .step-node .dot{
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     border: 1.5px solid var(--line);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10.5px;
+    font-size: 11px;
     color: var(--ink-soft);
     background: var(--secondary-white);
     flex-shrink: 0;
@@ -370,15 +365,15 @@
   }
   @media (max-width: 700px){
     .step-node .label{ display: none; }
-    .step-connector{ width: 12px; margin: 0 4px; }
+    .step-connector{ width: 14px; margin: 0 5px; }
   }
   .step-progress-mobile{
     display: none;
     text-align: center;
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--ink-soft);
-    margin-top: 4px;
+    margin-top: 6px;
   }
   @media (max-width: 700px){
     .step-progress-mobile{ display: block; }
@@ -388,32 +383,27 @@
     flex: 1;
     display: flex;
     justify-content: center;
-    padding: 18px 20px 40px;
+    padding: 24px 20px 56px;
   }
   .step-panel{
     width: 100%;
-    max-width: 560px;
+    max-width: 640px;
   }
   .step-panel h2{
-    font-size: 20px;
-    margin-bottom: 4px;
+    font-size: 22px;
+    margin-bottom: 5px;
   }
   .step-panel .step-sub{
     color: var(--ink-soft);
-    font-size: 13.5px;
-    margin-bottom: 12px;
-  }
-  @media (min-width: 640px){
-    #wizard-view > main{ padding: 32px 24px 56px; }
-    .step-panel h2{ font-size: 25px; }
-    .step-panel .step-sub{ font-size: 14px; margin-bottom: 16px; }
+    font-size: 14px;
+    margin-bottom: 18px;
   }
 
   /* Step 1: upload */
   .dropzone{
-    border: 1px dashed var(--input-border);
+    border: 1.5px dashed var(--input-border);
     border-radius: 12px;
-    padding: 16px 16px 14px;
+    padding: 20px 20px 16px;
     text-align: center;
     cursor: pointer;
     background: var(--input-bg);
@@ -425,29 +415,29 @@
   }
   .dz-icon-cluster{
     position: relative;
-    width: 54px;
-    height: 38px;
-    margin: 0 auto 10px;
+    width: 64px;
+    height: 46px;
+    margin: 0 auto 14px;
   }
   .dz-icon-cluster .dz-file{
     position: absolute;
     bottom: 0;
-    width: 25px;
-    height: 32px;
-    border-radius: 4px;
+    width: 30px;
+    height: 38px;
+    border-radius: 5px;
     background: var(--secondary-white);
     border: 1.5px solid var(--input-border);
     box-shadow: 0 2px 6px rgba(20,20,20,0.06);
   }
   .dz-icon-cluster .dz-file svg{ width: 100%; height: 100%; display: block; color: var(--ink-soft); }
   .dz-icon-cluster .dz-file-1{ left: 0; transform: rotate(-8deg); z-index: 1; }
-  .dz-icon-cluster .dz-file-2{ left: 14px; transform: rotate(4deg); z-index: 2; }
+  .dz-icon-cluster .dz-file-2{ left: 17px; transform: rotate(4deg); z-index: 2; }
   .dz-icon-cluster .dz-badge{
     position: absolute;
     top: -4px;
-    right: 0;
-    width: 20px;
-    height: 20px;
+    right: 2px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background: var(--ink);
     color: var(--secondary-white);
@@ -457,51 +447,46 @@
     z-index: 3;
     box-shadow: 0 0 0 3px var(--input-bg);
   }
-  .dz-icon-cluster .dz-badge svg{ width: 11px; height: 11px; }
+  .dz-icon-cluster .dz-badge svg{ width: 13px; height: 13px; }
   .dz-browse-btn{
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: var(--primary-yellow);
+    background: var(--secondary-white);
     color: var(--ink);
-    border: none;
+    border: 1.5px solid var(--line);
     border-radius: 999px;
-    height: 48px;
-    padding: 0 24px;
+    padding: 11px 24px;
     font-size: 14.5px;
     font-weight: 700;
   }
   .dz-browse-btn svg{ width: 17px; height: 17px; flex-shrink: 0; }
   .dropzone .dz-hint{
-    font-size: 12px;
+    font-size: 12.5px;
     color: var(--ink-soft);
-    margin: 8px 0 12px;
+    margin: 10px 0 14px;
   }
   .dz-format-badges{
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 6px;
     justify-content: center;
-    margin-bottom: 6px;
-    max-width: 100%;
+    margin-bottom: 8px;
   }
   .dz-format-badges .badge{
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.02em;
     color: var(--ink-soft);
     background: var(--secondary-white);
     border: 1px solid var(--input-border);
     border-radius: 999px;
-    padding: 2px 8px;
+    padding: 3px 9px;
   }
   .dropzone .dz-maxsize{
-    font-size: 11px;
+    font-size: 12px;
     color: var(--ink-soft);
-  }
-  @media (min-width: 640px){
-    .dz-browse-btn{ height: 52px; padding: 0 28px; font-size: 15px; }
   }
   #file-input{ display: none; }
   .file-chosen{
@@ -715,18 +700,13 @@
   .step-nav{
     display: flex;
     justify-content: space-between;
-    gap: 12px;
-    margin-top: 24px;
+    margin-top: 32px;
   }
   .btn-ghost{
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 44px;
     background: none;
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    padding: 0 20px;
+    padding: 10px 20px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -734,27 +714,6 @@
   }
   .btn-ghost:hover{ border-color: var(--ink); }
   .btn-ghost:disabled{ opacity: 0.4; cursor: not-allowed; }
-  .btn-nav-primary{
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 44px;
-    background: var(--primary-yellow);
-    color: var(--ink);
-    border: none;
-    border-radius: var(--radius);
-    padding: 0 22px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  .btn-nav-primary:hover{ background: var(--primary-yellow-deep); }
-  .btn-nav-primary:disabled{
-    background: var(--input-bg);
-    color: var(--ink-soft);
-    border: 1px solid var(--input-border);
-    cursor: not-allowed;
-  }
   .btn-dark{
     background: var(--ink);
     color: var(--secondary-white);
@@ -772,17 +731,17 @@
   .dash-back-link{
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     background: none;
     border: none;
-    padding: 12px 24px 0;
-    font-size: 12.5px;
+    padding: 14px 20px 0;
+    font-size: 13px;
     font-weight: 500;
     color: var(--ink-soft);
     cursor: pointer;
   }
   .dash-back-link:hover{ color: var(--ink); }
-  .dash-back-link svg{ width: 14px; height: 14px; }
+  .dash-back-link svg{ width: 15px; height: 15px; }
 
   .dash-tabs{
     display: flex;
@@ -1298,7 +1257,7 @@
         <div class="file-error hidden" id="file-error"></div>
         <div class="step-nav">
           <button class="btn-ghost" disabled>Back</button>
-          <button class="btn-nav-primary" id="to-step-2" disabled>Continue</button>
+          <button class="btn-dark" id="to-step-2" disabled>Continue</button>
         </div>
       </section>
 
@@ -1306,16 +1265,16 @@
       <section class="step-panel hidden" data-step-panel="2">
         <h2>What do you want to do?</h2>
         <div class="step-sub">Choose one action for this document.</div>
-        <div class="pill-row" id="action-grid">
-          <button class="pill" data-action="Summarize" aria-pressed="false">Summarize</button>
-          <button class="pill" data-action="Analyze" aria-pressed="false">Analyze</button>
-          <button class="pill" data-action="Ask" aria-pressed="false">Ask</button>
-          <button class="pill" data-action="Extract" aria-pressed="false">Extract</button>
-          <button class="pill" data-action="Transform" aria-pressed="false">Transform</button>
+        <div class="choice-grid" id="action-grid">
+          <button class="choice-card" data-action="Summarize" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">📝</div><div class="choice-name">Summarize</div><div class="choice-desc">Get a synthesis of the content</div></button>
+          <button class="choice-card" data-action="Analyze" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">🔍</div><div class="choice-name">Analyze</div><div class="choice-desc">Surface the key insights</div></button>
+          <button class="choice-card" data-action="Ask" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">💬</div><div class="choice-name">Ask</div><div class="choice-desc">Ask questions about the content</div></button>
+          <button class="choice-card" data-action="Extract" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">📌</div><div class="choice-name">Extract</div><div class="choice-desc">Pull out specific data or facts</div></button>
+          <button class="choice-card" data-action="Transform" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">🔄</div><div class="choice-name">Transform</div><div class="choice-desc">Turn it into another format</div></button>
         </div>
         <div class="step-nav">
           <button class="btn-ghost" id="back-to-1">Back</button>
-          <button class="btn-nav-primary" id="to-step-3" disabled>Continue</button>
+          <button class="btn-dark" id="to-step-3" disabled>Continue</button>
         </div>
       </section>
 
@@ -1334,7 +1293,7 @@
 
         <div class="step-nav">
           <button class="btn-ghost" id="back-to-2">Back</button>
-          <button class="btn-nav-primary" id="to-step-4" disabled>Generate result</button>
+          <button class="btn-dark" id="to-step-4" disabled>Generate result</button>
         </div>
       </section>
 
@@ -1906,7 +1865,8 @@
     document.getElementById('file-upload-status').classList.add('hidden');
     document.getElementById('file-error').classList.add('hidden');
     document.getElementById('to-step-2').disabled = true;
-    document.querySelectorAll('#action-grid .pill, #preset-grid .pill').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
+    document.querySelectorAll('.choice-card').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
+    document.querySelectorAll('#preset-grid .pill').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
     document.getElementById('to-step-3').disabled = true;
     document.getElementById('to-step-4').disabled = true;
     goToStep(1);
@@ -2021,9 +1981,9 @@
   const actionGrid = document.getElementById('action-grid');
   const toStep3Btn = document.getElementById('to-step-3');
   actionGrid.addEventListener('click', (e) => {
-    const card = e.target.closest('.pill');
+    const card = e.target.closest('.choice-card');
     if (!card) return;
-    actionGrid.querySelectorAll('.pill').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
+    document.querySelectorAll('.choice-card').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
     card.classList.add('selected');
     card.setAttribute('aria-pressed', 'true');
     wizardState.action = card.dataset.action;
