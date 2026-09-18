@@ -1,0 +1,2091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Docly — Your documents. Finally understood.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/parse/dist/parse.min.js"></script>
+<style>
+
+  /* ============ TOKENS ============ */
+  :root{
+    --primary-yellow: #FFD600;
+    --primary-yellow-deep: #E0B900;
+    --primary-yellow-tint: rgba(255, 214, 0, 0.14);
+    --primary-yellow-text: #C79A00;
+    --secondary-white: #FFFFFF;
+    --ink: #000000;
+    --ink-soft: #6B7280;
+    --line: #E4E7EC;
+    --input-bg: #F6F7F9;
+    --input-border: #E4E7EC;
+    --paper: var(--secondary-white);
+    --error: #000000;
+    --radius: 4px;
+    --font-display: 'Fraunces', serif;
+    --font-ui: 'IBM Plex Sans', sans-serif;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; max-width: 100%; overflow-x: hidden; }
+  body{
+    font-family: var(--font-ui);
+    color: var(--ink);
+    background: var(--paper);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,h2,h3{ font-family: var(--font-display); margin:0; font-weight:600; }
+  button{ font-family: var(--font-ui); }
+  a{ color: inherit; }
+
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  [tabindex]:focus-visible{
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  .hidden{ display: none !important; }
+
+  /* ============ AUTH SCREEN (centered card, plain white) ============ */
+  #auth-screen{
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 48px 20px 40px;
+    background: var(--secondary-white);
+  }
+  .auth-card{
+    width: 100%;
+    max-width: 380px;
+  }
+  .auth-accent-bar{
+    width: 32px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--primary-yellow);
+    margin-bottom: 14px;
+  }
+  .auth-wordmark{
+    text-align: center;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 22px;
+    margin-bottom: 18px;
+  }
+  .auth-slogan{
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 16px;
+  }
+  .auth-heading{
+    margin-bottom: 14px;
+  }
+  .auth-heading h1{
+    font-size: 22px;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  .auth-heading p{
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  .field{ margin-bottom: 14px; }
+  .field label{
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 7px;
+  }
+  .field-input-wrap{ position: relative; }
+  .field input{
+    width: 100%;
+    max-width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    font-size: 15px;
+    background: var(--input-bg);
+    color: var(--ink);
+  }
+  .field-input-wrap input{ padding-right: 42px; }
+  .field input::placeholder{ color: #9AA1AC; }
+  .field input:focus{ border-color: var(--primary-yellow-deep); background: var(--secondary-white); }
+  .toggle-password{
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    cursor: pointer;
+    color: var(--ink-soft);
+  }
+  .toggle-password:hover{ color: var(--ink); }
+  .toggle-password .icon-eye-off{ display: none; }
+  .toggle-password.is-visible .icon-eye{ display: none; }
+  .toggle-password.is-visible .icon-eye-off{ display: block; }
+
+  .field-row{
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 13.5px;
+  }
+  .remember-me{
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--ink);
+  }
+  .remember-me input[type="checkbox"]{
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    appearance: none;
+    border: 1.5px solid var(--primary-yellow);
+    border-radius: 5px;
+    background: var(--secondary-white);
+    cursor: pointer;
+    position: relative;
+  }
+  .remember-me input[type="checkbox"]:checked{
+    background: var(--primary-yellow);
+  }
+  .remember-me input[type="checkbox"]:checked::after{
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border: solid var(--ink);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .link-btn{
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--primary-yellow-text);
+    text-decoration: underline;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13.5px;
+  }
+
+  .btn-primary{
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--primary-yellow);
+    color: var(--ink);
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-primary:hover{ background: var(--primary-yellow-deep); }
+  .btn-primary:disabled{ opacity: 0.5; cursor: not-allowed; }
+
+  .auth-error{
+    background: var(--secondary-white);
+    color: var(--error);
+    border: 1px solid var(--ink);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  .auth-switch-note{
+    text-align: center;
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-top: 14px;
+  }
+  .auth-switch-note button{
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--primary-yellow-text);
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  /* ============ APP SHELL ============ */
+  #app-shell{ min-height: 100vh; display: flex; flex-direction: column; }
+
+  .topbar{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 2px solid var(--primary-yellow);
+    background: var(--secondary-white);
+  }
+  .topbar .wordmark{
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+  }
+
+  /* Compact user menu (avatar trigger + dropdown), replaces exposed email/logout row */
+  .user-menu{ position: relative; }
+  .user-trigger{
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: block;
+    border-radius: 50%;
+  }
+  .user-avatar{
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--primary-yellow);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .user-dropdown{
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 200px;
+    background: var(--secondary-white);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    padding: 6px;
+    z-index: 20;
+  }
+  .user-dropdown-email{
+    padding: 8px 10px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 4px;
+    word-break: break-all;
+  }
+  .user-dropdown-logout{
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .user-dropdown-logout:hover{ background: var(--input-bg); }
+
+  /* Step tracker — numbered because this genuinely is a fixed 4-step sequence */
+  .step-tracker{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 16px 16px 0;
+  }
+  .step-node{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-node .dot{
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--ink-soft);
+    background: var(--secondary-white);
+    flex-shrink: 0;
+  }
+  .step-node.active .dot{
+    background: var(--primary-yellow);
+    border-color: var(--primary-yellow-deep);
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .step-node.done .dot{
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--secondary-white);
+  }
+  .step-node .label{
+    font-size: 13px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .step-node.active .label{ color: var(--ink); font-weight: 500; }
+  .step-connector{
+    width: 24px;
+    height: 1px;
+    background: var(--line);
+    margin: 0 8px;
+  }
+  @media (max-width: 700px){
+    .step-node .label{ display: none; }
+    .step-connector{ width: 14px; margin: 0 5px; }
+  }
+  .step-progress-mobile{
+    display: none;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-top: 6px;
+  }
+  @media (max-width: 700px){
+    .step-progress-mobile{ display: block; }
+  }
+
+  #wizard-view > main{
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 24px 20px 56px;
+  }
+  .step-panel{
+    width: 100%;
+    max-width: 640px;
+  }
+  .step-panel h2{
+    font-size: 22px;
+    margin-bottom: 5px;
+  }
+  .step-panel .step-sub{
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin-bottom: 18px;
+  }
+
+  /* Step 1: upload */
+  .dropzone{
+    border: 1.5px dashed var(--input-border);
+    border-radius: 12px;
+    padding: 20px 20px 16px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--input-bg);
+  }
+  .dropzone:hover{ border-color: var(--primary-yellow-deep); background: var(--primary-yellow-tint); }
+  .dropzone.dragover{
+    border-color: var(--primary-yellow-deep);
+    background: var(--primary-yellow-tint);
+  }
+  .dz-icon-cluster{
+    position: relative;
+    width: 64px;
+    height: 46px;
+    margin: 0 auto 14px;
+  }
+  .dz-icon-cluster .dz-file{
+    position: absolute;
+    bottom: 0;
+    width: 30px;
+    height: 38px;
+    border-radius: 5px;
+    background: var(--secondary-white);
+    border: 1.5px solid var(--input-border);
+    box-shadow: 0 2px 6px rgba(20,20,20,0.06);
+  }
+  .dz-icon-cluster .dz-file svg{ width: 100%; height: 100%; display: block; color: var(--ink-soft); }
+  .dz-icon-cluster .dz-file-1{ left: 0; transform: rotate(-8deg); z-index: 1; }
+  .dz-icon-cluster .dz-file-2{ left: 17px; transform: rotate(4deg); z-index: 2; }
+  .dz-icon-cluster .dz-badge{
+    position: absolute;
+    top: -4px;
+    right: 2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--secondary-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    box-shadow: 0 0 0 3px var(--input-bg);
+  }
+  .dz-icon-cluster .dz-badge svg{ width: 13px; height: 13px; }
+  .dz-browse-btn{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--secondary-white);
+    color: var(--ink);
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    padding: 11px 24px;
+    font-size: 14.5px;
+    font-weight: 700;
+  }
+  .dz-browse-btn svg{ width: 17px; height: 17px; flex-shrink: 0; }
+  .dropzone .dz-hint{
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin: 10px 0 14px;
+  }
+  .dz-format-badges{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  .dz-format-badges .badge{
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+    background: var(--secondary-white);
+    border: 1px solid var(--input-border);
+    border-radius: 999px;
+    padding: 3px 9px;
+  }
+  .dropzone .dz-maxsize{
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  #file-input{ display: none; }
+  .file-chosen{
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 14px;
+    background: var(--secondary-white);
+  }
+  .file-chosen .file-info{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .file-chosen .file-icon{
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--primary-yellow-tint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .file-chosen .file-text{ min-width: 0; }
+  .file-chosen .file-name{
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .file-chosen .file-size{
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .file-chosen .remove-file{
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-size: 13px;
+    text-decoration: underline;
+    flex-shrink: 0;
+  }
+  .file-error{
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--ink);
+    border-radius: var(--radius);
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .file-upload-status{
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+  .file-upload-status.is-error{ color: #B3261E; }
+
+  /* Step 2: action choice */
+  .choice-grid{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .choice-card{
+    position: relative;
+    flex: 1 1 220px;
+    max-width: 260px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    background: var(--secondary-white);
+    cursor: pointer;
+    text-align: left;
+  }
+  @media (max-width: 560px){
+    .choice-card{ flex: 1 1 100%; max-width: 100%; }
+  }
+  .choice-card .choice-icon{
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--primary-yellow-tint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  .choice-card .choice-name{ font-weight: 500; font-size: 15px; margin-bottom: 3px; }
+  .choice-card .choice-desc{ font-size: 12.5px; color: var(--ink-soft); }
+  .choice-card.selected{
+    border-color: var(--ink);
+    background: var(--primary-yellow-tint);
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+  .choice-card .check-mark{
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--secondary-white);
+    font-size: 11px;
+    align-items: center;
+    justify-content: center;
+  }
+  .choice-card.selected .check-mark{ display: flex; }
+
+  /* Step 3: customize */
+  .field-group{ margin-bottom: 26px; }
+  .field-group .fg-label{
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+  .pill-row{ display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill{
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 13px;
+    background: var(--secondary-white);
+    cursor: pointer;
+    color: var(--ink-soft);
+  }
+  .pill.selected{
+    background: var(--primary-yellow);
+    border-color: var(--primary-yellow-deep);
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .pill.selected::before{
+    content: "✓";
+    margin-right: 5px;
+    font-weight: 700;
+  }
+
+  /* Step 4: result */
+  .result-loading{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 48px 24px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  .spinner{
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 3px solid var(--line);
+    border-top-color: var(--primary-yellow-deep);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+  .result-loading p{
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .result-box{
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    background: var(--secondary-white);
+  }
+  .result-box .result-meta{
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .result-box .result-placeholder{
+    font-size: 14.5px;
+    color: var(--ink);
+    line-height: 1.65;
+    white-space: pre-wrap;
+  }
+  .result-sources{ margin-top: 18px; }
+  .citation-preview-label{
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 16px;
+    margin-bottom: 6px;
+  }
+  .citation-tag{
+    display: block;
+    font-size: 12px;
+    color: var(--ink-soft);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    text-align: left;
+  }
+
+  /* Nav buttons */
+  .step-nav{
+  .step-nav{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 32px;
+  }
+  .btn-ghost{
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .btn-ghost:hover{ border-color: var(--ink); }
+  .btn-ghost:disabled{ opacity: 0.4; cursor: not-allowed; }
+  .btn-dark{
+    background: var(--ink);
+    color: var(--secondary-white);
+    border: none;
+    border-radius: var(--radius);
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .btn-dark:hover{ background: #000; }
+  .btn-dark:disabled{ opacity: 0.4; cursor: not-allowed; }
+
+  /* ============ DASHBOARD ============ */
+  .dash-back-link{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    padding: 14px 20px 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .dash-back-link:hover{ color: var(--ink); }
+  .dash-back-link svg{ width: 15px; height: 15px; }
+
+  .dash-tabs{
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 18px 20px 0;
+    scrollbar-width: none;
+  }
+  .dash-tabs::-webkit-scrollbar{ display: none; }
+  .dash-tab{
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .dash-tab.active{
+    background: var(--ink);
+    color: var(--secondary-white);
+    font-weight: 600;
+  }
+
+  /* ---- Dashboard body layout: sidebar (desktop/tablet) + drawer (mobile) ---- */
+  .dash-body{
+    display: flex;
+    align-items: flex-start;
+  }
+  .dash-main{
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dash-tab-trigger-mobile{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: calc(100% - 40px);
+    margin: 16px 20px 0;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .dash-tab-trigger-mobile svg{ width: 16px; height: 16px; color: var(--ink-soft); flex-shrink: 0; }
+
+  .dash-sidebar-overlay{
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20,20,20,0.4);
+    z-index: 39;
+  }
+  .dash-sidebar-overlay.open{ display: block; }
+
+  #dash-tabs.dash-sidebar{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: -260px;
+    width: 240px;
+    background: var(--secondary-white);
+    border-right: 1px solid var(--line);
+    padding: 18px 12px;
+    z-index: 40;
+    overflow-y: auto;
+    transition: left 0.25s ease;
+  }
+  #dash-tabs.dash-sidebar.open{ left: 0; }
+  #dash-tabs.dash-sidebar .dash-tab{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    white-space: normal;
+    text-align: left;
+  }
+  #dash-tabs.dash-sidebar .dash-tab svg{ width: 17px; height: 17px; flex-shrink: 0; }
+  #dash-tabs.dash-sidebar .dash-tab.active{
+    background: var(--primary-yellow-tint);
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  @media (min-width: 768px){
+    .dash-tab-trigger-mobile{ display: none; }
+    .dash-sidebar-overlay{ display: none !important; }
+    #dash-tabs.dash-sidebar{
+      position: sticky;
+      top: 0;
+      left: 0;
+      width: 208px;
+      flex-shrink: 0;
+      height: calc(100vh - 54px);
+      transition: none;
+      padding: 20px 12px;
+    }
+  }
+
+  .dash-toolbar{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 20px 0;
+  }
+  @media (min-width: 640px){
+    .dash-toolbar{ flex-direction: row; align-items: center; }
+  }
+  .dash-search{
+    position: relative;
+    flex: 1;
+  }
+  .dash-search svg{
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--ink-soft);
+  }
+  .dash-search input{
+    width: 100%;
+    padding: 10px 14px 10px 36px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    font-size: 14px;
+    background: var(--input-bg);
+    color: var(--ink);
+  }
+  .dash-search input:focus{ border-color: var(--primary-yellow-deep); background: var(--secondary-white); }
+  .dash-new-btn{
+    width: 100%;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 0;
+  }
+  @media (min-width: 640px){
+    .dash-new-btn{ width: auto; flex-shrink: 0; }
+  }
+
+  .dash-list{
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 16px 20px 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .dash-card{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--secondary-white);
+    cursor: pointer;
+  }
+  .dash-card:hover{ border-color: var(--ink); }
+  .dash-card-select{ flex-shrink: 0; display: flex; }
+  .dash-card-select input[type="checkbox"]{
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    appearance: none;
+    border: 1.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--secondary-white);
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .dash-card-select input[type="checkbox"]:checked{ background: var(--primary-yellow); border-color: var(--primary-yellow-deep); }
+  .dash-card-select input[type="checkbox"]:checked::after{
+    content: ""; position: absolute; left: 5px; top: 1px; width: 5px; height: 9px;
+    border: solid var(--ink); border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
+  .dash-card-icon{
+    width: 36px; height: 36px; flex-shrink: 0;
+    border-radius: 8px;
+    background: var(--primary-yellow-tint);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .dash-card-info{ flex: 1; min-width: 0; }
+  .dash-card-name{
+    font-size: 14.5px; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .dash-card-date{ font-size: 12.5px; color: var(--ink-soft); margin-top: 1px; }
+
+  .transform-menu, .card-menu{ position: relative; flex-shrink: 0; }
+  .transform-trigger{
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 13px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .transform-trigger:hover{ border-color: var(--ink); }
+  .menu-trigger{
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; border-radius: 8px;
+    font-size: 17px; color: var(--ink-soft); cursor: pointer;
+  }
+  .menu-trigger:hover{ background: var(--input-bg); color: var(--ink); }
+  .menu-panel{
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 170px;
+    background: var(--secondary-white);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    padding: 6px;
+    z-index: 20;
+  }
+  .menu-item{
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none; border: none; border-radius: 6px;
+    padding: 8px 10px; font-size: 13px; color: var(--ink); cursor: pointer;
+  }
+  .menu-item:hover{ background: var(--input-bg); }
+  .menu-item.danger{ color: #B3261E; }
+
+  .dash-compare-bar{
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--ink);
+    color: var(--secondary-white);
+    border-radius: 999px;
+    padding: 10px 10px 10px 18px;
+    font-size: 13.5px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    z-index: 30;
+  }
+  .dash-compare-bar .btn-dark{
+    background: var(--primary-yellow);
+    color: var(--ink);
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .dash-empty{
+    text-align: center;
+    padding: 64px 20px;
+    color: var(--ink-soft);
+  }
+  .dash-empty-icon{ font-size: 28px; margin-bottom: 10px; }
+  .dash-empty p{ margin: 0 0 16px; font-size: 14px; }
+
+  /* ============ DETAIL VIEW ============ */
+  .detail-main{ max-width: 640px; margin: 0 auto; padding: 20px 20px 60px; }
+  .detail-main h2{ font-size: 22px; margin-bottom: 4px; }
+  .detail-subtabs{ padding: 18px 0 0; margin-bottom: 16px; }
+  .detail-panel .result-box{ margin-top: 0; }
+  .detail-notes{
+    width: 100%;
+    min-height: 160px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    background: var(--input-bg);
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: var(--font-ui);
+    color: var(--ink);
+    resize: vertical;
+  }
+  .detail-notes:focus{ border-color: var(--primary-yellow-deep); background: var(--secondary-white); }
+</style>
+</head>
+<body>
+
+  <!-- ============ AUTH SCREEN ============ -->
+  <div id="auth-screen">
+    <div class="auth-card">
+      <div class="auth-wordmark">Docly</div>
+
+      <div id="auth-error" class="auth-error hidden"></div>
+
+      <!-- LOGIN VIEW -->
+      <div id="view-login">
+        <div class="auth-accent-bar"></div>
+        <div class="auth-slogan">Your documents.<br>Finally understood.</div>
+        <form id="login-form">
+          <div class="field">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" placeholder="you@company.com" required autocomplete="email" />
+          </div>
+          <div class="field">
+            <label for="login-password">Password</label>
+            <div class="field-input-wrap">
+              <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password" />
+              <button type="button" class="toggle-password" data-target="login-password" aria-label="Show password">
+                <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.6 21.6 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 7 11 7a21.6 21.6 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="field-row" style="justify-content: space-between;">
+            <label class="remember-me"><input type="checkbox" id="remember-me" /> Remember me</label>
+            <button type="button" class="link-btn" id="forgot-password">Forgot password?</button>
+          </div>
+          <button type="submit" class="btn-primary" id="login-submit"><span>Log in</span><span aria-hidden="true">→</span></button>
+        </form>
+        <div class="auth-switch-note">
+          Don't have an account? <button type="button" id="switch-to-signup">Sign up</button>
+        </div>
+      </div>
+
+      <!-- SIGNUP VIEW -->
+      <div id="view-signup" class="hidden">
+        <div class="auth-accent-bar"></div>
+        <div class="auth-heading">
+          <h1>Create your account</h1>
+          <p>Start understanding your documents.</p>
+        </div>
+        <form id="signup-form">
+          <div class="field">
+            <label for="signup-email">Email</label>
+            <input type="email" id="signup-email" placeholder="you@company.com" required autocomplete="email" />
+          </div>
+          <div class="field">
+            <label for="signup-password">Password</label>
+            <div class="field-input-wrap">
+              <input type="password" id="signup-password" placeholder="••••••••" required autocomplete="new-password" minlength="6" />
+              <button type="button" class="toggle-password" data-target="signup-password" aria-label="Show password">
+                <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.6 21.6 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 7 11 7a21.6 21.6 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" id="signup-submit"><span>Create account</span><span aria-hidden="true">→</span></button>
+        </form>
+        <div class="auth-switch-note">
+          Already have an account? <button type="button" id="switch-to-login">Log in</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ APP SHELL ============ -->
+  <div id="app-shell" class="hidden">
+    <div class="topbar">
+      <div class="wordmark">Docly</div>
+      <div class="user-menu">
+        <button class="user-trigger" id="user-trigger" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
+          <span class="user-avatar" id="user-avatar"></span>
+        </button>
+        <div class="user-dropdown hidden" id="user-dropdown">
+          <div class="user-dropdown-email" id="user-email-display"></div>
+          <button class="user-dropdown-logout" id="logout-btn" type="button">Log out</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ DASHBOARD VIEW ============ -->
+    <div id="dashboard-view">
+      <button class="dash-tab-trigger-mobile" id="dash-tab-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+        <span id="dash-tab-trigger-label">All documents</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="dash-sidebar-overlay" id="dash-sidebar-overlay"></div>
+
+      <div class="dash-body">
+        <nav class="dash-sidebar" id="dash-tabs" aria-label="Dashboard sections">
+          <button class="dash-tab active" data-tab="documents" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+            All documents
+          </button>
+          <button class="dash-tab" data-tab="summaries" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-5Z"/><path d="M9 13h6M9 17h6M9 9h1"/></svg>
+            Summaries
+          </button>
+          <button class="dash-tab" data-tab="conversations" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-8.9 8.37 8.5 8.5 0 0 1-3.8-1L3 20l1.13-5.3a8.5 8.5 0 0 1 12.79-9.9 8.38 8.38 0 0 1 4.08 6.7Z"/></svg>
+            Conversations
+          </button>
+          <button class="dash-tab" data-tab="analyses" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="20" x2="6" y2="13"/><line x1="12" y1="20" x2="12" y2="8"/><line x1="18" y1="20" x2="18" y2="4"/></svg>
+            Analyses
+          </button>
+          <button class="dash-tab" data-tab="exports" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            Exports
+          </button>
+        </nav>
+
+        <div class="dash-main">
+          <div class="dash-toolbar">
+            <div class="dash-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="dash-search-input" placeholder="Search your work…" />
+            </div>
+            <button class="btn-primary dash-new-btn" id="new-document-btn" type="button">
+              <span aria-hidden="true">+</span><span>New document</span>
+            </button>
+          </div>
+
+          <div class="dash-list" id="dash-list"></div>
+
+          <div class="dash-compare-bar hidden" id="dash-compare-bar">
+            <span id="dash-compare-count">0 selected</span>
+            <button class="btn-dark" id="dash-compare-btn" type="button">Compare</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ DOCUMENT DETAIL VIEW ============ -->
+    <div id="detail-view" class="hidden">
+      <button class="dash-back-link" id="detail-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to dashboard
+      </button>
+      <main class="detail-main">
+        <h2 id="detail-title">Document name</h2>
+        <div class="step-sub" id="detail-sub">Uploaded on —</div>
+        <div class="dash-tabs detail-subtabs" id="detail-subtabs">
+          <button class="dash-tab active" data-subtab="summary" type="button">Summary</button>
+          <button class="dash-tab" data-subtab="conversations" type="button">Conversations</button>
+          <button class="dash-tab" data-subtab="notes" type="button">Notes</button>
+        </div>
+        <div class="detail-panel" data-detail-panel="summary">
+          <div class="result-box"><div class="result-placeholder" id="detail-summary-text"></div></div>
+        </div>
+        <div class="detail-panel hidden" data-detail-panel="conversations">
+          <div class="dash-empty">
+            <div class="dash-empty-icon" aria-hidden="true">💬</div>
+            <p>No questions asked yet for this document.</p>
+          </div>
+        </div>
+        <div class="detail-panel hidden" data-detail-panel="notes">
+          <textarea class="detail-notes" id="detail-notes-input" placeholder="Write a note about this document…"></textarea>
+        </div>
+      </main>
+    </div>
+
+    <!-- ============ WIZARD VIEW ============ -->
+    <div id="wizard-view" class="hidden">
+      <button class="dash-back-link" id="wizard-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to dashboard
+      </button>
+      <div class="step-tracker" id="step-tracker"></div>
+      <div class="step-progress-mobile" id="step-progress-mobile"></div>
+
+    <main>
+      <!-- STEP 1 -->
+      <section class="step-panel" data-step-panel="1">
+        <h2>Upload your document</h2>
+        <div class="step-sub">Docly works with the formats below.</div>
+        <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Drop a file here, or press Enter to browse your computer">
+          <div class="dz-icon-cluster" aria-hidden="true">
+            <span class="dz-file dz-file-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg></span>
+            <span class="dz-file dz-file-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></span>
+            <span class="dz-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><polyline points="6 11 12 5 18 11"/></svg>
+            </span>
+          </div>
+          <span class="dz-browse-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/></svg>
+            Choose a file
+          </span>
+          <div class="dz-hint">or drag and drop here</div>
+          <div class="dz-format-badges" aria-hidden="true">
+            <span class="badge">PDF</span><span class="badge">DOC</span><span class="badge">DOCX</span><span class="badge">XLS</span><span class="badge">XLSX</span><span class="badge">PPT</span><span class="badge">PPTX</span><span class="badge">TXT</span><span class="badge">EPUB</span><span class="badge">CSV</span><span class="badge">MD</span>
+          </div>
+          <div class="dz-maxsize">Maximum file size: 50 MB</div>
+          <input type="file" id="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.epub,.csv,.md" />
+        </div>
+        <div class="file-chosen hidden" id="file-chosen">
+          <div class="file-info">
+            <span class="file-icon" id="file-icon">📄</span>
+            <div class="file-text">
+              <div class="file-name" id="file-chosen-name"></div>
+              <div class="file-size" id="file-chosen-size"></div>
+            </div>
+          </div>
+          <button class="remove-file" id="remove-file" type="button">Remove</button>
+        </div>
+        <div class="file-upload-status hidden" id="file-upload-status"></div>
+        <div class="file-error hidden" id="file-error"></div>
+        <div class="step-nav">
+          <button class="btn-ghost" disabled>Back</button>
+          <button class="btn-dark" id="to-step-2" disabled>Continue</button>
+        </div>
+      </section>
+
+      <!-- STEP 2 -->
+      <section class="step-panel hidden" data-step-panel="2">
+        <h2>What do you want to do?</h2>
+        <div class="step-sub">Choose one action for this document.</div>
+        <div class="choice-grid" id="action-grid">
+          <button class="choice-card" data-action="Summarize" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">📝</div><div class="choice-name">Summarize</div><div class="choice-desc">Get a synthesis of the content</div></button>
+          <button class="choice-card" data-action="Analyze" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">🔍</div><div class="choice-name">Analyze</div><div class="choice-desc">Surface the key insights</div></button>
+          <button class="choice-card" data-action="Ask" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">💬</div><div class="choice-name">Ask</div><div class="choice-desc">Ask questions about the content</div></button>
+          <button class="choice-card" data-action="Extract" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">📌</div><div class="choice-name">Extract</div><div class="choice-desc">Pull out specific data or facts</div></button>
+          <button class="choice-card" data-action="Transform" aria-pressed="false"><span class="check-mark">✓</span><div class="choice-icon" aria-hidden="true">🔄</div><div class="choice-name">Transform</div><div class="choice-desc">Turn it into another format</div></button>
+        </div>
+        <div class="step-nav">
+          <button class="btn-ghost" id="back-to-1">Back</button>
+          <button class="btn-dark" id="to-step-3" disabled>Continue</button>
+        </div>
+      </section>
+
+      <!-- STEP 3 -->
+      <section class="step-panel hidden" data-step-panel="3">
+        <h2>Choose the result</h2>
+        <div class="step-sub">Pick the format that fits what you need.</div>
+
+        <div class="pill-row" id="preset-grid">
+          <button class="pill" data-preset="Short" aria-pressed="false">Short</button>
+          <button class="pill" data-preset="Detailed" aria-pressed="false">Detailed</button>
+          <button class="pill" data-preset="Professional" aria-pressed="false">Professional</button>
+          <button class="pill" data-preset="Table" aria-pressed="false">Table</button>
+          <button class="pill" data-preset="Presentation" aria-pressed="false">Presentation</button>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn-ghost" id="back-to-2">Back</button>
+          <button class="btn-dark" id="to-step-4" disabled>Generate result</button>
+        </div>
+      </section>
+
+      <!-- STEP 4 -->
+      <section class="step-panel hidden" data-step-panel="4">
+        <h2>Result</h2>
+        <div class="step-sub">Your result appears below, with sources you can trace back to the document.</div>
+
+        <div class="result-loading hidden" id="result-loading">
+          <div class="spinner"></div>
+          <p>Analyzing your document…</p>
+        </div>
+
+        <div id="result-content">
+          <div class="result-box">
+            <div class="result-meta" id="result-meta"></div>
+            <div class="result-placeholder" id="result-text"></div>
+            <div class="result-sources hidden" id="result-sources">
+              <div class="citation-preview-label">Sources</div>
+              <div id="result-sources-list"></div>
+            </div>
+          </div>
+          <div class="step-nav">
+            <button class="btn-ghost" id="back-to-3">Back</button>
+            <button class="btn-ghost" id="start-over">Back to dashboard</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    </div>
+  </div>
+
+<script>
+  /* ============ BACK4APP CONNECTION ============ */
+  Parse.initialize("bEJVDXz07faSqrzKGtzpTSBMEiHb9eJTO4JLEcy7", "eP7o73XecwdmKxYLSRoyYcfQyJkKcWeqftUcNRha");
+  Parse.serverURL = "https://parseapi.back4app.com/";
+
+  const authScreen = document.getElementById('auth-screen');
+  const appShell = document.getElementById('app-shell');
+  const authError = document.getElementById('auth-error');
+
+  function showAuthError(message){
+    authError.textContent = message;
+    authError.classList.remove('hidden');
+  }
+  function clearAuthError(){
+    authError.classList.add('hidden');
+    authError.textContent = '';
+  }
+
+  function showApp(user){
+    authScreen.classList.add('hidden');
+    appShell.classList.remove('hidden');
+    const email = user.get('email') || user.get('username') || '';
+    document.getElementById('user-email-display').textContent = email;
+    document.getElementById('user-avatar').textContent = email.charAt(0).toUpperCase();
+    showDashboardView();
+  }
+  function showAuth(){
+    appShell.classList.add('hidden');
+    authScreen.classList.remove('hidden');
+  }
+
+  /* ============ VIEW SWITCHING (Dashboard / Wizard / Detail) ============ */
+  const dashboardView = document.getElementById('dashboard-view');
+  const wizardView = document.getElementById('wizard-view');
+  const detailView = document.getElementById('detail-view');
+
+  function showDashboardView(){
+    wizardView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    dashboardView.classList.remove('hidden');
+    closeDashSidebar();
+    renderDashboardList();
+  }
+  function showWizardView(){
+    dashboardView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    wizardView.classList.remove('hidden');
+  }
+  function showDetailView(){
+    dashboardView.classList.add('hidden');
+    wizardView.classList.add('hidden');
+    detailView.classList.remove('hidden');
+  }
+
+  /* ============ DASHBOARD: real Back4app data ============ */
+  const FILE_TYPE_ICONS = { pdf:'📕', doc:'📘', docx:'📘', xls:'📊', xlsx:'📊', ppt:'📙', pptx:'📙', txt:'📄', epub:'📖', csv:'📊', md:'📄' };
+  const TAB_ICONS = { summaries:'📝', conversations:'💬', analyses:'🔍', exports:'⬇️' };
+  const TAB_EMPTY_TEXT = {
+    conversations: 'No conversations yet. Ask a question about one of your documents to start one.',
+    analyses: 'No analyses yet. Run "Analyze" on a document to see it here.'
+  };
+  const TAB_LABELS = { documents: 'All documents', summaries: 'Summaries', conversations: 'Conversations', analyses: 'Analyses', exports: 'Exports' };
+
+  function formatDashDate(d){
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  async function fetchTabItems(tab){
+    const owner = Parse.User.current();
+    if (!owner) return [];
+
+    if (tab === 'documents'){
+      const q = new Parse.Query('Document');
+      q.equalTo('owner', owner);
+      q.descending('createdAt');
+      const docs = await q.find();
+      return docs.map(d => ({
+        id: d.id,
+        name: d.get('fileName') || 'Untitled',
+        ext: (d.get('fileType') || '').toLowerCase(),
+        date: formatDashDate(d.createdAt),
+        parseObject: d
+      }));
+    }
+    if (tab === 'summaries' || tab === 'analyses'){
+      const wantedType = tab === 'summaries' ? 'résumé' : 'analyse';
+      const q = new Parse.Query('Result');
+      q.equalTo('owner', owner);
+      q.equalTo('type', wantedType);
+      q.include('document');
+      q.descending('createdAt');
+      const results = await q.find();
+      return results.map(r => {
+        const docObj = r.get('document');
+        const baseName = (docObj && docObj.get('fileName')) || 'Untitled document';
+        return {
+          id: r.id,
+          name: baseName + (tab === 'summaries' ? ' — Summary' : ' — Analysis'),
+          date: formatDashDate(r.createdAt),
+          parseObject: r
+        };
+      });
+    }
+    if (tab === 'conversations'){
+      const q = new Parse.Query('Conversation');
+      q.equalTo('owner', owner);
+      q.descending('createdAt');
+      const convs = await q.find();
+      return convs.map(c => ({
+        id: c.id,
+        name: c.get('title') || 'Conversation',
+        date: formatDashDate(c.get('lastMessageAt') || c.createdAt),
+        parseObject: c
+      }));
+    }
+    if (tab === 'exports'){
+      const q = new Parse.Query('Export');
+      q.equalTo('owner', owner);
+      q.descending('createdAt');
+      const exps = await q.find();
+      return exps.map(e => {
+        const file = e.get('fileUrl');
+        return {
+          id: e.id,
+          name: (file && file.name && file.name()) || ('Export.' + (e.get('format') || '').toLowerCase()),
+          date: formatDashDate(e.createdAt),
+          parseObject: e
+        };
+      });
+    }
+    return [];
+  }
+
+  const notesStore = {};
+  let currentTab = 'documents';
+  let selectedDocIds = new Set();
+  let dashCache = [];
+
+  /* ---- Sidebar / mobile drawer ---- */
+  const dashSidebar = document.getElementById('dash-tabs');
+  const dashSidebarOverlay = document.getElementById('dash-sidebar-overlay');
+  const dashTabTrigger = document.getElementById('dash-tab-trigger');
+  const dashTabTriggerLabel = document.getElementById('dash-tab-trigger-label');
+
+  function openDashSidebar(){
+    dashSidebar.classList.add('open');
+    dashSidebarOverlay.classList.add('open');
+    dashTabTrigger.setAttribute('aria-expanded', 'true');
+  }
+  function closeDashSidebar(){
+    dashSidebar.classList.remove('open');
+    dashSidebarOverlay.classList.remove('open');
+    dashTabTrigger.setAttribute('aria-expanded', 'false');
+  }
+  dashTabTrigger.addEventListener('click', () => {
+    dashSidebar.classList.contains('open') ? closeDashSidebar() : openDashSidebar();
+  });
+  dashSidebarOverlay.addEventListener('click', closeDashSidebar);
+
+  /* ---- Tabs ---- */
+  document.getElementById('dash-tabs').addEventListener('click', (e) => {
+    const tab = e.target.closest('.dash-tab');
+    if (!tab) return;
+    document.querySelectorAll('#dash-tabs .dash-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentTab = tab.dataset.tab;
+    dashTabTriggerLabel.textContent = TAB_LABELS[currentTab];
+    selectedDocIds.clear();
+    document.getElementById('dash-search-input').value = '';
+    closeDashSidebar();
+    renderDashboardList();
+  });
+
+  /* ---- Search ---- */
+  document.getElementById('dash-search-input').addEventListener('input', renderDashboardList);
+
+  /* ---- New document ---- */
+  document.getElementById('new-document-btn').addEventListener('click', () => {
+    resetWizard();
+    showWizardView();
+  });
+
+  /* ---- Back to dashboard from wizard ---- */
+  document.getElementById('wizard-back').addEventListener('click', async () => {
+    if (currentStep > 1 || wizardState.fileName) {
+      if (!confirm('Leave without finishing? Your progress on this document will be lost.')) return;
+    }
+    const orphanDoc = wizardState.documentObj;
+    resetWizard();
+    showDashboardView();
+    if (orphanDoc) { try { await orphanDoc.destroy(); } catch (e) { /* ignore */ } }
+  });
+
+  /* ---- Back to dashboard from detail view ---- */
+  document.getElementById('detail-back').addEventListener('click', showDashboardView);
+
+  function closeAllMenus(except){
+    document.querySelectorAll('.menu-panel').forEach(p => { if (p !== except) p.classList.add('hidden'); });
+  }
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.menu-trigger')) closeAllMenus(null);
+  });
+
+  async function renderDashboardList(){
+    const list = document.getElementById('dash-list');
+    const tabAtRequest = currentTab;
+    list.innerHTML = '<div class="dash-empty"><p>Loading…</p></div>';
+
+    let items;
+    try {
+      items = await fetchTabItems(tabAtRequest);
+    } catch (err) {
+      if (tabAtRequest !== currentTab) return;
+      list.innerHTML = '<div class="dash-empty"><p>Could not load your work. Check your connection and try again.</p></div>';
+      return;
+    }
+    if (tabAtRequest !== currentTab) return; // user switched tabs while this was loading
+
+    const query = document.getElementById('dash-search-input').value.trim().toLowerCase();
+    items = items.filter(item => item.name.toLowerCase().includes(query));
+    dashCache = items;
+    list.innerHTML = '';
+
+    if (items.length === 0){
+      const empty = document.createElement('div');
+      empty.className = 'dash-empty';
+      empty.innerHTML = '<div class="dash-empty-icon" aria-hidden="true">' + (TAB_ICONS[currentTab] || '📁') + '</div>' +
+        '<p>' + (query ? 'No results for “' + query + '”.' : (TAB_EMPTY_TEXT[currentTab] || 'Nothing here yet.')) + '</p>';
+      list.appendChild(empty);
+      updateCompareBar();
+      return;
+    }
+
+    const canRename = (currentTab === 'documents' || currentTab === 'conversations');
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'dash-card';
+      card.dataset.id = item.id;
+
+      let html = '';
+      if (currentTab === 'documents'){
+        html += '<span class="dash-card-select"><input type="checkbox" data-id="' + item.id + '" ' + (selectedDocIds.has(item.id) ? 'checked' : '') + ' aria-label="Select ' + item.name + '"></span>';
+      }
+      const icon = currentTab === 'documents' ? (FILE_TYPE_ICONS[item.ext] || '📄') : (TAB_ICONS[currentTab] || '📄');
+      html += '<div class="dash-card-icon" aria-hidden="true">' + icon + '</div>';
+      html += '<div class="dash-card-info"><div class="dash-card-name">' + item.name + '</div><div class="dash-card-date">' + item.date + '</div></div>';
+      if (currentTab === 'summaries'){
+        html += '<div class="transform-menu"><button class="transform-trigger" type="button">Transform</button>' +
+          '<div class="menu-panel hidden">' +
+          '<button class="menu-item" data-transform="presentation">Turn into presentation</button>' +
+          '<button class="menu-item" data-transform="studysheet">Turn into study sheet</button>' +
+          '<button class="menu-item" data-transform="report">Turn into professional report</button>' +
+          '</div></div>';
+      }
+      html += '<div class="card-menu"><button class="menu-trigger" type="button" aria-label="More actions">⋯</button>' +
+        '<div class="menu-panel hidden">' +
+        '<button class="menu-item" data-action="resume">Resume</button>' +
+        (canRename ? '<button class="menu-item" data-action="rename">Rename</button>' : '') +
+        '<button class="menu-item" data-action="download">Download</button>' +
+        '<button class="menu-item" data-action="share">Share</button>' +
+        '<button class="menu-item danger" data-action="delete">Delete</button>' +
+        '</div></div>';
+      card.innerHTML = html;
+      list.appendChild(card);
+    });
+    updateCompareBar();
+  }
+
+  document.getElementById('dash-list').addEventListener('click', async (e) => {
+    const checkbox = e.target.closest('input[type="checkbox"]');
+    if (checkbox){
+      const id = checkbox.dataset.id;
+      if (checkbox.checked) selectedDocIds.add(id); else selectedDocIds.delete(id);
+      updateCompareBar();
+      return;
+    }
+    const trigger = e.target.closest('.menu-trigger, .transform-trigger');
+    if (trigger){
+      const panel = trigger.nextElementSibling;
+      const isHidden = panel.classList.contains('hidden');
+      closeAllMenus(panel);
+      panel.classList.toggle('hidden', !isHidden);
+      return;
+    }
+    const menuItem = e.target.closest('.menu-item');
+    if (menuItem){
+      const card = menuItem.closest('.dash-card');
+      const id = card.dataset.id;
+      const item = dashCache.find(i => i.id === id);
+      closeAllMenus(null);
+      if (!item) return;
+      if (menuItem.dataset.action === 'delete'){
+        if (confirm('Delete this item? This cannot be undone.')){
+          try {
+            await item.parseObject.destroy();
+            selectedDocIds.delete(id);
+            renderDashboardList();
+          } catch (err) {
+            alert('Could not delete this item. Please try again.');
+          }
+        }
+      } else if (menuItem.dataset.action === 'rename'){
+        const newName = prompt('Rename to:', item.name.replace(/ — (Summary|Analysis|Conversation)$/, ''));
+        if (newName && newName.trim()){
+          try {
+            if (currentTab === 'documents') item.parseObject.set('fileName', newName.trim());
+            else if (currentTab === 'conversations') item.parseObject.set('title', newName.trim());
+            await item.parseObject.save();
+            renderDashboardList();
+          } catch (err) {
+            alert('Could not rename this item. Please try again.');
+          }
+        }
+      }
+      return;
+    }
+    const card = e.target.closest('.dash-card');
+    if (card) openDetailView(card.dataset.id);
+  });
+
+  function updateCompareBar(){
+    const bar = document.getElementById('dash-compare-bar');
+    if (currentTab === 'documents' && selectedDocIds.size >= 2){
+      document.getElementById('dash-compare-count').textContent = selectedDocIds.size + ' selected';
+      bar.classList.remove('hidden');
+    } else {
+      bar.classList.add('hidden');
+    }
+  }
+
+  /* ---- Detail view ---- */
+  function openDetailView(id){
+    const item = dashCache.find(i => i.id === id);
+    if (!item) return;
+    const isResultLike = (currentTab === 'summaries' || currentTab === 'analyses');
+    const isDoc = currentTab === 'documents';
+    document.getElementById('detail-title').textContent = item.name;
+    document.getElementById('detail-sub').textContent = 'Added on ' + item.date;
+    document.getElementById('detail-summary-text').textContent = isResultLike
+      ? (item.parseObject.get('content') || 'No content yet.')
+      : 'Open this item to see its generated content and sources here.';
+    document.getElementById('detail-notes-input').value = isDoc
+      ? (item.parseObject.get('notes') || '')
+      : (notesStore[id] || '');
+    document.querySelectorAll('#detail-subtabs .dash-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+    document.querySelectorAll('.detail-panel').forEach((p, i) => p.classList.toggle('hidden', i !== 0));
+    detailView.dataset.currentId = id;
+    detailView.dataset.currentTab = currentTab;
+    showDetailView();
+  }
+  document.getElementById('detail-subtabs').addEventListener('click', (e) => {
+    const tab = e.target.closest('.dash-tab');
+    if (!tab) return;
+    document.querySelectorAll('#detail-subtabs .dash-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.detail-panel').forEach(p => p.classList.toggle('hidden', p.dataset.detailPanel !== tab.dataset.subtab));
+  });
+  document.getElementById('detail-notes-input').addEventListener('input', (e) => {
+    notesStore[detailView.dataset.currentId] = e.target.value;
+  });
+  document.getElementById('detail-notes-input').addEventListener('blur', async (e) => {
+    if (detailView.dataset.currentTab !== 'documents') return;
+    const item = dashCache.find(i => i.id === detailView.dataset.currentId);
+    if (!item) return;
+    try {
+      item.parseObject.set('notes', e.target.value);
+      await item.parseObject.save();
+    } catch (err) { /* keep the typed value locally even if the save failed */ }
+  });
+
+  // On load, check if a user session already exists
+  const currentUser = Parse.User.current();
+  if (currentUser) {
+    showApp(currentUser);
+  } else {
+    document.getElementById('login-email').focus();
+  }
+
+  /* ---- View switching (Log in / Sign up) ---- */
+  const loginForm = document.getElementById('login-form');
+  const signupForm = document.getElementById('signup-form');
+  const viewLogin = document.getElementById('view-login');
+  const viewSignup = document.getElementById('view-signup');
+
+  function showView(view){
+    viewLogin.classList.toggle('hidden', view !== 'login');
+    viewSignup.classList.toggle('hidden', view !== 'signup');
+    clearAuthError();
+  }
+
+  document.getElementById('switch-to-signup').addEventListener('click', () => showView('signup'));
+  document.getElementById('switch-to-login').addEventListener('click', () => showView('login'));
+
+  /* ---- Forgot password ---- */
+  document.getElementById('forgot-password').addEventListener('click', async () => {
+    clearAuthError();
+    const email = document.getElementById('login-email').value.trim();
+    if (!email) {
+      showAuthError('Enter your email above first, then click "Forgot password?" again.');
+      document.getElementById('login-email').focus();
+      return;
+    }
+    try {
+      await Parse.User.requestPasswordReset(email);
+      showAuthError('If an account exists for ' + email + ', a reset link has been sent.');
+    } catch (err) {
+      showAuthError(err.message || 'Could not send the reset link.');
+    }
+  });
+
+  /* ---- Show/hide password ---- */
+  document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      btn.classList.toggle('is-visible', isHidden);
+      btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    });
+  });
+
+  /* ---- Account menu dropdown ---- */
+  const userTrigger = document.getElementById('user-trigger');
+  const userDropdown = document.getElementById('user-dropdown');
+  userTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = !userDropdown.classList.contains('hidden');
+    userDropdown.classList.toggle('hidden', isOpen);
+    userTrigger.setAttribute('aria-expanded', String(!isOpen));
+  });
+  document.addEventListener('click', (e) => {
+    if (!userDropdown.classList.contains('hidden') && !userDropdown.contains(e.target) && e.target !== userTrigger) {
+      userDropdown.classList.add('hidden');
+      userTrigger.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  /* ---- Sign up ---- */
+  signupForm.addEventListener('submit', async function(e){
+    e.preventDefault();
+    clearAuthError();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const submitBtn = document.getElementById('signup-submit');
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating account…';
+    try {
+      const user = new Parse.User();
+      user.set('username', email);
+      user.set('email', email);
+      user.set('password', password);
+      await user.signUp();
+      showApp(user);
+    } catch (err) {
+      showAuthError(err.message || 'Could not create the account.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create account';
+    }
+  });
+
+  /* ---- Log in ---- */
+  loginForm.addEventListener('submit', async function(e){
+    e.preventDefault();
+    clearAuthError();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const submitBtn = document.getElementById('login-submit');
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Logging in…';
+    try {
+      const user = await Parse.User.logIn(email, password);
+      showApp(user);
+    } catch (err) {
+      showAuthError(err.message || 'Could not log in.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Log in';
+    }
+  });
+
+  /* ---- Log out ---- */
+  document.getElementById('logout-btn').addEventListener('click', async function(){
+    await Parse.User.logOut();
+    resetWizard();
+    showAuth();
+  });
+
+  /* ============ 4-STEP WIZARD ============ */
+  const STEP_LABELS = ['Upload', 'Action', 'Result type', 'Result'];
+  let currentStep = 1;
+  const wizardState = {
+    fileName: null,
+    documentObj: null,
+    action: null,
+    length: 'Medium',
+    style: 'Simple',
+    format: 'Paragraphs'
+  };
+
+  function renderTracker(){
+    const tracker = document.getElementById('step-tracker');
+    tracker.innerHTML = '';
+    STEP_LABELS.forEach((label, i) => {
+      const stepNum = i + 1;
+      const isDone = stepNum < currentStep;
+      const node = document.createElement('div');
+      node.className = 'step-node' + (stepNum === currentStep ? ' active' : (isDone ? ' done' : ''));
+      node.innerHTML = '<div class="dot">' + (isDone ? '✓' : stepNum) + '</div><div class="label">' + label + '</div>';
+      tracker.appendChild(node);
+      if (stepNum < STEP_LABELS.length) {
+        const connector = document.createElement('div');
+        connector.className = 'step-connector';
+        tracker.appendChild(connector);
+      }
+    });
+    document.getElementById('step-progress-mobile').textContent =
+      'Step ' + currentStep + ' of ' + STEP_LABELS.length + ' — ' + STEP_LABELS[currentStep - 1];
+  }
+
+  function goToStep(step){
+    currentStep = step;
+    document.querySelectorAll('[data-step-panel]').forEach(panel => {
+      panel.classList.toggle('hidden', panel.dataset.stepPanel !== String(step));
+    });
+    renderTracker();
+  }
+
+  function resetWizard(){
+    wizardState.fileName = null;
+    wizardState.documentObj = null;
+    wizardState.action = null;
+    wizardState.resultText = null;
+    wizardState.resultSources = null;
+    document.getElementById('file-chosen').classList.add('hidden');
+    document.getElementById('file-upload-status').classList.add('hidden');
+    document.getElementById('file-error').classList.add('hidden');
+    document.getElementById('to-step-2').disabled = true;
+    document.querySelectorAll('.choice-card').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
+    document.querySelectorAll('#preset-grid .pill').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
+    document.getElementById('to-step-3').disabled = true;
+    document.getElementById('to-step-4').disabled = true;
+    goToStep(1);
+  }
+
+  renderTracker();
+
+  /* ---- Step 1: upload ---- */
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input');
+  const fileChosen = document.getElementById('file-chosen');
+  const fileChosenName = document.getElementById('file-chosen-name');
+  const toStep2Btn = document.getElementById('to-step-2');
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      fileInput.click();
+    }
+  });
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) handleFile(e.target.files[0]);
+  });
+
+  const ALLOWED_EXT = ['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','epub','csv','md'];
+  const FILE_ICONS = { pdf:'📕', doc:'📘', docx:'📘', xls:'📊', xlsx:'📊', ppt:'📙', pptx:'📙', txt:'📄', epub:'📖', csv:'📊', md:'📄' };
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+
+  function formatBytes(bytes){
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function handleFile(file){
+    const ext = file.name.split('.').pop().toLowerCase();
+    const fileError = document.getElementById('file-error');
+    if (!ALLOWED_EXT.includes(ext)) {
+      fileError.textContent = 'This file type isn\'t supported. Please use one of: ' + ALLOWED_EXT.join(', ').toUpperCase() + '.';
+      fileError.classList.remove('hidden');
+      fileChosen.classList.add('hidden');
+      toStep2Btn.disabled = true;
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      fileError.textContent = 'This file is too large (' + formatBytes(file.size) + '). Maximum size is 50 MB.';
+      fileError.classList.remove('hidden');
+      fileChosen.classList.add('hidden');
+      toStep2Btn.disabled = true;
+      return;
+    }
+    fileError.classList.add('hidden');
+    wizardState.fileName = file.name;
+    wizardState.documentObj = null;
+    document.getElementById('file-icon').textContent = FILE_ICONS[ext] || '📄';
+    fileChosenName.textContent = file.name;
+    document.getElementById('file-chosen-size').textContent = formatBytes(file.size);
+    fileChosen.classList.remove('hidden');
+    toStep2Btn.disabled = true;
+    uploadDocument(file, ext);
+  }
+
+  async function uploadDocument(file, ext){
+    const statusEl = document.getElementById('file-upload-status');
+    statusEl.classList.remove('hidden', 'is-error');
+    statusEl.textContent = 'Uploading… 0%';
+    try {
+      const parseFile = new Parse.File(file.name, file);
+      await parseFile.save({
+        progress: (value) => { statusEl.textContent = 'Uploading… ' + Math.round(value * 100) + '%'; }
+      });
+      const DocumentClass = Parse.Object.extend('Document');
+      const doc = new DocumentClass();
+      doc.set('fileName', file.name);
+      doc.set('fileType', ext);
+      doc.set('fileUrl', parseFile);
+      doc.set('fileSize', file.size);
+      doc.set('owner', Parse.User.current());
+      doc.set('status', 'ready');
+      const savedDoc = await doc.save();
+      wizardState.documentObj = savedDoc;
+      statusEl.textContent = 'Uploaded ✓';
+      toStep2Btn.disabled = false;
+    } catch (err) {
+      statusEl.textContent = 'Upload failed — ' + (err.code !== undefined ? '[' + err.code + '] ' : '') + (err.message || err);
+      statusEl.classList.add('is-error');
+      toStep2Btn.disabled = true;
+    }
+  }
+
+  document.getElementById('remove-file').addEventListener('click', async () => {
+    const doc = wizardState.documentObj;
+    wizardState.fileName = null;
+    wizardState.documentObj = null;
+    fileInput.value = '';
+    fileChosen.classList.add('hidden');
+    document.getElementById('file-upload-status').classList.add('hidden');
+    toStep2Btn.disabled = true;
+    if (doc) { try { await doc.destroy(); } catch (e) { /* ignore */ } }
+  });
+  toStep2Btn.addEventListener('click', () => goToStep(2));
+
+  /* ---- Step 2: action ---- */
+  const actionGrid = document.getElementById('action-grid');
+  const toStep3Btn = document.getElementById('to-step-3');
+  actionGrid.addEventListener('click', (e) => {
+    const card = e.target.closest('.choice-card');
+    if (!card) return;
+    document.querySelectorAll('.choice-card').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
+    card.classList.add('selected');
+    card.setAttribute('aria-pressed', 'true');
+    wizardState.action = card.dataset.action;
+    toStep3Btn.disabled = false;
+  });
+  document.getElementById('back-to-1').addEventListener('click', () => goToStep(1));
+  toStep3Btn.addEventListener('click', () => goToStep(3));
+
+  /* ---- Step 3: result preset ---- */
+  const PRESET_MAP = {
+    Short:         { length: 'Short',    style: 'Simple',       format: 'Paragraphs' },
+    Detailed:      { length: 'Detailed', style: 'Simple',       format: 'Paragraphs' },
+    Professional:  { length: 'Medium',   style: 'Professional', format: 'Paragraphs' },
+    Table:         { length: 'Medium',   style: 'Professional', format: 'Table' },
+    Presentation:  { length: 'Medium',   style: 'Executive',    format: 'Outline' }
+  };
+  const presetGrid = document.getElementById('preset-grid');
+  const toStep4Btn = document.getElementById('to-step-4');
+  presetGrid.addEventListener('click', (e) => {
+    const card = e.target.closest('.pill');
+    if (!card) return;
+    presetGrid.querySelectorAll('.pill').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
+    card.classList.add('selected');
+    card.setAttribute('aria-pressed', 'true');
+    const preset = PRESET_MAP[card.dataset.preset];
+    wizardState.length = preset.length;
+    wizardState.style = preset.style;
+    wizardState.format = preset.format;
+    toStep4Btn.disabled = false;
+  });
+  document.getElementById('back-to-2').addEventListener('click', () => goToStep(2));
+  document.getElementById('to-step-4').addEventListener('click', () => {
+    goToStep(4);
+    const loading = document.getElementById('result-loading');
+    const content = document.getElementById('result-content');
+    loading.classList.remove('hidden');
+    content.classList.add('hidden');
+    generateResult()
+      .then(() => {
+        renderResultMeta();
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+      })
+      .catch((err) => {
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+        document.getElementById('result-meta').textContent =
+          'Something went wrong while saving your result — ' + (err.code !== undefined ? '[' + err.code + '] ' : '') + (err.message || err);
+      });
+  });
+
+  async function generateResult(){
+    const doc = wizardState.documentObj;
+    const owner = Parse.User.current();
+    if (!doc || !owner) return;
+
+    const response = await Parse.Cloud.run('generateDocumentResult', {
+      documentId: doc.id,
+      action: wizardState.action,
+      length: wizardState.length,
+      style: wizardState.style,
+      format: wizardState.format
+    });
+    wizardState.resultText = response.content || '';
+    wizardState.resultSources = response.sources || [];
+  }
+
+  /* ---- Step 4: result ---- */
+  function renderResultMeta(){
+    document.getElementById('result-meta').textContent =
+      (wizardState.fileName || 'Document') + '  ·  ' + wizardState.action +
+      '  ·  ' + wizardState.length + ', ' + wizardState.style + ', ' + wizardState.format;
+    document.getElementById('result-text').textContent = wizardState.resultText || '';
+    const sourcesBox = document.getElementById('result-sources');
+    const sourcesList = document.getElementById('result-sources-list');
+    sourcesList.innerHTML = '';
+    const sources = wizardState.resultSources || [];
+    if (sources.length > 0){
+      sources.forEach(s => {
+        const tag = document.createElement('div');
+        tag.className = 'citation-tag';
+        const where = s.paragraph !== undefined ? ('Paragraph ' + s.paragraph) : 'Source';
+        tag.textContent = where + (s.note ? ' — ' + s.note : '');
+        sourcesList.appendChild(tag);
+      });
+      sourcesBox.classList.remove('hidden');
+    } else {
+      sourcesBox.classList.add('hidden');
+    }
+  }
+  document.getElementById('back-to-3').addEventListener('click', () => goToStep(3));
+  document.getElementById('start-over').addEventListener('click', () => {
+    fileInput.value = '';
+    resetWizard();
+    showDashboardView();
+  });
+</script>
+</body>
+</html>
