@@ -677,9 +677,11 @@
   }
   .result-box .result-placeholder{
     font-size: 14.5px;
-    color: var(--ink-soft);
-    line-height: 1.6;
+    color: var(--ink);
+    line-height: 1.65;
+    white-space: pre-wrap;
   }
+  .result-sources{ margin-top: 18px; }
   .citation-preview-label{
     font-size: 12px;
     color: var(--ink-soft);
@@ -687,12 +689,14 @@
     margin-bottom: 6px;
   }
   .citation-tag{
-    display: inline-block;
+    display: block;
     font-size: 12px;
     color: var(--ink-soft);
     border: 1px dashed var(--line);
-    border-radius: 999px;
-    padding: 4px 10px;
+    border-radius: 10px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    text-align: left;
   }
 
   /* Nav buttons */
@@ -1310,11 +1314,11 @@
         <div id="result-content">
           <div class="result-box">
             <div class="result-meta" id="result-meta"></div>
-            <div class="result-placeholder">
-              The connection between Docly's interface and its document intelligence engine will be wired up in the next build phase. Once connected, this panel will show the real result, generated from your file with your chosen action, length, style and format.
+            <div class="result-placeholder" id="result-text"></div>
+            <div class="result-sources hidden" id="result-sources">
+              <div class="citation-preview-label">Sources</div>
+              <div id="result-sources-list"></div>
             </div>
-            <div class="citation-preview-label">Preview of how a source citation will look:</div>
-            <div class="citation-tag" id="citation-placeholder">Source — page — paragraph</div>
           </div>
           <div class="step-nav">
             <button class="btn-ghost" id="back-to-3">Back</button>
@@ -1861,6 +1865,8 @@
     wizardState.fileName = null;
     wizardState.documentObj = null;
     wizardState.action = null;
+    wizardState.resultText = null;
+    wizardState.resultSources = null;
     document.getElementById('file-chosen').classList.add('hidden');
     document.getElementById('file-upload-status').classList.add('hidden');
     document.getElementById('file-error').classList.add('hidden');
@@ -2035,43 +2041,20 @@
       });
   });
 
-  const RESULT_TYPE_MAP = { Summarize: 'résumé', Analyze: 'analyse', Extract: 'extraction', Transform: 'transformation' };
   async function generateResult(){
     const doc = wizardState.documentObj;
     const owner = Parse.User.current();
     if (!doc || !owner) return;
-    const placeholderText = 'This is a placeholder result — real AI-generated content will be connected in the next build step.';
 
-    if (wizardState.action === 'Ask'){
-      const ConversationClass = Parse.Object.extend('Conversation');
-      const conv = new ConversationClass();
-      conv.set('document', doc);
-      conv.set('owner', owner);
-      conv.set('title', (wizardState.fileName || 'Document') + ' — Conversation');
-      conv.set('lastMessageAt', new Date());
-      const savedConv = await conv.save();
-      const MessageClass = Parse.Object.extend('Message');
-      const msg = new MessageClass();
-      msg.set('conversation', savedConv);
-      msg.set('role', 'assistant');
-      msg.set('content', placeholderText);
-      msg.set('sources', []);
-      await msg.save();
-      return;
-    }
-
-    const ResultClass = Parse.Object.extend('Result');
-    const result = new ResultClass();
-    result.set('document', doc);
-    result.set('owner', owner);
-    result.set('type', RESULT_TYPE_MAP[wizardState.action] || wizardState.action);
-    result.set('content', placeholderText);
-    result.set('lengths', wizardState.length);
-    result.set('style', wizardState.style);
-    result.set('format', wizardState.format);
-    result.set('sources', []);
-    result.set('language', 'French');
-    await result.save();
+    const response = await Parse.Cloud.run('generateDocumentResult', {
+      documentId: doc.id,
+      action: wizardState.action,
+      length: wizardState.length,
+      style: wizardState.style,
+      format: wizardState.format
+    });
+    wizardState.resultText = response.content || '';
+    wizardState.resultSources = response.sources || [];
   }
 
   /* ---- Step 4: result ---- */
@@ -2079,6 +2062,23 @@
     document.getElementById('result-meta').textContent =
       (wizardState.fileName || 'Document') + '  ·  ' + wizardState.action +
       '  ·  ' + wizardState.length + ', ' + wizardState.style + ', ' + wizardState.format;
+    document.getElementById('result-text').textContent = wizardState.resultText || '';
+    const sourcesBox = document.getElementById('result-sources');
+    const sourcesList = document.getElementById('result-sources-list');
+    sourcesList.innerHTML = '';
+    const sources = wizardState.resultSources || [];
+    if (sources.length > 0){
+      sources.forEach(s => {
+        const tag = document.createElement('div');
+        tag.className = 'citation-tag';
+        const where = s.paragraph !== undefined ? ('Paragraph ' + s.paragraph) : 'Source';
+        tag.textContent = where + (s.note ? ' — ' + s.note : '');
+        sourcesList.appendChild(tag);
+      });
+      sourcesBox.classList.remove('hidden');
+    } else {
+      sourcesBox.classList.add('hidden');
+    }
   }
   document.getElementById('back-to-3').addEventListener('click', () => goToStep(3));
   document.getElementById('start-over').addEventListener('click', () => {
