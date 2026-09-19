@@ -10,26 +10,25 @@
 <script src="https://unpkg.com/parse/dist/parse.min.js"></script>
 <style>
   :root{
-    --yellow:#EAB308; --yellow-dark:#7C4A03; --yellow-tint:#FDF3D6;
-    --blue:#2F5EE0; --blue-dark:#1E3A8A; --blue-tint:#EAEFFC;
-    --ink:#201B15; --ink-soft:#5B5347; --ink-faint:#9C9384;
-    --paper:#FAF8F3; --paper-raised:#FFFFFF; --line:#E6E1D6;
-    --danger:#A02A2A; --danger-tint:#FBEAEA;
+    --yellow:#EAB308; --yellow-ink:#6B4700; --yellow-tint:#FDF3D6;
+    --blue:#2F5EE0; --blue-dark:#16255C; --blue-tint:#E8EDFB; --blue-faint:#8891B0;
+    --paper:#FAFAF8; --paper-raised:#FFFFFF; --line:#E4E8F5;
+    --danger:#B3261E; --danger-tint:#FBEAEA;
     --radius:10px;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
     font-family:'IBM Plex Sans', sans-serif;
-    color:var(--ink);
+    color:var(--blue-dark);
     background:var(--paper);
     -webkit-font-smoothing:antialiased;
     min-height:100vh;
   }
-  h1,h2,h3,.brand-word{font-family:'Newsreader', serif;}
+  h1,h2,.brand-word{font-family:'Newsreader', serif;}
   button{font-family:inherit;}
   [hidden]{display:none !important;}
-  img,svg{max-width:100%;}
+  svg{display:block;}
 
   .btn{
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
@@ -38,211 +37,214 @@
     transition:transform .08s ease;
   }
   .btn:active{transform:scale(0.98);}
-  .btn-primary{background:var(--yellow);color:var(--yellow-dark);}
-  .btn-primary:hover{background:#DDA80A;}
-  .btn-primary:disabled{background:#EFE9D6;color:var(--ink-faint);cursor:not-allowed;}
-  .btn-outline{background:transparent;border:1px solid var(--line);color:var(--ink);}
-  .btn-outline:hover{border-color:var(--ink-faint);}
-  .btn-ghost{background:transparent;color:var(--ink-soft);border:none;height:auto;padding:4px 6px;}
+  .btn-primary{background:var(--yellow);color:var(--yellow-ink);}
+  .btn-primary:hover{background:#D9A400;}
+  .btn-primary:disabled{background:#F3EAC7;color:#B3A164;cursor:not-allowed;}
+  .btn-outline{background:transparent;border:1px solid var(--line);color:var(--blue-dark);}
+  .btn-outline:hover{border-color:var(--blue);}
   .btn-block{width:100%;}
   .btn-sm{height:34px;padding:0 12px;font-size:13px;}
 
   .field{margin-bottom:14px;}
-  .field label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:6px;}
+  .field label{display:block;font-size:13px;color:var(--blue-faint);margin-bottom:6px;}
   .field input{
     width:100%;height:44px;border:1px solid var(--line);border-radius:var(--radius);
-    padding:0 14px;font-size:14px;background:var(--paper-raised);color:var(--ink);
+    padding:0 14px;font-size:14px;background:var(--paper-raised);color:var(--blue-dark);
   }
   .field input:focus{outline:2px solid var(--blue);outline-offset:1px;}
   .field-pass{position:relative;}
   .field-pass button{
-    position:absolute;right:10px;top:50%;transform:translateY(-50%);
-    background:none;border:none;color:var(--ink-faint);cursor:pointer;height:auto;padding:4px;
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    background:none;border:none;color:var(--blue-faint);cursor:pointer;height:auto;padding:6px;display:flex;
   }
+  .checkrow{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--blue-faint);margin-bottom:16px;}
   .error-msg{
     background:var(--danger-tint);color:var(--danger);font-size:13px;
-    padding:10px 12px;border-radius:var(--radius);margin-bottom:14px;
+    padding:10px 12px;border-radius:var(--radius);margin-bottom:16px;
   }
 
   /* ---------- AUTH SCREEN ---------- */
-  #screen-auth{min-height:100vh;display:flex;}
-  .auth-brand{
-    flex:1;background:var(--ink);color:var(--paper);
-    display:flex;flex-direction:column;justify-content:center;
-    padding:60px 56px;position:relative;
-  }
-  .auth-brand .brand-word{font-size:22px;font-weight:600;margin:0 0 40px;}
-  .auth-brand h1{
-    font-size:clamp(28px,4vw,44px);font-weight:500;line-height:1.25;margin:0 0 18px;max-width:480px;
-  }
-  .auth-brand h1 mark{
-    background:var(--yellow);color:var(--yellow-dark);padding:0 6px;border-radius:3px;
-  }
-  .auth-brand p{color:#C9C2B3;font-size:15px;max-width:380px;line-height:1.6;}
-  .auth-formside{
-    flex:1;display:flex;align-items:center;justify-content:center;
-    padding:40px 24px;background:var(--paper);
-  }
-  .auth-card{width:100%;max-width:380px;}
-  .auth-card .brand-word{display:none;}
-  .auth-card h2{font-size:24px;font-weight:500;margin:0 0 6px;}
-  .auth-card .sub{color:var(--ink-soft);font-size:14px;margin:0 0 26px;}
-  .auth-forgot{display:flex;justify-content:flex-end;margin:-4px 0 18px;}
-  .auth-forgot a{font-size:13px;color:var(--blue);text-decoration:none;}
+  #screen-auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .auth-card{width:100%;max-width:400px;background:var(--paper-raised);border:1px solid var(--line);border-radius:16px;padding:36px 32px;}
+  .auth-brand-mini{text-align:center;margin-bottom:26px;}
+  .auth-brand-mini .brand-word{font-size:26px;font-weight:600;margin:0;}
+  .auth-brand-mini .slogan{font-size:13px;color:var(--blue-faint);margin:4px 0 0;}
+  .auth-forgot-center{text-align:center;margin:14px 0 0;}
+  .auth-forgot-center a{font-size:13px;color:var(--blue);text-decoration:none;}
   .auth-switch{
-    text-align:center;font-size:13px;color:var(--ink-soft);margin-top:22px;
+    text-align:center;font-size:13px;color:var(--blue-faint);margin-top:22px;
     padding-top:18px;border-top:1px solid var(--line);
   }
   .auth-switch a{color:var(--blue);text-decoration:none;font-weight:500;}
 
-  @media (max-width:900px){
-    #screen-auth{flex-direction:column;}
-    .auth-brand{flex:none;padding:32px 24px;min-height:auto;}
-    .auth-brand h1{font-size:24px;max-width:none;}
-    .auth-brand p{display:none;}
-    .auth-formside{flex:none;padding:32px 20px 48px;}
-  }
-
   /* ---------- DASHBOARD ---------- */
-  #screen-dashboard{display:flex;min-height:100vh;}
+  .db-topbar{
+    height:58px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 20px;border-bottom:1px solid var(--line);background:var(--paper-raised);
+  }
+  .db-topbar .brand-word{font-size:19px;font-weight:600;}
+  .db-user{position:relative;}
+  .db-user-btn{
+    display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:4px;
+  }
+  .db-user-btn .avatar{
+    width:30px;height:30px;border-radius:50%;background:var(--yellow-tint);color:var(--yellow-ink);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;
+  }
+  .db-user-menu{
+    position:absolute;right:0;top:42px;background:var(--paper-raised);border:1px solid var(--line);
+    border-radius:8px;box-shadow:0 6px 18px rgba(22,37,92,.08);min-width:190px;overflow:hidden;z-index:10;
+  }
+  .db-user-menu .em{padding:10px 12px;font-size:12px;color:var(--blue-faint);border-bottom:1px solid var(--line);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .db-user-menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:10px 12px;font-size:13px;color:var(--blue-dark);cursor:pointer;}
+  .db-user-menu button:hover{background:var(--paper);}
+
+  #screen-dashboard{display:flex;min-height:100vh;flex-direction:column;}
+  .db-body{display:flex;flex:1;min-height:0;}
   .db-sidebar{
     width:220px;flex-shrink:0;background:var(--paper-raised);border-right:1px solid var(--line);
-    padding:20px 14px;display:flex;flex-direction:column;
+    padding:16px 12px;
   }
-  .db-sidebar .brand-word{font-size:18px;font-weight:600;margin:4px 8px 24px;}
   .nav-item{
     display:flex;align-items:center;gap:10px;height:40px;padding:0 10px;border-radius:var(--radius);
-    color:var(--ink-soft);font-size:14px;cursor:pointer;border:none;background:none;width:100%;text-align:left;
+    color:var(--blue-faint);font-size:14px;cursor:pointer;border:none;background:none;width:100%;text-align:left;
   }
   .nav-item:hover{background:var(--paper);}
-  .nav-item.active{background:var(--yellow-tint);color:var(--yellow-dark);font-weight:500;}
-  .nav-item .ic{width:18px;text-align:center;font-size:14px;}
-  .db-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-top:1px solid var(--line);}
-  .db-user .avatar{
-    width:30px;height:30px;border-radius:50%;background:var(--blue-tint);color:var(--blue-dark);
-    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;
-  }
-  .db-user .email{font-size:12px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
-  .db-user button{background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:12px;}
+  .nav-item.active{background:var(--yellow-tint);color:var(--yellow-ink);font-weight:500;}
+  .nav-item .ic{width:18px;display:flex;}
 
   .db-drawer-toggle{display:none;}
   .db-main{flex:1;min-width:0;padding:26px 32px;}
-  .db-topbar{display:flex;gap:12px;margin-bottom:22px;}
+  .db-toolbar{display:flex;gap:12px;margin-bottom:22px;}
   .db-search{
     flex:1;height:42px;border:1px solid var(--line);border-radius:var(--radius);
     padding:0 14px;font-size:14px;background:var(--paper-raised);
   }
-  .db-topbar .btn{white-space:nowrap;}
+  .db-toolbar .btn{white-space:nowrap;}
 
-  .db-title{font-size:20px;font-weight:500;margin:0 0 16px;}
-  .doc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
-  @media (min-width:1100px){.doc-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
-  .doc-card{
-    background:var(--paper-raised);border:1px solid var(--line);border-left:3px solid var(--ink-faint);
-    border-radius:var(--radius);padding:14px 14px 12px;position:relative;
+  .db-section-head{display:flex;align-items:baseline;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .db-section-head h1{font-size:21px;font-weight:500;margin:0;}
+  .db-count{font-size:13px;color:var(--blue-faint);}
+  .db-section-head .spacer{flex:1;}
+  .db-sort{
+    height:32px;padding:0 10px;border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--paper-raised);font-size:12px;color:var(--blue-dark);cursor:pointer;
   }
-  .doc-card.type-summary{border-left-color:var(--yellow);}
-  .doc-card.type-analysis{border-left-color:var(--blue);}
-  .doc-card.type-conversation{border-left-color:var(--blue);}
-  .doc-card .doc-name{font-size:14px;font-weight:500;margin:0 0 4px;padding-right:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .doc-card .doc-meta{font-size:12px;color:var(--ink-faint);}
-  .doc-card .doc-menu-btn{
-    position:absolute;top:10px;right:8px;background:none;border:none;cursor:pointer;
-    color:var(--ink-faint);font-size:16px;padding:4px;
+  .db-filter-btn{
+    width:32px;height:32px;border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--paper-raised);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--blue-faint);
   }
+
+  .doc-row{
+    display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);
+    border-radius:var(--radius);background:var(--paper-raised);margin-bottom:8px;position:relative;
+  }
+  .doc-row input[type=checkbox]{accent-color:var(--yellow);width:16px;height:16px;flex-shrink:0;}
+  .doc-icon{
+    width:36px;height:36px;border-radius:8px;background:var(--yellow-tint);color:var(--yellow-ink);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;
+  }
+  .doc-info{flex:1;min-width:0;}
+  .doc-name{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .doc-meta{font-size:12px;color:var(--blue-faint);}
+  .doc-menu-btn{background:none;border:none;cursor:pointer;color:var(--blue-faint);font-size:16px;padding:4px;flex-shrink:0;}
   .doc-menu{
-    position:absolute;top:34px;right:8px;background:var(--paper-raised);border:1px solid var(--line);
-    border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.08);z-index:5;min-width:140px;overflow:hidden;
+    position:absolute;top:42px;right:10px;background:var(--paper-raised);border:1px solid var(--line);
+    border-radius:8px;box-shadow:0 4px 14px rgba(22,37,92,.08);z-index:5;min-width:140px;overflow:hidden;
   }
   .doc-menu button{
     display:block;width:100%;text-align:left;background:none;border:none;padding:9px 12px;
-    font-size:13px;color:var(--ink);cursor:pointer;
+    font-size:13px;color:var(--blue-dark);cursor:pointer;
   }
   .doc-menu button:hover{background:var(--paper);}
   .doc-menu button.danger{color:var(--danger);}
   .empty-state{
     border:1px dashed var(--line);border-radius:var(--radius);padding:40px 20px;text-align:center;
-    color:var(--ink-soft);
+    color:var(--blue-faint);
   }
-  .empty-state p{margin:0 0 4px;font-size:14px;}
-  .empty-state .sub{font-size:13px;color:var(--ink-faint);}
+  .empty-state p{margin:0 0 4px;font-size:14px;color:var(--blue-dark);}
+  .empty-state .sub{font-size:13px;color:var(--blue-faint);}
 
   @media (max-width:768px){
     .db-sidebar{
-      position:fixed;inset:0;z-index:30;transform:translateX(-100%);transition:transform .2s ease;
+      position:fixed;top:58px;bottom:0;left:0;z-index:30;transform:translateX(-100%);transition:transform .2s ease;
       width:78%;max-width:280px;
     }
     .db-sidebar.open{transform:translateX(0);}
-    .db-overlay{
-      position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:25;
-    }
+    .db-overlay{position:fixed;inset:0;top:58px;background:rgba(22,37,92,.35);z-index:25;}
     .db-drawer-toggle{
       display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 12px;border:1px solid var(--line);
-      border-radius:var(--radius);background:var(--paper-raised);font-size:13px;color:var(--ink);cursor:pointer;
+      border-radius:var(--radius);background:var(--paper-raised);font-size:13px;color:var(--blue-dark);cursor:pointer;
       margin-bottom:14px;
     }
     .db-main{padding:18px 16px;}
-    .doc-grid{grid-template-columns:1fr;}
+    .doc-row{flex-wrap:wrap;}
   }
 
   /* ---------- WIZARD ---------- */
-  #screen-wizard{min-height:100vh;padding:30px 20px 100px;}
-  .wiz-wrap{max-width:640px;margin:0 auto;}
-  .wiz-back{background:none;border:none;color:var(--ink-soft);font-size:13px;cursor:pointer;margin-bottom:18px;padding:0;}
-  .wiz-dots{display:flex;justify-content:center;gap:6px;margin-bottom:24px;}
-  .wiz-dots span{width:7px;height:7px;border-radius:50%;background:var(--line);}
-  .wiz-dots span.done{background:var(--blue);}
+  #screen-wizard{min-height:100vh;padding:0 20px 100px;border-top:3px solid var(--yellow);}
+  .wiz-wrap{max-width:640px;margin:0 auto;padding-top:26px;}
+  .wiz-back{background:none;border:none;color:var(--blue-faint);font-size:13px;cursor:pointer;margin-bottom:22px;padding:0;}
+
+  .stepper{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px;}
+  .step-circle{
+    width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);color:var(--blue-faint);
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:var(--paper-raised);
+  }
+  .step-circle.done{background:var(--yellow);border-color:var(--yellow);color:var(--yellow-ink);}
+  .step-line{width:28px;height:1.5px;background:var(--line);}
+  .step-line.done{background:var(--yellow);}
+  .step-caption{text-align:center;font-size:12px;color:var(--blue-faint);margin:0 0 26px;}
 
   .dropzone{
-    border:1.5px dashed var(--line);border-radius:14px;padding:36px 20px;text-align:center;
+    border:1.5px dashed var(--line);border-radius:14px;padding:30px 20px;text-align:center;
     display:flex;flex-direction:column;align-items:center;gap:10px;background:var(--paper-raised);
     cursor:pointer;
   }
   .dropzone.drag{border-color:var(--blue);background:var(--blue-tint);}
   .dropzone .icon{
-    width:44px;height:44px;border-radius:50%;background:var(--ink);color:var(--paper);
-    display:flex;align-items:center;justify-content:center;font-size:18px;
+    width:40px;height:40px;border-radius:50%;background:var(--blue-tint);color:var(--blue);
+    display:flex;align-items:center;justify-content:center;
   }
   .dropzone .dz-title{font-size:14px;font-weight:500;}
-  .dropzone .dz-formats{font-size:12px;color:var(--ink-faint);}
+  .dropzone .dz-formats{font-size:12px;color:var(--blue-faint);}
   .dropzone input[type=file]{display:none;}
 
   .file-ready{
     display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:var(--radius);
-    padding:12px 14px;background:var(--paper-raised);
+    padding:12px 14px;background:var(--paper-raised);margin-top:12px;
   }
-  .file-ready .fi{width:36px;height:36px;border-radius:8px;background:var(--yellow-tint);color:var(--yellow-dark);
-    display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0;}
+  .file-ready .fi{width:36px;height:36px;border-radius:8px;background:var(--yellow-tint);color:var(--yellow-ink);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
   .file-ready .fname{font-size:14px;font-weight:500;}
-  .file-ready .fmeta{font-size:12px;color:var(--ink-faint);}
+  .file-ready .fmeta{font-size:12px;color:var(--blue-faint);display:flex;align-items:center;gap:5px;}
   .file-ready .progress{height:4px;background:var(--line);border-radius:4px;margin-top:6px;overflow:hidden;}
   .file-ready .progress i{display:block;height:100%;background:var(--blue);width:0%;transition:width .2s;}
-  .file-ready .remove{margin-left:auto;background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:14px;}
+  .file-ready .remove{margin-left:auto;background:none;border:none;color:var(--blue-faint);cursor:pointer;font-size:16px;}
 
-  .wiz-label{font-size:13px;color:var(--ink-soft);margin:26px 0 10px;}
+  .wiz-section{margin-top:28px;}
+  .wiz-section-head{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+  .wiz-section-head .bar{width:3px;height:16px;background:var(--yellow);border-radius:2px;}
+  .wiz-section-head h2{font-size:15px;font-weight:600;margin:0;}
+  .wiz-section-sub{font-size:12px;color:var(--blue-faint);margin:0 0 12px 11px;}
   .pill-row{display:flex;flex-wrap:wrap;gap:8px;}
   .pill{
-    padding:8px 14px;border-radius:20px;border:1px solid var(--line);font-size:13px;
-    background:var(--paper-raised);color:var(--ink-soft);cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:20px;border:1px solid var(--line);
+    font-size:13px;background:var(--paper-raised);color:var(--blue-dark);cursor:pointer;
   }
-  .pill.selected{border-color:var(--blue);color:var(--blue-dark);background:var(--blue-tint);font-weight:500;}
+  .pill svg{color:var(--blue-faint);}
+  .pill.selected{border-color:var(--yellow);background:var(--yellow-tint);color:var(--yellow-ink);font-weight:500;}
+  .pill.selected svg{color:var(--yellow-ink);}
 
-  .wiz-footer{
-    position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-top:1px solid var(--line);
-    padding:14px 20px;display:flex;justify-content:flex-end;
-  }
-  .wiz-footer-inner{max-width:640px;width:100%;display:flex;justify-content:flex-end;}
-  @media (min-width:900px){
-    .wiz-footer{position:static;border-top:none;padding:32px 0 0;background:none;}
-  }
+  .wiz-actions{display:flex;justify-content:space-between;gap:10px;margin-top:30px;}
 
   .result-block{margin-top:8px;}
   .result-block h2{font-size:19px;font-weight:500;margin:0 0 14px;}
   .result-content{
     background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);
-    padding:18px;font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap;
+    padding:18px;font-size:14px;line-height:1.7;color:var(--blue-dark);white-space:pre-wrap;
   }
-  .sources{margin-top:14px;font-size:12px;color:var(--ink-faint);}
+  .sources{margin-top:14px;font-size:12px;color:var(--blue-faint);padding-left:18px;}
   .sources li{margin-bottom:4px;}
   .result-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
 </style>
@@ -251,128 +253,170 @@
 
 <!-- ============ AUTH SCREEN ============ -->
 <section id="screen-auth">
-  <div class="auth-brand">
-    <div class="brand-word">Docly</div>
-    <h1>Your documents.<br><mark>Finally understood.</mark></h1>
-    <p>Drop any file — PDF, Word, Excel, PowerPoint and more — and get clear, sourced answers in seconds.</p>
-  </div>
-  <div class="auth-formside">
-    <div class="auth-card">
-      <div id="err-auth" class="error-msg" hidden></div>
+  <div class="auth-card">
+    <div class="auth-brand-mini">
+      <p class="brand-word">Docly</p>
+      <p class="slogan">Your documents. Finally understood.</p>
+    </div>
+    <div id="err-auth" class="error-msg" hidden></div>
 
-      <!-- LOGIN -->
-      <div id="pane-login">
-        <h2>Log in</h2>
-        <p class="sub">Welcome back — pick up where you left off.</p>
-        <form id="form-login">
-          <div class="field">
-            <label for="login-email">Email</label>
-            <input type="email" id="login-email" required autocomplete="email">
-          </div>
-          <div class="field field-pass">
-            <label for="login-pass">Password</label>
-            <input type="password" id="login-pass" required autocomplete="current-password">
-            <button type="button" class="toggle-pass" data-target="login-pass">show</button>
-          </div>
-          <div class="auth-forgot"><a href="#" id="link-forgot">Forgot password?</a></div>
-          <button type="submit" class="btn btn-primary btn-block" id="btn-login">Log in</button>
-        </form>
-        <div class="auth-switch">Don't have an account? <a href="#" id="to-signup">Sign up</a></div>
-      </div>
+    <!-- LOGIN -->
+    <div id="pane-login">
+      <form id="form-login">
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" required autocomplete="email">
+        </div>
+        <div class="field field-pass">
+          <label for="login-pass">Password</label>
+          <input type="password" id="login-pass" required autocomplete="current-password">
+          <button type="button" class="toggle-pass" data-target="login-pass" aria-label="Show password">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <label class="checkrow"><input type="checkbox" checked disabled> Remember me</label>
+        <button type="submit" class="btn btn-primary btn-block" id="btn-login">Log in</button>
+      </form>
+      <div class="auth-forgot-center"><a href="#" id="link-forgot">Forgot password?</a></div>
+      <div class="auth-switch">Don't have an account? <a href="#" id="to-signup">Sign up</a></div>
+    </div>
 
-      <!-- SIGNUP -->
-      <div id="pane-signup" hidden>
-        <h2>Create your account</h2>
-        <p class="sub">Just an email and a password — that's it.</p>
-        <form id="form-signup">
-          <div class="field">
-            <label for="signup-email">Email</label>
-            <input type="email" id="signup-email" required autocomplete="email">
-          </div>
-          <div class="field field-pass">
-            <label for="signup-pass">Password</label>
-            <input type="password" id="signup-pass" required autocomplete="new-password">
-            <button type="button" class="toggle-pass" data-target="signup-pass">show</button>
-          </div>
-          <button type="submit" class="btn btn-primary btn-block" id="btn-signup">Sign up</button>
-        </form>
-        <div class="auth-switch">Already have an account? <a href="#" id="to-login">Log in</a></div>
-      </div>
+    <!-- SIGNUP -->
+    <div id="pane-signup" hidden>
+      <form id="form-signup">
+        <div class="field">
+          <label for="signup-email">Email</label>
+          <input type="email" id="signup-email" required autocomplete="email">
+        </div>
+        <div class="field field-pass">
+          <label for="signup-pass">Password</label>
+          <input type="password" id="signup-pass" required autocomplete="new-password">
+          <button type="button" class="toggle-pass" data-target="signup-pass" aria-label="Show password">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="btn-signup">Sign up</button>
+      </form>
+      <div class="auth-switch">Already have an account? <a href="#" id="to-login">Log in</a></div>
     </div>
   </div>
 </section>
 
 <!-- ============ DASHBOARD ============ -->
 <section id="screen-dashboard" hidden>
-  <div class="db-overlay" id="db-overlay" hidden></div>
-  <nav class="db-sidebar" id="db-sidebar">
-    <div class="brand-word">Docly</div>
-    <button class="nav-item active" data-tab="documents"><span class="ic">&#128196;</span> All documents</button>
-    <button class="nav-item" data-tab="summaries"><span class="ic">&#9737;</span> Summaries</button>
-    <button class="nav-item" data-tab="conversations"><span class="ic">&#128172;</span> Conversations</button>
-    <button class="nav-item" data-tab="analyses"><span class="ic">&#128202;</span> Analyses</button>
-    <button class="nav-item" data-tab="exports"><span class="ic">&#8595;</span> Exports</button>
+  <header class="db-topbar">
+    <button class="db-drawer-toggle" id="db-drawer-toggle" aria-label="Open menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></svg>
+    </button>
+    <p class="brand-word">Docly</p>
     <div class="db-user">
-      <div class="avatar" id="db-avatar">·</div>
-      <div class="email" id="db-email">—</div>
-      <button id="btn-logout">Log out</button>
+      <button class="db-user-btn" id="db-user-btn">
+        <span class="avatar" id="db-avatar">·</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="db-user-menu" id="db-user-menu" hidden>
+        <div class="em" id="db-email">—</div>
+        <button id="btn-logout">Log out</button>
+      </div>
     </div>
-  </nav>
+  </header>
 
-  <main class="db-main">
-    <button class="db-drawer-toggle" id="db-drawer-toggle">&#9776; <span id="db-drawer-label">All documents</span></button>
-    <div class="db-topbar">
-      <input type="text" class="db-search" id="db-search" placeholder="Search your documents and results">
-      <button class="btn btn-primary" id="btn-new-doc">+ New document</button>
-    </div>
-    <h1 class="db-title" id="db-tab-title">All documents</h1>
-    <div id="db-list"></div>
-  </main>
+  <div class="db-body">
+    <div class="db-overlay" id="db-overlay" hidden></div>
+    <nav class="db-sidebar" id="db-sidebar">
+      <button class="nav-item active" data-tab="documents">
+        <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h5" stroke-linecap="round"/></svg></span>
+        All documents
+      </button>
+      <button class="nav-item" data-tab="summaries">
+        <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v4M12 17v4M5 12H3M21 12h-2M7 7L5.5 5.5M18.5 18.5L17 17M17 7l1.5-1.5M6.5 18.5L5 17" stroke-linecap="round"/></svg></span>
+        Summaries
+      </button>
+      <button class="nav-item" data-tab="conversations">
+        <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v10H8l-4 4V5z" stroke-linejoin="round"/></svg></span>
+        Conversations
+      </button>
+      <button class="nav-item" data-tab="analyses">
+        <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="6"/><path d="M15 15l5 5" stroke-linecap="round"/></svg></span>
+        Analyses
+      </button>
+      <button class="nav-item" data-tab="exports">
+        <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 4v11M7 11l5 5 5-5M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        Exports
+      </button>
+    </nav>
+
+    <main class="db-main">
+      <button class="db-drawer-toggle" id="db-drawer-toggle-2" style="display:none">&#9776;</button>
+      <div class="db-toolbar">
+        <input type="text" class="db-search" id="db-search" placeholder="Search your documents and results">
+        <button class="btn btn-primary" id="btn-new-doc">+ New document</button>
+      </div>
+      <div class="db-section-head">
+        <h1 id="db-tab-title">All documents</h1>
+        <span class="db-count" id="db-count"></span>
+        <span class="spacer"></span>
+        <button class="db-sort" id="db-sort">Most recent</button>
+        <button class="db-filter-btn" aria-label="Filter">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M7 12h10M10 18h4" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div id="db-list"></div>
+    </main>
+  </div>
 </section>
 
 <!-- ============ WIZARD ============ -->
 <section id="screen-wizard" hidden>
   <div class="wiz-wrap">
     <button class="wiz-back" id="wiz-back">&larr; Back to dashboard</button>
-    <div class="wiz-dots"><span id="dot-1"></span><span id="dot-2"></span><span id="dot-3"></span></div>
+    <div class="stepper">
+      <div class="step-circle" id="dot-1">1</div><div class="step-line" id="line-1"></div>
+      <div class="step-circle" id="dot-2">2</div><div class="step-line" id="line-2"></div>
+      <div class="step-circle" id="dot-3">3</div>
+    </div>
+    <p class="step-caption" id="step-caption">Step 1 of 3 — Upload your file</p>
 
     <div id="wiz-inputs">
-      <div id="dropzone-wrap">
-        <div class="dropzone" id="dropzone">
-          <div class="icon">&#8593;</div>
-          <div class="dz-title">Drop your file, or <u>browse</u></div>
-          <div class="dz-formats">PDF · DOCX · XLSX · PPTX · TXT · EPUB · CSV · MD</div>
-          <input type="file" id="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.epub,.csv,.md">
-        </div>
+      <div class="dropzone" id="dropzone">
+        <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v11M7 9l5-5 5 5M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="dz-title">Drop your file, or <u>browse</u></div>
+        <div class="dz-formats">PDF · DOCX · XLSX · PPTX · TXT · EPUB · CSV · MD</div>
+        <input type="file" id="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.epub,.csv,.md">
       </div>
       <div id="file-ready-wrap" hidden></div>
 
-      <div class="wiz-label">What do you want to do?</div>
-      <div class="pill-row" id="action-pills">
-        <button class="pill" data-value="summarize">Summarize</button>
-        <button class="pill" data-value="analyze">Analyze</button>
-        <button class="pill" data-value="ask">Ask questions</button>
-        <button class="pill" data-value="extract">Extract</button>
-        <button class="pill" data-value="transform">Transform</button>
+      <div class="wiz-section">
+        <div class="wiz-section-head"><span class="bar"></span><h2>What do you want to do?</h2></div>
+        <p class="wiz-section-sub">Choose an action to process your document.</p>
+        <div class="pill-row" id="action-pills">
+          <button class="pill" data-value="summarize"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v4M12 17v4M5 12H3M21 12h-2M7 7L5.5 5.5M18.5 18.5L17 17M17 7l1.5-1.5M6.5 18.5L5 17" stroke-linecap="round"/></svg>Summarize</button>
+          <button class="pill" data-value="analyze"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="6"/><path d="M15 15l5 5" stroke-linecap="round"/></svg>Analyze</button>
+          <button class="pill" data-value="ask"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16v10H8l-4 4V5z" stroke-linejoin="round"/></svg>Ask questions</button>
+          <button class="pill" data-value="extract"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4v11M7 11l5 5 5-5M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg>Extract</button>
+          <button class="pill" data-value="transform"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h13l-3-3M20 16H7l3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>Transform</button>
+        </div>
       </div>
 
-      <div class="wiz-label">Choose the result</div>
-      <div class="pill-row" id="result-pills">
-        <button class="pill" data-value="short">Short</button>
-        <button class="pill" data-value="detailed">Detailed</button>
-        <button class="pill" data-value="professional">Professional</button>
-        <button class="pill" data-value="table">Table</button>
-        <button class="pill" data-value="presentation">Presentation</button>
+      <div class="wiz-section">
+        <div class="wiz-section-head"><span class="bar"></span><h2>Choose the result</h2></div>
+        <p class="wiz-section-sub">Select the format and style of your output.</p>
+        <div class="pill-row" id="result-pills">
+          <button class="pill" data-value="short"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 9h8M8 13h5" stroke-linecap="round"/></svg>Short</button>
+          <button class="pill" data-value="detailed"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 11h8M8 14h8M8 17h5" stroke-linecap="round"/></svg>Detailed</button>
+          <button class="pill" data-value="professional"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="8" width="18" height="11" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Professional</button>
+          <button class="pill" data-value="table"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>Table</button>
+          <button class="pill" data-value="presentation"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4" stroke-linecap="round"/></svg>Presentation</button>
+        </div>
+      </div>
+
+      <div class="wiz-actions">
+        <button class="btn btn-outline" id="btn-wiz-back-2">&larr; Back</button>
+        <button class="btn btn-primary" id="btn-continue" disabled>Continue &rarr;</button>
       </div>
     </div>
 
     <div id="wiz-result" class="result-block" hidden></div>
-  </div>
-
-  <div class="wiz-footer">
-    <div class="wiz-footer-inner">
-      <button class="btn btn-primary" id="btn-continue" disabled>Continue</button>
-    </div>
   </div>
 </section>
 
@@ -399,9 +443,7 @@ function togglePane(showLogin){
 document.querySelectorAll(".toggle-pass").forEach(btn=>{
   btn.onclick = ()=>{
     const input = document.getElementById(btn.dataset.target);
-    const isPass = input.type === "password";
-    input.type = isPass ? "text" : "password";
-    btn.textContent = isPass ? "hide" : "show";
+    input.type = (input.type === "password") ? "text" : "password";
   };
 });
 document.getElementById("link-forgot").onclick = async (e)=>{
@@ -451,6 +493,13 @@ document.getElementById("btn-logout").onclick = async ()=>{
   await Parse.User.logOut();
   location.reload();
 };
+document.getElementById("db-user-btn").onclick = ()=>{
+  const m = document.getElementById("db-user-menu");
+  m.hidden = !m.hidden;
+};
+document.addEventListener("click", (e)=>{
+  if(!e.target.closest(".db-user")) document.getElementById("db-user-menu").hidden = true;
+});
 
 // ---------------- Dashboard ----------------
 const TABS = {
@@ -461,6 +510,7 @@ const TABS = {
   exports:{label:"Exports", cls:"Export"}
 };
 let currentTab = "documents";
+let sortDesc = true;
 
 function enterApp(){
   const user = Parse.User.current();
@@ -479,20 +529,26 @@ document.querySelectorAll(".nav-item").forEach(btn=>{
   };
 });
 
+document.getElementById("db-sort").onclick = ()=>{
+  sortDesc = !sortDesc;
+  document.getElementById("db-sort").textContent = sortDesc ? "Most recent" : "Oldest first";
+  loadTab(currentTab);
+};
+
 async function loadTab(tab){
   currentTab = tab;
   const t = TABS[tab];
   document.getElementById("db-tab-title").textContent = t.label;
-  document.getElementById("db-drawer-label").textContent = t.label;
   const list = document.getElementById("db-list");
-  list.innerHTML = "<p style='color:var(--ink-faint);font-size:13px;'>Loading…</p>";
+  list.innerHTML = "<p style='color:var(--blue-faint);font-size:13px;'>Loading…</p>";
   try{
     const q = new Parse.Query(t.cls);
     q.equalTo("owner", Parse.User.current());
     if(t.type) q.equalTo("type", t.type);
-    q.descending("createdAt");
+    if(sortDesc) q.descending("createdAt"); else q.ascending("createdAt");
     q.limit(50);
     const results = await q.find();
+    document.getElementById("db-count").textContent = results.length + (results.length === 1 ? " item" : " items");
     renderList(tab, results);
   }catch(err){
     list.innerHTML = "<p style='color:var(--danger);font-size:13px;'>"+err.message+"</p>";
@@ -505,30 +561,38 @@ function renderList(tab, items){
     list.innerHTML = `<div class="empty-state"><p>No items here yet.</p><span class="sub">Start with "New document" above.</span></div>`;
     return;
   }
-  const grid = document.createElement("div");
-  grid.className = "doc-grid";
+  const wrap = document.createElement("div");
   items.forEach(item=>{
     const name = displayName(tab, item);
     const meta = displayMeta(tab, item);
-    const typeClass = tab === "summaries" ? "type-summary" : (tab === "analyses" || tab === "conversations" ? "type-analysis" : "");
-    const card = document.createElement("div");
-    card.className = "doc-card " + typeClass;
-    card.innerHTML = `
-      <div class="doc-name">${escapeHtml(name)}</div>
-      <div class="doc-meta">${escapeHtml(meta)}</div>
+    const row = document.createElement("div");
+    row.className = "doc-row";
+    row.innerHTML = `
+      <input type="checkbox">
+      <div class="doc-icon">${badgeText(tab, item)}</div>
+      <div class="doc-info">
+        <div class="doc-name">${escapeHtml(name)}</div>
+        <div class="doc-meta">${escapeHtml(meta)}</div>
+      </div>
       <button class="doc-menu-btn">&#8942;</button>
     `;
-    card.querySelector(".doc-menu-btn").onclick = (e)=>{
+    row.querySelector(".doc-menu-btn").onclick = (e)=>{
       e.stopPropagation();
       closeAllMenus();
-      openMenu(card, tab, item);
+      openMenu(row, tab, item);
     };
-    grid.appendChild(card);
+    wrap.appendChild(row);
   });
   list.innerHTML = "";
-  list.appendChild(grid);
+  list.appendChild(wrap);
 }
 
+function badgeText(tab, item){
+  if(tab === "documents") return (item.get("fileType")||"FILE").toUpperCase().slice(0,4);
+  if(tab === "conversations") return "CHAT";
+  if(tab === "exports") return (item.get("format")||"EXP").toUpperCase().slice(0,4);
+  return (item.get("type")||"RES").toUpperCase().slice(0,4);
+}
 function displayName(tab, item){
   if(tab === "documents") return item.get("fileName") || "Untitled file";
   if(tab === "conversations") return item.get("title") || "Conversation";
@@ -536,7 +600,7 @@ function displayName(tab, item){
   return (item.get("type") || "Result") + " — " + (item.get("style")||"");
 }
 function displayMeta(tab, item){
-  if(tab === "documents") return (item.get("status")||"ready") + " · " + (item.get("fileType")||"");
+  if(tab === "documents") return (item.get("status")||"ready") + " · " + (item.get("fileType")||"") + " · " + timeAgo(item.get("createdAt"));
   if(tab === "conversations") return "Updated " + timeAgo(item.get("lastMessageAt") || item.get("updatedAt"));
   return timeAgo(item.get("createdAt"));
 }
@@ -552,7 +616,7 @@ function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"
 function closeAllMenus(){ document.querySelectorAll(".doc-menu").forEach(m=>m.remove()); }
 document.addEventListener("click", closeAllMenus);
 
-function openMenu(card, tab, item){
+function openMenu(row, tab, item){
   const menu = document.createElement("div");
   menu.className = "doc-menu";
   const canRename = tab === "documents" || tab === "conversations";
@@ -562,7 +626,7 @@ function openMenu(card, tab, item){
     <button data-act="share">Share</button>
     <button data-act="delete" class="danger">Delete</button>
   `;
-  card.appendChild(menu);
+  row.appendChild(menu);
   menu.onclick = async (e)=>{
     e.stopPropagation();
     const act = e.target.dataset.act;
@@ -585,17 +649,18 @@ function openMenu(card, tab, item){
 
 document.getElementById("db-search").oninput = (e)=>{
   const q = e.target.value.toLowerCase();
-  document.querySelectorAll(".doc-card").forEach(card=>{
-    const match = card.querySelector(".doc-name").textContent.toLowerCase().includes(q);
-    card.style.display = match ? "" : "none";
+  document.querySelectorAll(".doc-row").forEach(row=>{
+    const match = row.querySelector(".doc-name").textContent.toLowerCase().includes(q);
+    row.style.display = match ? "" : "none";
   });
 };
 
 // mobile drawer
-document.getElementById("db-drawer-toggle").onclick = ()=>{
+function openDrawer(){
   document.getElementById("db-sidebar").classList.add("open");
   document.getElementById("db-overlay").hidden = false;
-};
+}
+document.getElementById("db-drawer-toggle").onclick = openDrawer;
 document.getElementById("db-overlay").onclick = closeDrawer;
 function closeDrawer(){
   document.getElementById("db-sidebar").classList.remove("open");
@@ -612,20 +677,22 @@ function openWizard(){
   resetWizard();
   showScreen("screen-wizard");
 }
-document.getElementById("wiz-back").onclick = ()=>{ showScreen("screen-dashboard"); loadTab(currentTab); };
+document.getElementById("wiz-back").onclick = backToDashboard;
+document.getElementById("btn-wiz-back-2").onclick = backToDashboard;
+function backToDashboard(){ showScreen("screen-dashboard"); loadTab(currentTab); }
 
 function resetWizard(){
   currentDocument = null; selectedAction = null; selectedResult = null;
   document.getElementById("wiz-inputs").hidden = false;
   document.getElementById("wiz-result").hidden = true;
-  document.getElementById("dropzone-wrap").hidden = false;
+  document.getElementById("wiz-inputs").style.display = "";
   document.getElementById("file-ready-wrap").hidden = true;
   document.getElementById("file-ready-wrap").innerHTML = "";
   document.getElementById("file-input").value = "";
   document.querySelectorAll("#action-pills .pill, #result-pills .pill").forEach(p=>p.classList.remove("selected"));
-  document.getElementById("btn-continue").textContent = "Continue";
+  document.getElementById("btn-continue").innerHTML = "Continue &rarr;";
   document.getElementById("btn-continue").onclick = handleContinue;
-  updateDots(); updateContinueState();
+  updateStepper(); updateContinueState();
 }
 
 const dropzone = document.getElementById("dropzone");
@@ -639,7 +706,8 @@ dropzone.addEventListener("drop", e=>{
 fileInput.onchange = ()=>{ if(fileInput.files.length) handleFile(fileInput.files[0]); };
 
 async function handleFile(file){
-  document.getElementById("dropzone-wrap").hidden = true;
+  // the dropzone stays visible — dropping a new file replaces the current one
+  if(currentDocument){ try{ await currentDocument.destroy(); }catch(e){} }
   const wrap = document.getElementById("file-ready-wrap");
   wrap.hidden = false;
   wrap.innerHTML = `
@@ -655,7 +723,10 @@ async function handleFile(file){
   `;
   document.getElementById("file-remove").onclick = async ()=>{
     if(currentDocument){ try{ await currentDocument.destroy(); }catch(e){} }
-    resetWizard();
+    currentDocument = null;
+    wrap.hidden = true; wrap.innerHTML = "";
+    fileInput.value = "";
+    updateStepper(); updateContinueState();
   };
 
   try{
@@ -682,12 +753,12 @@ async function handleFile(file){
     doc.set("uploadProgress", 100);
     await doc.save();
     currentDocument = doc;
-    document.getElementById("file-status").textContent = formatSize(file.size) + " · ready";
+    document.getElementById("file-status").innerHTML = formatSize(file.size) + " · <span style='color:var(--blue);font-weight:500;'>Ready</span>";
     document.getElementById("file-progress").style.width = "100%";
   }catch(err){
     document.getElementById("file-status").textContent = "Upload failed: " + err.message;
   }
-  updateDots(); updateContinueState();
+  updateStepper(); updateContinueState();
 }
 function formatSize(bytes){
   if(bytes < 1024) return bytes + " B";
@@ -700,7 +771,7 @@ document.querySelectorAll("#action-pills .pill").forEach(p=>{
     document.querySelectorAll("#action-pills .pill").forEach(x=>x.classList.remove("selected"));
     p.classList.add("selected");
     selectedAction = p.dataset.value;
-    updateDots(); updateContinueState();
+    updateStepper(); updateContinueState();
   };
 });
 document.querySelectorAll("#result-pills .pill").forEach(p=>{
@@ -708,14 +779,23 @@ document.querySelectorAll("#result-pills .pill").forEach(p=>{
     document.querySelectorAll("#result-pills .pill").forEach(x=>x.classList.remove("selected"));
     p.classList.add("selected");
     selectedResult = p.dataset.value;
-    updateDots(); updateContinueState();
+    updateStepper(); updateContinueState();
   };
 });
 
-function updateDots(){
-  document.getElementById("dot-1").classList.toggle("done", !!currentDocument);
-  document.getElementById("dot-2").classList.toggle("done", !!selectedAction);
-  document.getElementById("dot-3").classList.toggle("done", !!selectedResult);
+function updateStepper(){
+  const d1 = document.getElementById("dot-1"), d2 = document.getElementById("dot-2"), d3 = document.getElementById("dot-3");
+  const l1 = document.getElementById("line-1"), l2 = document.getElementById("line-2");
+  d1.classList.toggle("done", !!currentDocument);
+  d2.classList.toggle("done", !!selectedAction);
+  d3.classList.toggle("done", !!selectedResult);
+  l1.classList.toggle("done", !!currentDocument);
+  l2.classList.toggle("done", !!selectedAction);
+  const cap = document.getElementById("step-caption");
+  if(!currentDocument) cap.textContent = "Step 1 of 3 — Upload your file";
+  else if(!selectedAction) cap.textContent = "Step 2 of 3 — Choose an action";
+  else if(!selectedResult) cap.textContent = "Step 3 of 3 — Choose the result";
+  else cap.textContent = "Ready — press Continue";
 }
 function updateContinueState(){
   document.getElementById("btn-continue").disabled = !(currentDocument && selectedAction && selectedResult);
@@ -769,12 +849,12 @@ async function handleContinue(){
     showResult(contentText, sources);
   }catch(err){
     alert("Could not generate the result: " + err.message);
-    btn.disabled = false; btn.textContent = "Continue";
+    btn.disabled = false; btn.innerHTML = "Continue &rarr;";
   }
 }
 
 function showResult(content, sources){
-  document.getElementById("wiz-inputs").hidden = true;
+  document.getElementById("wiz-inputs").style.display = "none";
   const block = document.getElementById("wiz-result");
   block.hidden = false;
   block.innerHTML = `
@@ -789,8 +869,7 @@ function showResult(content, sources){
   `;
   document.getElementById("btn-copy").onclick = ()=>navigator.clipboard.writeText(content);
   document.getElementById("btn-export").onclick = ()=>alert("Export formats are coming soon.");
-  document.getElementById("btn-back-dash").onclick = ()=>{ showScreen("screen-dashboard"); loadTab("documents"); };
-  document.getElementById("btn-continue").parentElement.parentElement.style.display = "none";
+  document.getElementById("btn-back-dash").onclick = backToDashboard;
 }
 
 // ---------------- Boot ----------------
