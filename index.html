@@ -11,8 +11,10 @@
 <style>
   :root{
     --yellow:#EAB308; --yellow-ink:#6B4700; --yellow-tint:#FDF3D6;
-    --blue:#2F5EE0; --blue-dark:#16255C; --blue-tint:#E8EDFB; --blue-faint:#8891B0;
-    --paper:#FAFAF8; --paper-raised:#FFFFFF; --line:#E4E8F5;
+    --yellow-off:#ECECEF; --yellow-off-ink:#A7A8B3;
+    --indigo:#2F3FA8; --indigo-soft:#6670C4;
+    --ink:#232A45; --muted:#7C8093; --faint:#A6A9B8;
+    --paper:#FAFAFB; --surface:#FFFFFF; --line:#E4E5EE;
     --danger:#B3261E; --danger-tint:#FBEAEA;
     --radius:10px;
   }
@@ -20,124 +22,173 @@
   html,body{margin:0;padding:0;}
   body{
     font-family:'IBM Plex Sans', sans-serif;
-    color:var(--blue-dark);
+    color:var(--ink);
     background:var(--paper);
     -webkit-font-smoothing:antialiased;
     min-height:100vh;
   }
-  h1,h2,.brand-word{font-family:'Newsreader', serif;}
+  h1,h2,.brand-word{font-family:'Newsreader', serif;color:var(--indigo);}
   button{font-family:inherit;}
   [hidden]{display:none !important;}
-  svg{display:block;}
+  svg{display:block;flex-shrink:0;}
+
+  .bg-blob{position:fixed;border-radius:50%;filter:blur(0px);pointer-events:none;z-index:0;opacity:.5;display:none;}
+  @media (min-width:900px){ .bg-blob{display:block;} }
+  .blob-yellow{width:260px;height:260px;background:var(--yellow-tint);top:-90px;right:-90px;}
+  .blob-indigo{width:280px;height:280px;background:#E7E9FA;bottom:-110px;left:-110px;}
 
   .btn{
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
-    height:44px;padding:0 18px;border-radius:var(--radius);
+    height:50px;padding:0 18px;border-radius:12px;
     font-size:14px;font-weight:500;cursor:pointer;border:1px solid transparent;
-    transition:transform .08s ease;
+    transition:transform .08s ease;position:relative;z-index:1;
   }
   .btn:active{transform:scale(0.98);}
   .btn-primary{background:var(--yellow);color:var(--yellow-ink);}
   .btn-primary:hover{background:#D9A400;}
-  .btn-primary:disabled{background:#F3EAC7;color:#B3A164;cursor:not-allowed;}
-  .btn-outline{background:transparent;border:1px solid var(--line);color:var(--blue-dark);}
-  .btn-outline:hover{border-color:var(--blue);}
+  .btn-primary:disabled{background:var(--yellow-off);color:var(--yellow-off-ink);cursor:not-allowed;}
+  .btn-outline{background:var(--surface);border:1px solid var(--line);color:var(--ink);}
+  .btn-outline:hover{border-color:var(--indigo);}
   .btn-block{width:100%;}
-  .btn-sm{height:34px;padding:0 12px;font-size:13px;}
+  .btn-sm{height:38px;padding:0 12px;font-size:13px;border-radius:10px;}
 
-  .field{margin-bottom:14px;}
-  .field label{display:block;font-size:13px;color:var(--blue-faint);margin-bottom:6px;}
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:8px;}
+  .field-input-wrap{position:relative;}
+  .field-input-wrap .fic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--faint);}
   .field input{
-    width:100%;height:44px;border:1px solid var(--line);border-radius:var(--radius);
-    padding:0 14px;font-size:14px;background:var(--paper-raised);color:var(--blue-dark);
+    width:100%;height:50px;border:1px solid var(--line);border-radius:var(--radius);
+    padding:0 14px 0 40px;font-size:14px;background:var(--surface);color:var(--ink);
   }
-  .field input:focus{outline:2px solid var(--blue);outline-offset:1px;}
-  .field-pass{position:relative;}
+  .field input:focus{outline:2px solid var(--indigo);outline-offset:1px;}
   .field-pass button{
     position:absolute;right:8px;top:50%;transform:translateY(-50%);
-    background:none;border:none;color:var(--blue-faint);cursor:pointer;height:auto;padding:6px;display:flex;
+    background:none;border:none;color:var(--faint);cursor:pointer;height:auto;padding:6px;display:flex;
   }
-  .checkrow{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--blue-faint);margin-bottom:16px;}
+  .checkrow{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:18px;}
+  .checkrow .cr-left{display:flex;align-items:center;gap:7px;}
+  .checkrow input[type=checkbox]{width:15px;height:15px;accent-color:var(--yellow);}
+  .checkrow a{color:var(--indigo);text-decoration:none;font-weight:500;}
   .error-msg{
     background:var(--danger-tint);color:var(--danger);font-size:13px;
     padding:10px 12px;border-radius:var(--radius);margin-bottom:16px;
   }
 
   /* ---------- AUTH SCREEN ---------- */
-  #screen-auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
-  .auth-card{width:100%;max-width:400px;background:var(--paper-raised);border:1px solid var(--line);border-radius:16px;padding:36px 32px;}
-  .auth-brand-mini{text-align:center;margin-bottom:26px;}
-  .auth-brand-mini .brand-word{font-size:26px;font-weight:600;margin:0;}
-  .auth-brand-mini .slogan{font-size:13px;color:var(--blue-faint);margin:4px 0 0;}
-  .auth-forgot-center{text-align:center;margin:14px 0 0;}
-  .auth-forgot-center a{font-size:13px;color:var(--blue);text-decoration:none;}
-  .auth-switch{
-    text-align:center;font-size:13px;color:var(--blue-faint);margin-top:22px;
-    padding-top:18px;border-top:1px solid var(--line);
+  #screen-auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;}
+  .auth-card{
+    width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);
+    border-radius:18px;padding:32px;position:relative;z-index:1;
   }
-  .auth-switch a{color:var(--blue);text-decoration:none;font-weight:500;}
+  @media (max-width:480px){ .auth-card{padding:24px 20px;} }
+  .auth-brand-mini{text-align:center;margin-bottom:24px;}
+  .auth-brand-mini .brand-word{font-size:25px;font-weight:600;margin:0;}
+  .auth-brand-mini .slogan{font-size:14px;color:var(--muted);margin:3px 0 0;}
+  .auth-forgot-center{text-align:right;font-size:13px;}
+  .auth-forgot-center a{color:var(--indigo);text-decoration:none;font-weight:500;}
+  .auth-switch{
+    text-align:center;font-size:13px;color:var(--muted);margin-top:16px;
+    padding-top:14px;border-top:1px solid var(--line);
+  }
+  .auth-switch a{color:var(--indigo);text-decoration:none;font-weight:600;}
 
   /* ---------- DASHBOARD ---------- */
   .db-topbar{
-    height:58px;display:flex;align-items:center;justify-content:space-between;
-    padding:0 20px;border-bottom:1px solid var(--line);background:var(--paper-raised);
+    height:68px;display:flex;align-items:center;gap:12px;
+    padding:0 20px;border-bottom:none;background:var(--surface);border-bottom:3px solid var(--yellow);
   }
-  .db-topbar .brand-word{font-size:19px;font-weight:600;}
+  .db-topbar .brand-word{font-size:19px;font-weight:600;margin:0;flex:1;}
+  .db-drawer-toggle{
+    display:flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--line);
+    border-radius:10px;background:var(--surface);cursor:pointer;color:var(--ink);flex-shrink:0;
+  }
+  @media (min-width:1024px){ .db-drawer-toggle{display:none;} }
+  .db-topbar-icons{display:flex;align-items:center;gap:10px;}
+  .db-bell{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--indigo);cursor:default;}
   .db-user{position:relative;}
-  .db-user-btn{
-    display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:4px;
-  }
+  .db-user-btn{display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:4px;}
   .db-user-btn .avatar{
-    width:30px;height:30px;border-radius:50%;background:var(--yellow-tint);color:var(--yellow-ink);
+    width:32px;height:32px;border-radius:50%;background:var(--yellow-tint);color:var(--yellow-ink);
     display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;
   }
   .db-user-menu{
-    position:absolute;right:0;top:42px;background:var(--paper-raised);border:1px solid var(--line);
-    border-radius:8px;box-shadow:0 6px 18px rgba(22,37,92,.08);min-width:190px;overflow:hidden;z-index:10;
+    position:absolute;right:0;top:44px;background:var(--surface);border:1px solid var(--line);
+    border-radius:10px;box-shadow:0 6px 18px rgba(35,42,69,.08);min-width:190px;overflow:hidden;z-index:20;
   }
-  .db-user-menu .em{padding:10px 12px;font-size:12px;color:var(--blue-faint);border-bottom:1px solid var(--line);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .db-user-menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:10px 12px;font-size:13px;color:var(--blue-dark);cursor:pointer;}
+  .db-user-menu .em{padding:10px 12px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .db-user-menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:10px 12px;font-size:13px;color:var(--ink);cursor:pointer;}
   .db-user-menu button:hover{background:var(--paper);}
+
+  .db-tabs{
+    display:flex;gap:6px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid var(--line);
+    background:var(--surface);scrollbar-width:none;
+  }
+  .db-tabs::-webkit-scrollbar{display:none;}
+  @media (min-width:1024px){ .db-tabs{display:none;} }
+  .db-tab{
+    flex-shrink:0;display:flex;align-items:center;gap:6px;height:34px;padding:0 13px;border-radius:20px;
+    border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:12.5px;cursor:pointer;white-space:nowrap;
+  }
+  .db-tab.active{background:var(--yellow-tint);border-color:var(--yellow);color:var(--yellow-ink);font-weight:500;}
 
   #screen-dashboard{display:flex;min-height:100vh;flex-direction:column;}
   .db-body{display:flex;flex:1;min-height:0;}
   .db-sidebar{
-    width:220px;flex-shrink:0;background:var(--paper-raised);border-right:1px solid var(--line);
-    padding:16px 12px;
+    width:230px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);
+    padding:16px 12px;display:flex;flex-direction:column;
+  }
+  @media (max-width:1023px){
+    .db-sidebar{
+      position:fixed;top:0;bottom:0;left:0;z-index:40;transform:translateX(-100%);transition:transform .2s ease;
+      width:78%;max-width:280px;padding-top:20px;
+    }
+    .db-sidebar.open{transform:translateX(0);}
+    .db-overlay{position:fixed;inset:0;background:rgba(35,42,69,.35);z-index:35;}
   }
   .nav-item{
     display:flex;align-items:center;gap:10px;height:40px;padding:0 10px;border-radius:var(--radius);
-    color:var(--blue-faint);font-size:14px;cursor:pointer;border:none;background:none;width:100%;text-align:left;
+    color:var(--muted);font-size:14px;cursor:pointer;border:none;background:none;width:100%;text-align:left;
   }
   .nav-item:hover{background:var(--paper);}
   .nav-item.active{background:var(--yellow-tint);color:var(--yellow-ink);font-weight:500;}
-  .nav-item .ic{width:18px;display:flex;}
-
-  .db-drawer-toggle{display:none;}
-  .db-main{flex:1;min-width:0;padding:26px 32px;}
-  .db-toolbar{display:flex;gap:12px;margin-bottom:22px;}
-  .db-search{
-    flex:1;height:42px;border:1px solid var(--line);border-radius:var(--radius);
-    padding:0 14px;font-size:14px;background:var(--paper-raised);
+  .nav-item .ic{width:18px;display:flex;color:var(--indigo);}
+  .nav-item.active .ic{color:var(--yellow-ink);}
+  .db-plan{
+    margin-top:auto;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12px;color:var(--muted);
   }
-  .db-toolbar .btn{white-space:nowrap;}
+  .db-plan .bar{height:5px;background:var(--line);border-radius:4px;margin:6px 0 10px;overflow:hidden;}
+  .db-plan .bar i{display:block;height:100%;width:40%;background:var(--indigo);}
+  .db-plan a{color:var(--indigo);font-weight:600;text-decoration:none;font-size:12px;}
+
+  .db-main{flex:1;min-width:0;padding:24px 28px;}
+  @media (max-width:640px){ .db-main{padding:18px 16px;} }
+  .db-toolbar{display:flex;gap:12px;margin-bottom:20px;}
+  @media (max-width:640px){ .db-toolbar{flex-direction:column;} }
+  .db-search-wrap{flex:1;min-width:0;position:relative;}
+  .db-search-wrap .fic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--faint);}
+  .db-search{
+    width:100%;min-width:0;height:50px;border:1px solid var(--line);border-radius:var(--radius);
+    padding:0 14px 0 40px;font-size:14px;background:var(--surface);color:var(--ink);
+  }
+  .db-toolbar .btn{white-space:nowrap;flex-shrink:0;}
+  @media (max-width:640px){ .db-toolbar .btn{width:100%;} }
 
   .db-section-head{display:flex;align-items:baseline;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
-  .db-section-head h1{font-size:21px;font-weight:500;margin:0;}
-  .db-count{font-size:13px;color:var(--blue-faint);}
+  .db-section-head h1{font-size:clamp(26px,5vw,34px);font-weight:500;margin:0;}
+  .db-count{font-size:13px;color:var(--faint);}
   .db-section-head .spacer{flex:1;}
   .db-sort{
-    height:32px;padding:0 10px;border:1px solid var(--line);border-radius:var(--radius);
-    background:var(--paper-raised);font-size:12px;color:var(--blue-dark);cursor:pointer;
+    height:36px;padding:0 12px;border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--surface);font-size:12px;color:var(--ink);cursor:pointer;
   }
   .db-filter-btn{
-    width:32px;height:32px;border:1px solid var(--line);border-radius:var(--radius);
-    background:var(--paper-raised);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--blue-faint);
+    width:36px;height:36px;border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--indigo);
   }
 
   .doc-row{
     display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);
-    border-radius:var(--radius);background:var(--paper-raised);margin-bottom:8px;position:relative;
+    border-radius:var(--radius);background:var(--surface);margin-bottom:8px;position:relative;
   }
   .doc-row input[type=checkbox]{accent-color:var(--yellow);width:16px;height:16px;flex-shrink:0;}
   .doc-icon{
@@ -145,115 +196,113 @@
     display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;
   }
   .doc-info{flex:1;min-width:0;}
-  .doc-name{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .doc-meta{font-size:12px;color:var(--blue-faint);}
-  .doc-menu-btn{background:none;border:none;cursor:pointer;color:var(--blue-faint);font-size:16px;padding:4px;flex-shrink:0;}
+  .doc-name{font-size:14px;font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .doc-meta{font-size:12px;color:var(--faint);}
+  .doc-menu-btn{background:none;border:none;cursor:pointer;color:var(--faint);font-size:16px;padding:4px;flex-shrink:0;}
   .doc-menu{
-    position:absolute;top:42px;right:10px;background:var(--paper-raised);border:1px solid var(--line);
-    border-radius:8px;box-shadow:0 4px 14px rgba(22,37,92,.08);z-index:5;min-width:140px;overflow:hidden;
+    position:absolute;top:42px;right:10px;background:var(--surface);border:1px solid var(--line);
+    border-radius:8px;box-shadow:0 4px 14px rgba(35,42,69,.08);z-index:5;min-width:140px;overflow:hidden;
   }
-  .doc-menu button{
-    display:block;width:100%;text-align:left;background:none;border:none;padding:9px 12px;
-    font-size:13px;color:var(--blue-dark);cursor:pointer;
-  }
+  .doc-menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:9px 12px;font-size:13px;color:var(--ink);cursor:pointer;}
   .doc-menu button:hover{background:var(--paper);}
   .doc-menu button.danger{color:var(--danger);}
-  .empty-state{
-    border:1px dashed var(--line);border-radius:var(--radius);padding:40px 20px;text-align:center;
-    color:var(--blue-faint);
-  }
-  .empty-state p{margin:0 0 4px;font-size:14px;color:var(--blue-dark);}
-  .empty-state .sub{font-size:13px;color:var(--blue-faint);}
 
-  @media (max-width:768px){
-    .db-sidebar{
-      position:fixed;top:58px;bottom:0;left:0;z-index:30;transform:translateX(-100%);transition:transform .2s ease;
-      width:78%;max-width:280px;
-    }
-    .db-sidebar.open{transform:translateX(0);}
-    .db-overlay{position:fixed;inset:0;top:58px;background:rgba(22,37,92,.35);z-index:25;}
-    .db-drawer-toggle{
-      display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 12px;border:1px solid var(--line);
-      border-radius:var(--radius);background:var(--paper-raised);font-size:13px;color:var(--blue-dark);cursor:pointer;
-      margin-bottom:14px;
-    }
-    .db-main{padding:18px 16px;}
-    .doc-row{flex-wrap:wrap;}
+  .empty-state{
+    max-width:360px;margin:24px auto;text-align:center;padding:36px 24px;
   }
+  .empty-state .ei{
+    width:56px;height:56px;margin:0 auto 16px;position:relative;color:var(--indigo);
+  }
+  .empty-state .ei svg.spark{position:absolute;color:var(--yellow);}
+  .empty-state .s1{top:-4px;right:-6px;}
+  .empty-state .s2{bottom:2px;left:-8px;}
+  .empty-state p.t{margin:0 0 6px;font-size:16px;font-weight:600;color:var(--ink);}
+  .empty-state p.sub{font-size:13px;color:var(--muted);margin:0 0 18px;line-height:1.5;}
 
   /* ---------- WIZARD ---------- */
-  #screen-wizard{min-height:100vh;padding:0 20px 100px;border-top:3px solid var(--yellow);}
-  .wiz-wrap{max-width:640px;margin:0 auto;padding-top:26px;}
-  .wiz-back{background:none;border:none;color:var(--blue-faint);font-size:13px;cursor:pointer;margin-bottom:22px;padding:0;}
+  #screen-wizard{min-height:100vh;padding:0 20px 60px;position:relative;overflow:hidden;border-bottom:3px solid transparent;}
+  .wiz-topbar{
+    height:60px;display:flex;align-items:center;justify-content:center;position:relative;
+    border-bottom:3px solid var(--yellow);margin:0 -20px 26px;padding:0 20px;
+  }
+  .wiz-back{
+    position:absolute;left:24px;top:50%;transform:translateY(-50%);background:none;border:none;
+    color:var(--muted);font-size:12.5px;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;
+  }
+  .wiz-topbar .brand-word{font-size:17px;font-weight:600;}
+  .wiz-topbar .db-user{position:absolute;right:20px;top:50%;transform:translateY(-50%);}
+
+  .wiz-wrap{max-width:760px;margin:0 auto;position:relative;z-index:1;}
 
   .stepper{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px;}
   .step-circle{
-    width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);color:var(--blue-faint);
-    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:var(--paper-raised);
+    width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);color:var(--faint);
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:var(--surface);
   }
   .step-circle.done{background:var(--yellow);border-color:var(--yellow);color:var(--yellow-ink);}
-  .step-line{width:28px;height:1.5px;background:var(--line);}
+  .step-line{width:26px;height:1.5px;background:var(--line);}
   .step-line.done{background:var(--yellow);}
-  .step-caption{text-align:center;font-size:12px;color:var(--blue-faint);margin:0 0 26px;}
+  .step-caption{text-align:center;font-size:12px;color:var(--indigo);font-weight:500;margin:0 0 22px;}
 
   .dropzone{
-    border:1.5px dashed var(--line);border-radius:14px;padding:30px 20px;text-align:center;
-    display:flex;flex-direction:column;align-items:center;gap:10px;background:var(--paper-raised);
-    cursor:pointer;
+    border:1.5px dashed var(--line);border-radius:14px;padding:22px 20px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--surface);
+    cursor:pointer;max-width:520px;margin:0 auto;
   }
-  .dropzone.drag{border-color:var(--blue);background:var(--blue-tint);}
+  .dropzone.drag{border-color:var(--indigo);background:#F4F5FC;}
   .dropzone .icon{
-    width:40px;height:40px;border-radius:50%;background:var(--blue-tint);color:var(--blue);
+    width:36px;height:36px;border-radius:50%;background:#EEF0FA;color:var(--indigo);
     display:flex;align-items:center;justify-content:center;
   }
-  .dropzone .dz-title{font-size:14px;font-weight:500;}
-  .dropzone .dz-formats{font-size:12px;color:var(--blue-faint);}
+  .dropzone .dz-title{font-size:14px;font-weight:500;color:var(--ink);}
+  .dropzone .dz-title u{color:var(--indigo);}
+  .dropzone .dz-formats{font-size:11.5px;color:var(--faint);}
   .dropzone input[type=file]{display:none;}
 
   .file-ready{
     display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:var(--radius);
-    padding:12px 14px;background:var(--paper-raised);margin-top:12px;
+    padding:12px 14px;background:var(--surface);margin:12px auto 0;max-width:520px;
   }
   .file-ready .fi{width:36px;height:36px;border-radius:8px;background:var(--yellow-tint);color:var(--yellow-ink);
     display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
   .file-ready .fname{font-size:14px;font-weight:500;}
-  .file-ready .fmeta{font-size:12px;color:var(--blue-faint);display:flex;align-items:center;gap:5px;}
+  .file-ready .fmeta{font-size:12px;color:var(--faint);display:flex;align-items:center;gap:5px;}
   .file-ready .progress{height:4px;background:var(--line);border-radius:4px;margin-top:6px;overflow:hidden;}
-  .file-ready .progress i{display:block;height:100%;background:var(--blue);width:0%;transition:width .2s;}
-  .file-ready .remove{margin-left:auto;background:none;border:none;color:var(--blue-faint);cursor:pointer;font-size:16px;}
+  .file-ready .progress i{display:block;height:100%;background:var(--indigo);width:0%;transition:width .2s;}
+  .file-ready .remove{margin-left:auto;background:none;border:none;color:var(--faint);cursor:pointer;font-size:16px;}
 
-  .wiz-section{margin-top:28px;}
-  .wiz-section-head{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
-  .wiz-section-head .bar{width:3px;height:16px;background:var(--yellow);border-radius:2px;}
-  .wiz-section-head h2{font-size:15px;font-weight:600;margin:0;}
-  .wiz-section-sub{font-size:12px;color:var(--blue-faint);margin:0 0 12px 11px;}
-  .pill-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .wiz-section{margin-top:22px;}
+  .wiz-section-head{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
+  .wiz-section-head .bar{width:3px;height:15px;background:var(--yellow);border-radius:2px;}
+  .wiz-section-head h2{font-size:15px;font-weight:600;margin:0;color:var(--ink);}
+  .wiz-section-sub{font-size:12px;color:var(--muted);margin:0 0 12px 11px;}
+  .pill-row{display:flex;flex-wrap:wrap;gap:11px;}
   .pill{
-    display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:20px;border:1px solid var(--line);
-    font-size:13px;background:var(--paper-raised);color:var(--blue-dark);cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;height:46px;padding:0 15px;border-radius:23px;border:1px solid var(--line);
+    font-size:13.5px;font-weight:500;background:var(--surface);color:var(--ink);cursor:pointer;
   }
-  .pill svg{color:var(--blue-faint);}
-  .pill.selected{border-color:var(--yellow);background:var(--yellow-tint);color:var(--yellow-ink);font-weight:500;}
+  .pill svg{color:var(--indigo);}
+  .pill.selected{border-color:var(--yellow);background:var(--yellow);color:var(--yellow-ink);}
   .pill.selected svg{color:var(--yellow-ink);}
 
-  .wiz-actions{display:flex;justify-content:space-between;gap:10px;margin-top:30px;}
-
-  .result-content{
-    background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);
-    padding:18px;font-size:14px;line-height:1.7;color:var(--blue-dark);white-space:pre-wrap;
-  }
-  .sources{margin-top:14px;font-size:12px;color:var(--blue-faint);padding-left:18px;}
-  .sources li{margin-bottom:4px;}
-  .result-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+  .wiz-actions{display:flex;justify-content:space-between;gap:10px;margin-top:24px;}
 
   /* ---------- RESULT SCREEN ---------- */
-  #screen-result{min-height:100vh;padding:0 20px 60px;border-top:3px solid var(--yellow);}
+  #screen-result{min-height:100vh;padding:0 20px 60px;}
   .res-wrap{max-width:760px;margin:0 auto;padding-top:26px;}
   .res-top{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
-  .res-back{background:none;border:none;color:var(--blue-faint);font-size:13px;cursor:pointer;padding:0;}
+  .res-back{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:0;}
   .res-badge{font-size:11px;padding:4px 10px;border-radius:20px;background:var(--yellow-tint);color:var(--yellow-ink);white-space:nowrap;}
-  .res-filename{font-size:15px;font-weight:600;margin:0 0 10px;}
-  .res-note{font-size:12px;color:var(--blue);background:var(--blue-tint);padding:9px 12px;border-radius:8px;margin-bottom:18px;}
+  .res-filename{font-size:15px;font-weight:600;margin:0 0 10px;color:var(--ink);}
+  .res-note{font-size:12px;color:var(--indigo);background:#EEF0FA;padding:9px 12px;border-radius:8px;margin-bottom:18px;}
+
+  .result-content{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px;font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap;
+  }
+  .sources{margin-top:14px;font-size:12px;color:var(--faint);padding-left:18px;}
+  .sources li{margin-bottom:4px;}
+  .result-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
 
   .res-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);}
   table.res-table{width:100%;border-collapse:collapse;font-size:13px;min-width:420px;}
@@ -262,12 +311,12 @@
 
   .slide-box{
     border:1px solid var(--line);border-radius:14px;aspect-ratio:16/9;padding:6%;
-    display:flex;flex-direction:column;justify-content:center;gap:12px;background:var(--paper-raised);
+    display:flex;flex-direction:column;justify-content:center;gap:12px;background:var(--surface);
   }
-  .slide-box h3{margin:0;font-size:clamp(16px,3vw,22px);}
-  .slide-box ul{margin:0;padding-left:18px;font-size:13px;color:var(--blue-faint);line-height:1.7;}
+  .slide-box h3{margin:0;font-size:clamp(16px,3vw,22px);color:var(--indigo);}
+  .slide-box ul{margin:0;padding-left:18px;font-size:13px;color:var(--muted);line-height:1.7;}
   .slide-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:14px;}
-  .slide-nav button{background:none;border:1px solid var(--line);border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--blue-dark);display:flex;align-items:center;justify-content:center;}
+  .slide-nav button{background:none;border:1px solid var(--line);border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--ink);display:flex;align-items:center;justify-content:center;}
   .slide-dots{display:flex;gap:6px;}
   .slide-dots span{width:7px;height:7px;border-radius:50%;background:var(--line);}
   .slide-dots span.active{background:var(--yellow);}
@@ -276,7 +325,7 @@
   .chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
   .msg{max-width:78%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.5;}
   .msg.user{align-self:flex-end;background:var(--yellow-tint);color:var(--yellow-ink);border-bottom-right-radius:3px;}
-  .msg.assistant{align-self:flex-start;background:var(--paper);color:var(--blue-dark);border:1px solid var(--line);border-bottom-left-radius:3px;}
+  .msg.assistant{align-self:flex-start;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-bottom-left-radius:3px;}
   .chat-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);}
   .chat-input-row input{flex:1;height:40px;border:1px solid var(--line);border-radius:20px;padding:0 14px;font-size:13px;}
   .chat-input-row button{width:40px;height:40px;border-radius:50%;background:var(--yellow);border:none;color:var(--yellow-ink);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -291,6 +340,8 @@
 
 <!-- ============ AUTH SCREEN ============ -->
 <section id="screen-auth">
+  <div class="bg-blob blob-yellow"></div>
+  <div class="bg-blob blob-indigo"></div>
   <div class="auth-card">
     <div class="auth-brand-mini">
       <p class="brand-word">Docly</p>
@@ -303,19 +354,27 @@
       <form id="form-login">
         <div class="field">
           <label for="login-email">Email</label>
-          <input type="email" id="login-email" required autocomplete="email">
+          <div class="field-input-wrap">
+            <span class="fic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+            <input type="email" id="login-email" required autocomplete="email" placeholder="you@example.com">
+          </div>
         </div>
         <div class="field field-pass">
           <label for="login-pass">Password</label>
-          <input type="password" id="login-pass" required autocomplete="current-password">
-          <button type="button" class="toggle-pass" data-target="login-pass" aria-label="Show password">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
+          <div class="field-input-wrap">
+            <span class="fic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
+            <input type="password" id="login-pass" required autocomplete="current-password">
+            <button type="button" class="toggle-pass" data-target="login-pass" aria-label="Show password">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
         </div>
-        <label class="checkrow"><input type="checkbox" checked disabled> Remember me</label>
-        <button type="submit" class="btn btn-primary btn-block" id="btn-login">Log in</button>
+        <div class="checkrow">
+          <label class="cr-left"><input type="checkbox" checked disabled> Remember me</label>
+          <a href="#" id="link-forgot">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="btn-login">Log in &rarr;</button>
       </form>
-      <div class="auth-forgot-center"><a href="#" id="link-forgot">Forgot password?</a></div>
       <div class="auth-switch">Don't have an account? <a href="#" id="to-signup">Sign up</a></div>
     </div>
 
@@ -324,16 +383,22 @@
       <form id="form-signup">
         <div class="field">
           <label for="signup-email">Email</label>
-          <input type="email" id="signup-email" required autocomplete="email">
+          <div class="field-input-wrap">
+            <span class="fic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+            <input type="email" id="signup-email" required autocomplete="email" placeholder="you@example.com">
+          </div>
         </div>
         <div class="field field-pass">
           <label for="signup-pass">Password</label>
-          <input type="password" id="signup-pass" required autocomplete="new-password">
-          <button type="button" class="toggle-pass" data-target="signup-pass" aria-label="Show password">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
+          <div class="field-input-wrap">
+            <span class="fic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
+            <input type="password" id="signup-pass" required autocomplete="new-password">
+            <button type="button" class="toggle-pass" data-target="signup-pass" aria-label="Show password">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
         </div>
-        <button type="submit" class="btn btn-primary btn-block" id="btn-signup">Sign up</button>
+        <button type="submit" class="btn btn-primary btn-block" id="btn-signup">Sign up &rarr;</button>
       </form>
       <div class="auth-switch">Already have an account? <a href="#" id="to-login">Log in</a></div>
     </div>
@@ -344,27 +409,38 @@
 <section id="screen-dashboard" hidden>
   <header class="db-topbar">
     <button class="db-drawer-toggle" id="db-drawer-toggle" aria-label="Open menu">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></svg>
     </button>
     <p class="brand-word">Docly</p>
-    <div class="db-user">
-      <button class="db-user-btn" id="db-user-btn">
-        <span class="avatar" id="db-avatar">·</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <div class="db-user-menu" id="db-user-menu" hidden>
-        <div class="em" id="db-email">—</div>
-        <button id="btn-logout">Log out</button>
+    <div class="db-topbar-icons">
+      <div class="db-bell"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></div>
+      <div class="db-user">
+        <button class="db-user-btn" id="db-user-btn">
+          <span class="avatar" id="db-avatar">·</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="db-user-menu" id="db-user-menu" hidden>
+          <div class="em" id="db-email">—</div>
+          <button id="btn-logout">Log out</button>
+        </div>
       </div>
     </div>
   </header>
+
+  <nav class="db-tabs" id="db-tabs">
+    <button class="db-tab active" data-tab="documents">Documents</button>
+    <button class="db-tab" data-tab="summaries">Summaries</button>
+    <button class="db-tab" data-tab="conversations">Conversations</button>
+    <button class="db-tab" data-tab="analyses">Analyses</button>
+    <button class="db-tab" data-tab="exports">Exports</button>
+  </nav>
 
   <div class="db-body">
     <div class="db-overlay" id="db-overlay" hidden></div>
     <nav class="db-sidebar" id="db-sidebar">
       <button class="nav-item active" data-tab="documents">
         <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h5" stroke-linecap="round"/></svg></span>
-        All documents
+        Documents
       </button>
       <button class="nav-item" data-tab="summaries">
         <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v4M12 17v4M5 12H3M21 12h-2M7 7L5.5 5.5M18.5 18.5L17 17M17 7l1.5-1.5M6.5 18.5L5 17" stroke-linecap="round"/></svg></span>
@@ -382,12 +458,19 @@
         <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 4v11M7 11l5 5 5-5M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         Exports
       </button>
+      <div class="db-plan">
+        Free plan · <span id="db-plan-count">0 / 5</span> documents
+        <div class="bar"><i id="db-plan-bar"></i></div>
+        <a href="#">Upgrade &rarr;</a>
+      </div>
     </nav>
 
     <main class="db-main">
-      <button class="db-drawer-toggle" id="db-drawer-toggle-2" style="display:none">&#9776;</button>
       <div class="db-toolbar">
-        <input type="text" class="db-search" id="db-search" placeholder="Search your documents and results">
+        <div class="db-search-wrap">
+          <span class="fic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="6"/><path d="M15 15l5 5" stroke-linecap="round"/></svg></span>
+          <input type="text" class="db-search" id="db-search" placeholder="Search documents…">
+        </div>
         <button class="btn btn-primary" id="btn-new-doc">+ New document</button>
       </div>
       <div class="db-section-head">
@@ -406,18 +489,24 @@
 
 <!-- ============ WIZARD ============ -->
 <section id="screen-wizard" hidden>
+  <div class="bg-blob blob-yellow" style="top:auto;bottom:-100px;right:-100px;"></div>
+  <div class="bg-blob blob-indigo"></div>
+  <div class="wiz-topbar">
+    <button class="wiz-back" id="wiz-back"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to dashboard</button>
+    <p class="brand-word">Docly</p>
+  </div>
   <div class="wiz-wrap">
-    <button class="wiz-back" id="wiz-back">&larr; Back to dashboard</button>
     <div class="stepper">
       <div class="step-circle" id="dot-1">1</div><div class="step-line" id="line-1"></div>
       <div class="step-circle" id="dot-2">2</div><div class="step-line" id="line-2"></div>
-      <div class="step-circle" id="dot-3">3</div>
+      <div class="step-circle" id="dot-3">3</div><div class="step-line" id="line-3"></div>
+      <div class="step-circle" id="dot-4">4</div>
     </div>
-    <p class="step-caption" id="step-caption">Step 1 of 3 — Upload your file</p>
+    <p class="step-caption" id="step-caption">Step 1 of 4 — Upload your file</p>
 
     <div id="wiz-inputs">
       <div class="dropzone" id="dropzone">
-        <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v11M7 9l5-5 5 5M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v11M7 9l5-5 5 5M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <div class="dz-title">Drop your file, or <u>browse</u></div>
         <div class="dz-formats">PDF · DOCX · XLSX · PPTX · TXT · EPUB · CSV · MD</div>
         <input type="file" id="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.epub,.csv,.md">
@@ -509,8 +598,8 @@ document.getElementById("link-forgot").onclick = async (e)=>{
 function showAuthError(msg, ok){
   const box = document.getElementById("err-auth");
   box.textContent = msg;
-  box.style.background = ok ? "var(--blue-tint)" : "var(--danger-tint)";
-  box.style.color = ok ? "var(--blue-dark)" : "var(--danger)";
+  box.style.background = ok ? "#EEF0FA" : "var(--danger-tint)";
+  box.style.color = ok ? "var(--indigo)" : "var(--danger)";
   box.hidden = false;
 }
 
@@ -569,12 +658,26 @@ function enterApp(){
   document.getElementById("db-avatar").textContent = (user.get("email")||"?")[0].toUpperCase();
   showScreen("screen-dashboard");
   loadTab("documents");
+  refreshPlanCount();
 }
 
-document.querySelectorAll(".nav-item").forEach(btn=>{
+async function refreshPlanCount(){
+  try{
+    const q = new Parse.Query("Document");
+    q.equalTo("owner", Parse.User.current());
+    const count = await q.count();
+    document.getElementById("db-plan-count").textContent = Math.min(count,5) + " / 5";
+    document.getElementById("db-plan-bar").style.width = Math.min(100, (count/5)*100) + "%";
+  }catch(e){}
+}
+
+function setActiveNav(tab){
+  document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("active", b.dataset.tab===tab));
+  document.querySelectorAll(".db-tab").forEach(b=>b.classList.toggle("active", b.dataset.tab===tab));
+}
+document.querySelectorAll(".nav-item, .db-tab").forEach(btn=>{
   btn.onclick = ()=>{
-    document.querySelectorAll(".nav-item").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
+    setActiveNav(btn.dataset.tab);
     loadTab(btn.dataset.tab);
     closeDrawer();
   };
@@ -591,7 +694,7 @@ async function loadTab(tab){
   const t = TABS[tab];
   document.getElementById("db-tab-title").textContent = t.label;
   const list = document.getElementById("db-list");
-  list.innerHTML = "<p style='color:var(--blue-faint);font-size:13px;'>Loading…</p>";
+  list.innerHTML = "<p style='color:var(--faint);font-size:13px;'>Loading…</p>";
   try{
     const q = new Parse.Query(t.cls);
     q.equalTo("owner", Parse.User.current());
@@ -609,7 +712,18 @@ async function loadTab(tab){
 function renderList(tab, items){
   const list = document.getElementById("db-list");
   if(items.length === 0){
-    list.innerHTML = `<div class="empty-state"><p>No items here yet.</p><span class="sub">Start with "New document" above.</span></div>`;
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="ei">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+          <svg class="spark s1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v4M12 17v4M5 12H3M21 12h-2" stroke-linecap="round"/></svg>
+          <svg class="spark s2" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v4M12 17v4M5 12H3M21 12h-2" stroke-linecap="round"/></svg>
+        </div>
+        <p class="t">No documents yet.</p>
+        <p class="sub">Start by uploading your first document and let Docly do the rest.</p>
+        <button class="btn btn-primary btn-sm" id="empty-new-doc">+ New document</button>
+      </div>`;
+    document.getElementById("empty-new-doc").onclick = openWizard;
     return;
   }
   const wrap = document.createElement("div");
@@ -687,7 +801,7 @@ function openMenu(row, tab, item){
       const val = prompt("New name:", item.get(field) || "");
       if(val){ item.set(field, val); await item.save(); loadTab(tab); }
     } else if(act === "delete"){
-      if(confirm("Delete this item?")){ await item.destroy(); loadTab(tab); }
+      if(confirm("Delete this item?")){ await item.destroy(); loadTab(tab); refreshPlanCount(); }
     } else if(act === "download"){
       const file = item.get("fileUrl");
       if(file && file.url()) window.open(file.url(), "_blank");
@@ -802,8 +916,9 @@ async function handleFile(file){
     doc.set("uploadProgress", 100);
     await doc.save();
     currentDocument = doc;
-    document.getElementById("file-status").innerHTML = formatSize(file.size) + " · <span style='color:var(--blue);font-weight:500;'>Ready</span>";
+    document.getElementById("file-status").innerHTML = formatSize(file.size) + " · <span style='color:var(--indigo);font-weight:500;'>Ready</span>";
     document.getElementById("file-progress").style.width = "100%";
+    refreshPlanCount();
   }catch(err){
     document.getElementById("file-status").textContent = "Upload failed: " + err.message;
   }
@@ -833,18 +948,22 @@ document.querySelectorAll("#result-pills .pill").forEach(p=>{
 });
 
 function updateStepper(){
-  const d1 = document.getElementById("dot-1"), d2 = document.getElementById("dot-2"), d3 = document.getElementById("dot-3");
-  const l1 = document.getElementById("line-1"), l2 = document.getElementById("line-2");
+  const d1 = document.getElementById("dot-1"), d2 = document.getElementById("dot-2"),
+        d3 = document.getElementById("dot-3"), d4 = document.getElementById("dot-4");
+  const l1 = document.getElementById("line-1"), l2 = document.getElementById("line-2"), l3 = document.getElementById("line-3");
+  const ready = !!(currentDocument && selectedAction && selectedResult);
   d1.classList.toggle("done", !!currentDocument);
   d2.classList.toggle("done", !!selectedAction);
   d3.classList.toggle("done", !!selectedResult);
+  d4.classList.toggle("done", ready);
   l1.classList.toggle("done", !!currentDocument);
   l2.classList.toggle("done", !!selectedAction);
+  l3.classList.toggle("done", !!selectedResult);
   const cap = document.getElementById("step-caption");
-  if(!currentDocument) cap.textContent = "Step 1 of 3 — Upload your file";
-  else if(!selectedAction) cap.textContent = "Step 2 of 3 — Choose an action";
-  else if(!selectedResult) cap.textContent = "Step 3 of 3 — Choose the result";
-  else cap.textContent = "Ready — press Continue";
+  if(!currentDocument) cap.textContent = "Step 1 of 4 — Upload your file";
+  else if(!selectedAction) cap.textContent = "Step 2 of 4 — Choose an action";
+  else if(!selectedResult) cap.textContent = "Step 3 of 4 — Choose the result";
+  else cap.textContent = "Step 4 of 4 — Ready to generate";
 }
 function updateContinueState(){
   document.getElementById("btn-continue").disabled = !(currentDocument && selectedAction && selectedResult);
@@ -944,7 +1063,7 @@ function openResultScreen(kind, payload, sources){
       </div>
       ${sourcesHtml(sources)}
     `;
-    actions.innerHTML = resultActionsHtml(payload);
+    actions.innerHTML = resultActionsHtml();
     wireResultActions(payload);
   } else if(kind === "presentation"){
     box.innerHTML = `
@@ -957,11 +1076,11 @@ function openResultScreen(kind, payload, sources){
       ${sourcesHtml(sources)}
     `;
     setupSlides();
-    actions.innerHTML = resultActionsHtml(payload);
+    actions.innerHTML = resultActionsHtml();
     wireResultActions(payload);
   } else {
     box.innerHTML = `<div class="result-content">${escapeHtml(payload)}</div>${sourcesHtml(sources)}`;
-    actions.innerHTML = resultActionsHtml(payload);
+    actions.innerHTML = resultActionsHtml();
     wireResultActions(payload);
   }
   showScreen("screen-result");
