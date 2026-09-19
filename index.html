@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Docly — Your documents. Finally understood.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/parse/dist/parse.min.js"></script>
+<style>
+  :root{
+    --yellow:#EAB308; --yellow-dark:#7C4A03; --yellow-tint:#FDF3D6;
+    --blue:#2F5EE0; --blue-dark:#1E3A8A; --blue-tint:#EAEFFC;
+    --ink:#201B15; --ink-soft:#5B5347; --ink-faint:#9C9384;
+    --paper:#FAF8F3; --paper-raised:#FFFFFF; --line:#E6E1D6;
+    --danger:#A02A2A; --danger-tint:#FBEAEA;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'IBM Plex Sans', sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  h1,h2,h3,.brand-word{font-family:'Newsreader', serif;}
+  button{font-family:inherit;}
+  [hidden]{display:none !important;}
+  img,svg{max-width:100%;}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    height:44px;padding:0 18px;border-radius:var(--radius);
+    font-size:14px;font-weight:500;cursor:pointer;border:1px solid transparent;
+    transition:transform .08s ease;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{background:var(--yellow);color:var(--yellow-dark);}
+  .btn-primary:hover{background:#DDA80A;}
+  .btn-primary:disabled{background:#EFE9D6;color:var(--ink-faint);cursor:not-allowed;}
+  .btn-outline{background:transparent;border:1px solid var(--line);color:var(--ink);}
+  .btn-outline:hover{border-color:var(--ink-faint);}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:none;height:auto;padding:4px 6px;}
+  .btn-block{width:100%;}
+  .btn-sm{height:34px;padding:0 12px;font-size:13px;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:6px;}
+  .field input{
+    width:100%;height:44px;border:1px solid var(--line);border-radius:var(--radius);
+    padding:0 14px;font-size:14px;background:var(--paper-raised);color:var(--ink);
+  }
+  .field input:focus{outline:2px solid var(--blue);outline-offset:1px;}
+  .field-pass{position:relative;}
+  .field-pass button{
+    position:absolute;right:10px;top:50%;transform:translateY(-50%);
+    background:none;border:none;color:var(--ink-faint);cursor:pointer;height:auto;padding:4px;
+  }
+  .error-msg{
+    background:var(--danger-tint);color:var(--danger);font-size:13px;
+    padding:10px 12px;border-radius:var(--radius);margin-bottom:14px;
+  }
+
+  /* ---------- AUTH SCREEN ---------- */
+  #screen-auth{min-height:100vh;display:flex;}
+  .auth-brand{
+    flex:1;background:var(--ink);color:var(--paper);
+    display:flex;flex-direction:column;justify-content:center;
+    padding:60px 56px;position:relative;
+  }
+  .auth-brand .brand-word{font-size:22px;font-weight:600;margin:0 0 40px;}
+  .auth-brand h1{
+    font-size:clamp(28px,4vw,44px);font-weight:500;line-height:1.25;margin:0 0 18px;max-width:480px;
+  }
+  .auth-brand h1 mark{
+    background:var(--yellow);color:var(--yellow-dark);padding:0 6px;border-radius:3px;
+  }
+  .auth-brand p{color:#C9C2B3;font-size:15px;max-width:380px;line-height:1.6;}
+  .auth-formside{
+    flex:1;display:flex;align-items:center;justify-content:center;
+    padding:40px 24px;background:var(--paper);
+  }
+  .auth-card{width:100%;max-width:380px;}
+  .auth-card .brand-word{display:none;}
+  .auth-card h2{font-size:24px;font-weight:500;margin:0 0 6px;}
+  .auth-card .sub{color:var(--ink-soft);font-size:14px;margin:0 0 26px;}
+  .auth-forgot{display:flex;justify-content:flex-end;margin:-4px 0 18px;}
+  .auth-forgot a{font-size:13px;color:var(--blue);text-decoration:none;}
+  .auth-switch{
+    text-align:center;font-size:13px;color:var(--ink-soft);margin-top:22px;
+    padding-top:18px;border-top:1px solid var(--line);
+  }
+  .auth-switch a{color:var(--blue);text-decoration:none;font-weight:500;}
+
+  @media (max-width:900px){
+    #screen-auth{flex-direction:column;}
+    .auth-brand{flex:none;padding:32px 24px;min-height:auto;}
+    .auth-brand h1{font-size:24px;max-width:none;}
+    .auth-brand p{display:none;}
+    .auth-formside{flex:none;padding:32px 20px 48px;}
+  }
+
+  /* ---------- DASHBOARD ---------- */
+  #screen-dashboard{display:flex;min-height:100vh;}
+  .db-sidebar{
+    width:220px;flex-shrink:0;background:var(--paper-raised);border-right:1px solid var(--line);
+    padding:20px 14px;display:flex;flex-direction:column;
+  }
+  .db-sidebar .brand-word{font-size:18px;font-weight:600;margin:4px 8px 24px;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;height:40px;padding:0 10px;border-radius:var(--radius);
+    color:var(--ink-soft);font-size:14px;cursor:pointer;border:none;background:none;width:100%;text-align:left;
+  }
+  .nav-item:hover{background:var(--paper);}
+  .nav-item.active{background:var(--yellow-tint);color:var(--yellow-dark);font-weight:500;}
+  .nav-item .ic{width:18px;text-align:center;font-size:14px;}
+  .db-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-top:1px solid var(--line);}
+  .db-user .avatar{
+    width:30px;height:30px;border-radius:50%;background:var(--blue-tint);color:var(--blue-dark);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;
+  }
+  .db-user .email{font-size:12px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+  .db-user button{background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:12px;}
+
+  .db-drawer-toggle{display:none;}
+  .db-main{flex:1;min-width:0;padding:26px 32px;}
+  .db-topbar{display:flex;gap:12px;margin-bottom:22px;}
+  .db-search{
+    flex:1;height:42px;border:1px solid var(--line);border-radius:var(--radius);
+    padding:0 14px;font-size:14px;background:var(--paper-raised);
+  }
+  .db-topbar .btn{white-space:nowrap;}
+
+  .db-title{font-size:20px;font-weight:500;margin:0 0 16px;}
+  .doc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+  @media (min-width:1100px){.doc-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+  .doc-card{
+    background:var(--paper-raised);border:1px solid var(--line);border-left:3px solid var(--ink-faint);
+    border-radius:var(--radius);padding:14px 14px 12px;position:relative;
+  }
+  .doc-card.type-summary{border-left-color:var(--yellow);}
+  .doc-card.type-analysis{border-left-color:var(--blue);}
+  .doc-card.type-conversation{border-left-color:var(--blue);}
+  .doc-card .doc-name{font-size:14px;font-weight:500;margin:0 0 4px;padding-right:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .doc-card .doc-meta{font-size:12px;color:var(--ink-faint);}
+  .doc-card .doc-menu-btn{
+    position:absolute;top:10px;right:8px;background:none;border:none;cursor:pointer;
+    color:var(--ink-faint);font-size:16px;padding:4px;
+  }
+  .doc-menu{
+    position:absolute;top:34px;right:8px;background:var(--paper-raised);border:1px solid var(--line);
+    border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.08);z-index:5;min-width:140px;overflow:hidden;
+  }
+  .doc-menu button{
+    display:block;width:100%;text-align:left;background:none;border:none;padding:9px 12px;
+    font-size:13px;color:var(--ink);cursor:pointer;
+  }
+  .doc-menu button:hover{background:var(--paper);}
+  .doc-menu button.danger{color:var(--danger);}
+  .empty-state{
+    border:1px dashed var(--line);border-radius:var(--radius);padding:40px 20px;text-align:center;
+    color:var(--ink-soft);
+  }
+  .empty-state p{margin:0 0 4px;font-size:14px;}
+  .empty-state .sub{font-size:13px;color:var(--ink-faint);}
+
+  @media (max-width:768px){
+    .db-sidebar{
+      position:fixed;inset:0;z-index:30;transform:translateX(-100%);transition:transform .2s ease;
+      width:78%;max-width:280px;
+    }
+    .db-sidebar.open{transform:translateX(0);}
+    .db-overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:25;
+    }
+    .db-drawer-toggle{
+      display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper-raised);font-size:13px;color:var(--ink);cursor:pointer;
+      margin-bottom:14px;
+    }
+    .db-main{padding:18px 16px;}
+    .doc-grid{grid-template-columns:1fr;}
+  }
+
+  /* ---------- WIZARD ---------- */
+  #screen-wizard{min-height:100vh;padding:30px 20px 100px;}
+  .wiz-wrap{max-width:640px;margin:0 auto;}
+  .wiz-back{background:none;border:none;color:var(--ink-soft);font-size:13px;cursor:pointer;margin-bottom:18px;padding:0;}
+  .wiz-dots{display:flex;justify-content:center;gap:6px;margin-bottom:24px;}
+  .wiz-dots span{width:7px;height:7px;border-radius:50%;background:var(--line);}
+  .wiz-dots span.done{background:var(--blue);}
+
+  .dropzone{
+    border:1.5px dashed var(--line);border-radius:14px;padding:36px 20px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:10px;background:var(--paper-raised);
+    cursor:pointer;
+  }
+  .dropzone.drag{border-color:var(--blue);background:var(--blue-tint);}
+  .dropzone .icon{
+    width:44px;height:44px;border-radius:50%;background:var(--ink);color:var(--paper);
+    display:flex;align-items:center;justify-content:center;font-size:18px;
+  }
+  .dropzone .dz-title{font-size:14px;font-weight:500;}
+  .dropzone .dz-formats{font-size:12px;color:var(--ink-faint);}
+  .dropzone input[type=file]{display:none;}
+
+  .file-ready{
+    display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:var(--radius);
+    padding:12px 14px;background:var(--paper-raised);
+  }
+  .file-ready .fi{width:36px;height:36px;border-radius:8px;background:var(--yellow-tint);color:var(--yellow-dark);
+    display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0;}
+  .file-ready .fname{font-size:14px;font-weight:500;}
+  .file-ready .fmeta{font-size:12px;color:var(--ink-faint);}
+  .file-ready .progress{height:4px;background:var(--line);border-radius:4px;margin-top:6px;overflow:hidden;}
+  .file-ready .progress i{display:block;height:100%;background:var(--blue);width:0%;transition:width .2s;}
+  .file-ready .remove{margin-left:auto;background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:14px;}
+
+  .wiz-label{font-size:13px;color:var(--ink-soft);margin:26px 0 10px;}
+  .pill-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .pill{
+    padding:8px 14px;border-radius:20px;border:1px solid var(--line);font-size:13px;
+    background:var(--paper-raised);color:var(--ink-soft);cursor:pointer;
+  }
+  .pill.selected{border-color:var(--blue);color:var(--blue-dark);background:var(--blue-tint);font-weight:500;}
+
+  .wiz-footer{
+    position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-top:1px solid var(--line);
+    padding:14px 20px;display:flex;justify-content:flex-end;
+  }
+  .wiz-footer-inner{max-width:640px;width:100%;display:flex;justify-content:flex-end;}
+  @media (min-width:900px){
+    .wiz-footer{position:static;border-top:none;padding:32px 0 0;background:none;}
+  }
+
+  .result-block{margin-top:8px;}
+  .result-block h2{font-size:19px;font-weight:500;margin:0 0 14px;}
+  .result-content{
+    background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px;font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap;
+  }
+  .sources{margin-top:14px;font-size:12px;color:var(--ink-faint);}
+  .sources li{margin-bottom:4px;}
+  .result-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+</style>
+</head>
+<body>
+
+<!-- ============ AUTH SCREEN ============ -->
+<section id="screen-auth">
+  <div class="auth-brand">
+    <div class="brand-word">Docly</div>
+    <h1>Your documents.<br><mark>Finally understood.</mark></h1>
+    <p>Drop any file — PDF, Word, Excel, PowerPoint and more — and get clear, sourced answers in seconds.</p>
+  </div>
+  <div class="auth-formside">
+    <div class="auth-card">
+      <div id="err-auth" class="error-msg" hidden></div>
+
+      <!-- LOGIN -->
+      <div id="pane-login">
+        <h2>Log in</h2>
+        <p class="sub">Welcome back — pick up where you left off.</p>
+        <form id="form-login">
+          <div class="field">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" required autocomplete="email">
+          </div>
+          <div class="field field-pass">
+            <label for="login-pass">Password</label>
+            <input type="password" id="login-pass" required autocomplete="current-password">
+            <button type="button" class="toggle-pass" data-target="login-pass">show</button>
+          </div>
+          <div class="auth-forgot"><a href="#" id="link-forgot">Forgot password?</a></div>
+          <button type="submit" class="btn btn-primary btn-block" id="btn-login">Log in</button>
+        </form>
+        <div class="auth-switch">Don't have an account? <a href="#" id="to-signup">Sign up</a></div>
+      </div>
+
+      <!-- SIGNUP -->
+      <div id="pane-signup" hidden>
+        <h2>Create your account</h2>
+        <p class="sub">Just an email and a password — that's it.</p>
+        <form id="form-signup">
+          <div class="field">
+            <label for="signup-email">Email</label>
+            <input type="email" id="signup-email" required autocomplete="email">
+          </div>
+          <div class="field field-pass">
+            <label for="signup-pass">Password</label>
+            <input type="password" id="signup-pass" required autocomplete="new-password">
+            <button type="button" class="toggle-pass" data-target="signup-pass">show</button>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="btn-signup">Sign up</button>
+        </form>
+        <div class="auth-switch">Already have an account? <a href="#" id="to-login">Log in</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DASHBOARD ============ -->
+<section id="screen-dashboard" hidden>
+  <div class="db-overlay" id="db-overlay" hidden></div>
+  <nav class="db-sidebar" id="db-sidebar">
+    <div class="brand-word">Docly</div>
+    <button class="nav-item active" data-tab="documents"><span class="ic">&#128196;</span> All documents</button>
+    <button class="nav-item" data-tab="summaries"><span class="ic">&#9737;</span> Summaries</button>
+    <button class="nav-item" data-tab="conversations"><span class="ic">&#128172;</span> Conversations</button>
+    <button class="nav-item" data-tab="analyses"><span class="ic">&#128202;</span> Analyses</button>
+    <button class="nav-item" data-tab="exports"><span class="ic">&#8595;</span> Exports</button>
+    <div class="db-user">
+      <div class="avatar" id="db-avatar">·</div>
+      <div class="email" id="db-email">—</div>
+      <button id="btn-logout">Log out</button>
+    </div>
+  </nav>
+
+  <main class="db-main">
+    <button class="db-drawer-toggle" id="db-drawer-toggle">&#9776; <span id="db-drawer-label">All documents</span></button>
+    <div class="db-topbar">
+      <input type="text" class="db-search" id="db-search" placeholder="Search your documents and results">
+      <button class="btn btn-primary" id="btn-new-doc">+ New document</button>
+    </div>
+    <h1 class="db-title" id="db-tab-title">All documents</h1>
+    <div id="db-list"></div>
+  </main>
+</section>
+
+<!-- ============ WIZARD ============ -->
+<section id="screen-wizard" hidden>
+  <div class="wiz-wrap">
+    <button class="wiz-back" id="wiz-back">&larr; Back to dashboard</button>
+    <div class="wiz-dots"><span id="dot-1"></span><span id="dot-2"></span><span id="dot-3"></span></div>
+
+    <div id="wiz-inputs">
+      <div id="dropzone-wrap">
+        <div class="dropzone" id="dropzone">
+          <div class="icon">&#8593;</div>
+          <div class="dz-title">Drop your file, or <u>browse</u></div>
+          <div class="dz-formats">PDF · DOCX · XLSX · PPTX · TXT · EPUB · CSV · MD</div>
+          <input type="file" id="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.epub,.csv,.md">
+        </div>
+      </div>
+      <div id="file-ready-wrap" hidden></div>
+
+      <div class="wiz-label">What do you want to do?</div>
+      <div class="pill-row" id="action-pills">
+        <button class="pill" data-value="summarize">Summarize</button>
+        <button class="pill" data-value="analyze">Analyze</button>
+        <button class="pill" data-value="ask">Ask questions</button>
+        <button class="pill" data-value="extract">Extract</button>
+        <button class="pill" data-value="transform">Transform</button>
+      </div>
+
+      <div class="wiz-label">Choose the result</div>
+      <div class="pill-row" id="result-pills">
+        <button class="pill" data-value="short">Short</button>
+        <button class="pill" data-value="detailed">Detailed</button>
+        <button class="pill" data-value="professional">Professional</button>
+        <button class="pill" data-value="table">Table</button>
+        <button class="pill" data-value="presentation">Presentation</button>
+      </div>
+    </div>
+
+    <div id="wiz-result" class="result-block" hidden></div>
+  </div>
+
+  <div class="wiz-footer">
+    <div class="wiz-footer-inner">
+      <button class="btn btn-primary" id="btn-continue" disabled>Continue</button>
+    </div>
+  </div>
+</section>
+
+<script>
+// ---------------- Parse init ----------------
+Parse.initialize("bEJVDXz07faSqrzKGtzpTSBMEiHb9eJTO4JLEcy7", "eP7o73XecwdmKxYLSRoyYcfQyJkKcWeqftUcNRha");
+Parse.serverURL = "https://parseapi.back4app.com/";
+
+// ---------------- Screen switching ----------------
+function showScreen(id){
+  ["screen-auth","screen-dashboard","screen-wizard"].forEach(s=>{
+    document.getElementById(s).hidden = (s !== id);
+  });
+}
+
+// ---------------- Auth screen ----------------
+document.getElementById("to-signup").onclick = e=>{e.preventDefault(); togglePane(false);};
+document.getElementById("to-login").onclick = e=>{e.preventDefault(); togglePane(true);};
+function togglePane(showLogin){
+  document.getElementById("pane-login").hidden = !showLogin;
+  document.getElementById("pane-signup").hidden = showLogin;
+  document.getElementById("err-auth").hidden = true;
+}
+document.querySelectorAll(".toggle-pass").forEach(btn=>{
+  btn.onclick = ()=>{
+    const input = document.getElementById(btn.dataset.target);
+    const isPass = input.type === "password";
+    input.type = isPass ? "text" : "password";
+    btn.textContent = isPass ? "hide" : "show";
+  };
+});
+document.getElementById("link-forgot").onclick = async (e)=>{
+  e.preventDefault();
+  const email = document.getElementById("login-email").value.trim();
+  if(!email){ showAuthError("Enter your email above first."); return; }
+  try{
+    await Parse.User.requestPasswordReset(email);
+    showAuthError("Check your inbox for a reset link.", true);
+  }catch(err){ showAuthError(err.message); }
+};
+function showAuthError(msg, ok){
+  const box = document.getElementById("err-auth");
+  box.textContent = msg;
+  box.style.background = ok ? "var(--blue-tint)" : "var(--danger-tint)";
+  box.style.color = ok ? "var(--blue-dark)" : "var(--danger)";
+  box.hidden = false;
+}
+
+document.getElementById("form-login").onsubmit = async (e)=>{
+  e.preventDefault();
+  document.getElementById("err-auth").hidden = true;
+  const email = document.getElementById("login-email").value.trim();
+  const pass = document.getElementById("login-pass").value;
+  try{
+    await Parse.User.logIn(email, pass);
+    enterApp();
+  }catch(err){ showAuthError(err.message || "Incorrect email or password."); }
+};
+
+document.getElementById("form-signup").onsubmit = async (e)=>{
+  e.preventDefault();
+  document.getElementById("err-auth").hidden = true;
+  const email = document.getElementById("signup-email").value.trim();
+  const pass = document.getElementById("signup-pass").value;
+  try{
+    const user = new Parse.User();
+    user.set("username", email);
+    user.set("email", email);
+    user.set("password", pass);
+    await user.signUp();
+    enterApp();
+  }catch(err){ showAuthError(err.message || "Could not create your account."); }
+};
+
+document.getElementById("btn-logout").onclick = async ()=>{
+  await Parse.User.logOut();
+  location.reload();
+};
+
+// ---------------- Dashboard ----------------
+const TABS = {
+  documents:{label:"All documents", cls:"Document"},
+  summaries:{label:"Summaries", cls:"Result", type:"résumé"},
+  conversations:{label:"Conversations", cls:"Conversation"},
+  analyses:{label:"Analyses", cls:"Result", type:"analyse"},
+  exports:{label:"Exports", cls:"Export"}
+};
+let currentTab = "documents";
+
+function enterApp(){
+  const user = Parse.User.current();
+  document.getElementById("db-email").textContent = user.get("email") || user.getUsername();
+  document.getElementById("db-avatar").textContent = (user.get("email")||"?")[0].toUpperCase();
+  showScreen("screen-dashboard");
+  loadTab("documents");
+}
+
+document.querySelectorAll(".nav-item").forEach(btn=>{
+  btn.onclick = ()=>{
+    document.querySelectorAll(".nav-item").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    loadTab(btn.dataset.tab);
+    closeDrawer();
+  };
+});
+
+async function loadTab(tab){
+  currentTab = tab;
+  const t = TABS[tab];
+  document.getElementById("db-tab-title").textContent = t.label;
+  document.getElementById("db-drawer-label").textContent = t.label;
+  const list = document.getElementById("db-list");
+  list.innerHTML = "<p style='color:var(--ink-faint);font-size:13px;'>Loading…</p>";
+  try{
+    const q = new Parse.Query(t.cls);
+    q.equalTo("owner", Parse.User.current());
+    if(t.type) q.equalTo("type", t.type);
+    q.descending("createdAt");
+    q.limit(50);
+    const results = await q.find();
+    renderList(tab, results);
+  }catch(err){
+    list.innerHTML = "<p style='color:var(--danger);font-size:13px;'>"+err.message+"</p>";
+  }
+}
+
+function renderList(tab, items){
+  const list = document.getElementById("db-list");
+  if(items.length === 0){
+    list.innerHTML = `<div class="empty-state"><p>No items here yet.</p><span class="sub">Start with "New document" above.</span></div>`;
+    return;
+  }
+  const grid = document.createElement("div");
+  grid.className = "doc-grid";
+  items.forEach(item=>{
+    const name = displayName(tab, item);
+    const meta = displayMeta(tab, item);
+    const typeClass = tab === "summaries" ? "type-summary" : (tab === "analyses" || tab === "conversations" ? "type-analysis" : "");
+    const card = document.createElement("div");
+    card.className = "doc-card " + typeClass;
+    card.innerHTML = `
+      <div class="doc-name">${escapeHtml(name)}</div>
+      <div class="doc-meta">${escapeHtml(meta)}</div>
+      <button class="doc-menu-btn">&#8942;</button>
+    `;
+    card.querySelector(".doc-menu-btn").onclick = (e)=>{
+      e.stopPropagation();
+      closeAllMenus();
+      openMenu(card, tab, item);
+    };
+    grid.appendChild(card);
+  });
+  list.innerHTML = "";
+  list.appendChild(grid);
+}
+
+function displayName(tab, item){
+  if(tab === "documents") return item.get("fileName") || "Untitled file";
+  if(tab === "conversations") return item.get("title") || "Conversation";
+  if(tab === "exports") return "Export — " + (item.get("format")||"");
+  return (item.get("type") || "Result") + " — " + (item.get("style")||"");
+}
+function displayMeta(tab, item){
+  if(tab === "documents") return (item.get("status")||"ready") + " · " + (item.get("fileType")||"");
+  if(tab === "conversations") return "Updated " + timeAgo(item.get("lastMessageAt") || item.get("updatedAt"));
+  return timeAgo(item.get("createdAt"));
+}
+function timeAgo(date){
+  if(!date) return "";
+  const diff = Math.round((Date.now() - new Date(date).getTime())/60000);
+  if(diff < 60) return diff + "m ago";
+  if(diff < 1440) return Math.round(diff/60) + "h ago";
+  return Math.round(diff/1440) + "d ago";
+}
+function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function closeAllMenus(){ document.querySelectorAll(".doc-menu").forEach(m=>m.remove()); }
+document.addEventListener("click", closeAllMenus);
+
+function openMenu(card, tab, item){
+  const menu = document.createElement("div");
+  menu.className = "doc-menu";
+  const canRename = tab === "documents" || tab === "conversations";
+  menu.innerHTML = `
+    ${canRename ? '<button data-act="rename">Rename</button>' : ""}
+    <button data-act="download">Download</button>
+    <button data-act="share">Share</button>
+    <button data-act="delete" class="danger">Delete</button>
+  `;
+  card.appendChild(menu);
+  menu.onclick = async (e)=>{
+    e.stopPropagation();
+    const act = e.target.dataset.act;
+    if(!act) return;
+    if(act === "rename"){
+      const field = tab === "documents" ? "fileName" : "title";
+      const val = prompt("New name:", item.get(field) || "");
+      if(val){ item.set(field, val); await item.save(); loadTab(tab); }
+    } else if(act === "delete"){
+      if(confirm("Delete this item?")){ await item.destroy(); loadTab(tab); }
+    } else if(act === "download"){
+      const file = item.get("fileUrl");
+      if(file && file.url()) window.open(file.url(), "_blank");
+      else alert("No downloadable file for this item yet.");
+    } else if(act === "share"){
+      alert("Sharing is coming soon.");
+    }
+  };
+}
+
+document.getElementById("db-search").oninput = (e)=>{
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll(".doc-card").forEach(card=>{
+    const match = card.querySelector(".doc-name").textContent.toLowerCase().includes(q);
+    card.style.display = match ? "" : "none";
+  });
+};
+
+// mobile drawer
+document.getElementById("db-drawer-toggle").onclick = ()=>{
+  document.getElementById("db-sidebar").classList.add("open");
+  document.getElementById("db-overlay").hidden = false;
+};
+document.getElementById("db-overlay").onclick = closeDrawer;
+function closeDrawer(){
+  document.getElementById("db-sidebar").classList.remove("open");
+  document.getElementById("db-overlay").hidden = true;
+}
+
+// ---------------- Wizard ----------------
+let currentDocument = null;
+let selectedAction = null;
+let selectedResult = null;
+
+document.getElementById("btn-new-doc").onclick = openWizard;
+function openWizard(){
+  resetWizard();
+  showScreen("screen-wizard");
+}
+document.getElementById("wiz-back").onclick = ()=>{ showScreen("screen-dashboard"); loadTab(currentTab); };
+
+function resetWizard(){
+  currentDocument = null; selectedAction = null; selectedResult = null;
+  document.getElementById("wiz-inputs").hidden = false;
+  document.getElementById("wiz-result").hidden = true;
+  document.getElementById("dropzone-wrap").hidden = false;
+  document.getElementById("file-ready-wrap").hidden = true;
+  document.getElementById("file-ready-wrap").innerHTML = "";
+  document.getElementById("file-input").value = "";
+  document.querySelectorAll("#action-pills .pill, #result-pills .pill").forEach(p=>p.classList.remove("selected"));
+  document.getElementById("btn-continue").textContent = "Continue";
+  document.getElementById("btn-continue").onclick = handleContinue;
+  updateDots(); updateContinueState();
+}
+
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("file-input");
+dropzone.onclick = ()=>fileInput.click();
+["dragenter","dragover"].forEach(ev=>dropzone.addEventListener(ev, e=>{e.preventDefault(); dropzone.classList.add("drag");}));
+["dragleave","drop"].forEach(ev=>dropzone.addEventListener(ev, e=>{e.preventDefault(); dropzone.classList.remove("drag");}));
+dropzone.addEventListener("drop", e=>{
+  if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.onchange = ()=>{ if(fileInput.files.length) handleFile(fileInput.files[0]); };
+
+async function handleFile(file){
+  document.getElementById("dropzone-wrap").hidden = true;
+  const wrap = document.getElementById("file-ready-wrap");
+  wrap.hidden = false;
+  wrap.innerHTML = `
+    <div class="file-ready">
+      <div class="fi">${(file.name.split(".").pop()||"?").slice(0,3).toUpperCase()}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="fname">${escapeHtml(file.name)}</div>
+        <div class="fmeta" id="file-status">Uploading…</div>
+        <div class="progress"><i id="file-progress" style="width:0%"></i></div>
+      </div>
+      <button class="remove" id="file-remove">&times;</button>
+    </div>
+  `;
+  document.getElementById("file-remove").onclick = async ()=>{
+    if(currentDocument){ try{ await currentDocument.destroy(); }catch(e){} }
+    resetWizard();
+  };
+
+  try{
+    const doc = new Parse.Object("Document");
+    doc.set("fileName", file.name);
+    doc.set("fileType", (file.name.split(".").pop()||"").toLowerCase());
+    doc.set("fileSize", file.size);
+    doc.set("owner", Parse.User.current());
+    doc.set("status", "uploading");
+    doc.set("uploadProgress", 0);
+
+    const parseFile = new Parse.File(file.name, file);
+    await parseFile.save({
+      progress: (p)=>{
+        const pct = Math.round(p*100);
+        const bar = document.getElementById("file-progress");
+        if(bar) bar.style.width = pct + "%";
+        const status = document.getElementById("file-status");
+        if(status) status.textContent = pct + "%";
+      }
+    });
+    doc.set("fileUrl", parseFile);
+    doc.set("status", "ready");
+    doc.set("uploadProgress", 100);
+    await doc.save();
+    currentDocument = doc;
+    document.getElementById("file-status").textContent = formatSize(file.size) + " · ready";
+    document.getElementById("file-progress").style.width = "100%";
+  }catch(err){
+    document.getElementById("file-status").textContent = "Upload failed: " + err.message;
+  }
+  updateDots(); updateContinueState();
+}
+function formatSize(bytes){
+  if(bytes < 1024) return bytes + " B";
+  if(bytes < 1024*1024) return Math.round(bytes/1024) + " KB";
+  return (bytes/1024/1024).toFixed(1) + " MB";
+}
+
+document.querySelectorAll("#action-pills .pill").forEach(p=>{
+  p.onclick = ()=>{
+    document.querySelectorAll("#action-pills .pill").forEach(x=>x.classList.remove("selected"));
+    p.classList.add("selected");
+    selectedAction = p.dataset.value;
+    updateDots(); updateContinueState();
+  };
+});
+document.querySelectorAll("#result-pills .pill").forEach(p=>{
+  p.onclick = ()=>{
+    document.querySelectorAll("#result-pills .pill").forEach(x=>x.classList.remove("selected"));
+    p.classList.add("selected");
+    selectedResult = p.dataset.value;
+    updateDots(); updateContinueState();
+  };
+});
+
+function updateDots(){
+  document.getElementById("dot-1").classList.toggle("done", !!currentDocument);
+  document.getElementById("dot-2").classList.toggle("done", !!selectedAction);
+  document.getElementById("dot-3").classList.toggle("done", !!selectedResult);
+}
+function updateContinueState(){
+  document.getElementById("btn-continue").disabled = !(currentDocument && selectedAction && selectedResult);
+}
+
+const RESULT_PRESETS = {
+  short:{lengths:"court", style:"simple", format:"paragraphes"},
+  detailed:{lengths:"détaillé", style:"simple", format:"paragraphes"},
+  professional:{lengths:"moyen", style:"professionnel", format:"paragraphes"},
+  table:{lengths:"moyen", style:"professionnel", format:"tableau"},
+  presentation:{lengths:"moyen", style:"exécutif", format:"plan"}
+};
+const TYPE_MAP = {summarize:"résumé", analyze:"analyse", extract:"extraction", transform:"transformation", ask:"conversation"};
+
+async function handleContinue(){
+  const btn = document.getElementById("btn-continue");
+  btn.disabled = true; btn.textContent = "Generating…";
+  const preset = RESULT_PRESETS[selectedResult];
+  try{
+    let contentText, sources = [];
+    if(selectedAction === "ask"){
+      const convo = new Parse.Object("Conversation");
+      convo.set("document", currentDocument);
+      convo.set("owner", Parse.User.current());
+      convo.set("title", currentDocument.get("fileName"));
+      convo.set("lastMessageAt", new Date());
+      await convo.save();
+      const msg = new Parse.Object("Message");
+      msg.set("conversation", convo);
+      msg.set("role", "assistant");
+      msg.set("content", "Ask me anything about this document — this is a placeholder answer until the AI engine is connected.");
+      await msg.save();
+      contentText = "Conversation started. Placeholder answer — the real AI engine isn't connected yet.";
+    } else {
+      const result = new Parse.Object("Result");
+      result.set("document", currentDocument);
+      result.set("owner", Parse.User.current());
+      result.set("type", TYPE_MAP[selectedAction] || "résumé");
+      result.set("lengths", preset.lengths);
+      result.set("style", preset.style);
+      result.set("format", preset.format);
+      result.set("language", "en");
+      contentText = "This is placeholder content — the AI engine isn't connected yet in this build. Once it is, the real "
+        + (TYPE_MAP[selectedAction]) + " of \"" + currentDocument.get("fileName") + "\" will appear here, formatted as "
+        + selectedResult + ".";
+      sources = [{page: 1, note: "Sample citation — will point to the real passage once the engine is connected."}];
+      result.set("content", contentText);
+      result.set("sources", sources);
+      await result.save();
+    }
+    showResult(contentText, sources);
+  }catch(err){
+    alert("Could not generate the result: " + err.message);
+    btn.disabled = false; btn.textContent = "Continue";
+  }
+}
+
+function showResult(content, sources){
+  document.getElementById("wiz-inputs").hidden = true;
+  const block = document.getElementById("wiz-result");
+  block.hidden = false;
+  block.innerHTML = `
+    <h2>Result</h2>
+    <div class="result-content">${escapeHtml(content)}</div>
+    ${sources && sources.length ? `<ul class="sources">${sources.map(s=>`<li>Source — page ${s.page}: ${escapeHtml(s.note)}</li>`).join("")}</ul>` : ""}
+    <div class="result-actions">
+      <button class="btn btn-outline btn-sm" id="btn-copy">Copy</button>
+      <button class="btn btn-outline btn-sm" id="btn-export">Export</button>
+      <button class="btn btn-primary btn-sm" id="btn-back-dash">Back to dashboard</button>
+    </div>
+  `;
+  document.getElementById("btn-copy").onclick = ()=>navigator.clipboard.writeText(content);
+  document.getElementById("btn-export").onclick = ()=>alert("Export formats are coming soon.");
+  document.getElementById("btn-back-dash").onclick = ()=>{ showScreen("screen-dashboard"); loadTab("documents"); };
+  document.getElementById("btn-continue").parentElement.parentElement.style.display = "none";
+}
+
+// ---------------- Boot ----------------
+(function boot(){
+  if(Parse.User.current()){ enterApp(); }
+  else { showScreen("screen-auth"); }
+})();
+</script>
+</body>
+</html>
