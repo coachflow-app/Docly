@@ -15,7 +15,7 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root{
-    --yellow:#F2A900; --yellow-ink:#6B4400; --yellow-tint:#FBEACB;
+    --yellow:#F5D134; --yellow-ink:#6B5300; --yellow-tint:#FCF3CF;
     --yellow-off:#ECECEF; --yellow-off-ink:#A7A8B3;
     --indigo:#2F3FA8; --indigo-soft:#6670C4;
     --ink:#232A45; --muted:#7C8093; --faint:#A6A9B8;
@@ -178,10 +178,10 @@
   .db-toolbar .btn{white-space:nowrap;flex-shrink:0;}
   @media (max-width:640px){ .db-toolbar .btn{width:100%;} }
 
+  .db-sortfilter-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
   .db-section-head{display:flex;align-items:baseline;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
   .db-section-head h1{font-size:clamp(26px,5vw,34px);font-weight:500;margin:0;}
   .db-count{font-size:13px;color:var(--faint);}
-  .db-section-head .spacer{flex:1;}
   .db-sort{
     height:36px;padding:0 12px;border:1px solid var(--line);border-radius:var(--radius);
     background:var(--surface);font-size:12px;color:var(--ink);cursor:pointer;
@@ -415,6 +415,29 @@
     .slide-box{padding:8%;}
     .chat-wrap{height:70vh;max-height:480px;}
   }
+
+  .quiz-q{border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px;background:var(--surface);}
+  .quiz-q-text{font-size:14px;font-weight:500;margin:0 0 10px;color:var(--ink);}
+  .quiz-options{display:flex;flex-direction:column;gap:8px;}
+  .quiz-opt{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink);padding:8px 10px;border-radius:8px;border:1px solid var(--line);cursor:pointer;}
+  .quiz-opt.correct{border-color:#2E7D32;background:#EAF6EC;color:#2E7D32;}
+  .quiz-opt.wrong{border-color:var(--danger);background:var(--danger-tint);color:var(--danger);}
+  .quiz-score{font-size:14px;font-weight:600;color:var(--indigo);margin-top:10px;}
+
+  .flashcard{
+    position:relative;border:1px solid var(--line);border-radius:14px;background:var(--surface);
+    padding:26px 20px;min-height:110px;display:flex;align-items:center;justify-content:center;text-align:center;
+    font-size:14px;color:var(--ink);cursor:pointer;margin-bottom:12px;
+  }
+  .flashcard .fc-back{color:var(--indigo);font-weight:500;}
+  .flashcard .fc-hint{position:absolute;bottom:8px;right:12px;font-size:10px;color:var(--faint);}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(35,42,69,.4);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .modal-box{background:var(--surface);border-radius:14px;padding:20px;width:100%;max-width:420px;}
+  .modal-box h3{margin:0 0 12px;font-size:16px;color:var(--indigo);}
+  .modal-box textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:inherit;font-size:13.5px;resize:vertical;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;}
+  .doc-note-dot{width:6px;height:6px;border-radius:50%;background:var(--yellow);flex-shrink:0;display:inline-block;}
 </style>
 </head>
 <body>
@@ -563,10 +586,7 @@
         </div>
         <button class="btn btn-primary" id="btn-new-doc">+ New document</button>
       </div>
-      <div class="db-section-head">
-        <h1 id="db-tab-title">All documents</h1>
-        <span class="db-count" id="db-count"></span>
-        <span class="spacer"></span>
+      <div class="db-sortfilter-row">
         <button class="db-sort" id="db-sort">Most recent</button>
         <div class="db-filter-wrap">
           <button class="db-filter-btn" id="db-filter-btn" aria-label="Filter">
@@ -591,6 +611,10 @@
           </div>
         </div>
       </div>
+      <div class="db-section-head">
+        <h1 id="db-tab-title">All documents</h1>
+        <span class="db-count" id="db-count"></span>
+      </div>
       <div id="db-list"></div>
     </main>
   </div>
@@ -611,7 +635,7 @@
       <div class="step-circle" id="dot-3">3</div><div class="step-line" id="line-3"></div>
       <div class="step-circle" id="dot-4">4</div>
     </div>
-    <p class="step-caption" id="step-caption">Step 1 of 4 — Upload your file</p>
+    <p class="step-caption" id="step-caption">Your documents. Finally understood — in just 4 simple steps.</p>
 
     <div id="wiz-inputs">
       <div class="dropzone" id="dropzone">
@@ -631,6 +655,8 @@
           <button class="pill" data-value="ask"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16v10H8l-4 4V5z" stroke-linejoin="round"/></svg>Ask questions</button>
           <button class="pill" data-value="extract"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4v11M7 11l5 5 5-5M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg>Extract</button>
           <button class="pill" data-value="transform"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h13l-3-3M20 16H7l3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>Transform</button>
+          <button class="pill" data-value="keypoints"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5" cy="7" r="1.4" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="5" cy="17" r="1.4" fill="currentColor" stroke="none"/><path d="M9 7h11M9 12h11M9 17h11" stroke-linecap="round"/></svg>Key points</button>
+          <button class="pill" data-value="actionitems"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="5" width="5" height="5" rx="1"/><path d="M6.3 7.3l.9.9 1.5-1.7" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="14" width="5" height="5" rx="1"/><path d="M12 7h9M12 16h9" stroke-linecap="round"/></svg>Action items</button>
         </div>
       </div>
 
@@ -643,6 +669,8 @@
           <button class="pill" data-value="professional"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="8" width="18" height="11" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Professional</button>
           <button class="pill" data-value="table"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>Table</button>
           <button class="pill" data-value="presentation"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4" stroke-linecap="round"/></svg>Presentation</button>
+          <button class="pill" data-value="quiz"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.8-2 1.8-2 3.5" stroke-linecap="round"/><circle cx="12" cy="16.3" r=".2" fill="currentColor"/></svg>Quiz</button>
+          <button class="pill" data-value="flashcards"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="M7 3h14v12" /></svg>Flashcards</button>
         </div>
       </div>
 
@@ -883,7 +911,7 @@ function renderList(tab, items){
       <input type="checkbox">
       <div class="doc-icon">${badgeText(tab, item)}</div>
       <div class="doc-info">
-        <div class="doc-name">${escapeHtml(name)}</div>
+        <div class="doc-name">${escapeHtml(name)}${item.get("notes") ? ' <span class="doc-note-dot" title="Has a note"></span>' : ""}</div>
         <div class="doc-meta">${escapeHtml(meta)}</div>
       </div>
       <button class="doc-menu-btn">&#8942;</button>
@@ -934,6 +962,7 @@ function openMenu(row, tab, item){
   const canRename = tab === "documents" || tab === "conversations";
   menu.innerHTML = `
     ${canRename ? '<button data-act="rename">Rename</button>' : ""}
+    <button data-act="notes">${item.get("notes") ? "Edit note" : "Add note"}</button>
     <button data-act="download">Download</button>
     <button data-act="share">Share</button>
     <button data-act="delete" class="danger">Delete</button>
@@ -947,6 +976,8 @@ function openMenu(row, tab, item){
       const field = tab === "documents" ? "fileName" : "title";
       const val = prompt("New name:", item.get(field) || "");
       if(val){ item.set(field, val); await item.save(); loadTab(tab); }
+    } else if(act === "notes"){
+      openNotesModal(item, tab);
     } else if(act === "delete"){
       if(confirm("Delete this item?")){ await item.destroy(); loadTab(tab); refreshPlanCount(); }
     } else if(act === "download"){
@@ -954,6 +985,29 @@ function openMenu(row, tab, item){
     } else if(act === "share"){
       shareItem(tab, item);
     }
+  };
+}
+
+function openNotesModal(item, tab){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <h3>Note</h3>
+      <textarea id="notes-textarea" placeholder="Write a personal note about this item…">${escapeHtml(item.get("notes")||"")}</textarea>
+      <div class="modal-actions">
+        <button class="btn btn-outline btn-sm" id="notes-cancel">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="notes-save">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.onclick = (e)=>{ if(e.target === overlay) overlay.remove(); };
+  document.getElementById("notes-cancel").onclick = ()=>overlay.remove();
+  document.getElementById("notes-save").onclick = async ()=>{
+    item.set("notes", document.getElementById("notes-textarea").value);
+    await item.save();
+    overlay.remove();
+    loadTab(tab);
   };
 }
 
@@ -1114,11 +1168,6 @@ function updateStepper(){
   l1.classList.toggle("done", !!currentDocument);
   l2.classList.toggle("done", !!selectedAction);
   l3.classList.toggle("done", !!selectedResult);
-  const cap = document.getElementById("step-caption");
-  if(!currentDocument) cap.textContent = "Step 1 of 4 — Upload your file";
-  else if(!selectedAction) cap.textContent = "Step 2 of 4 — Choose an action";
-  else if(!selectedResult) cap.textContent = "Step 3 of 4 — Choose the result";
-  else cap.textContent = "Step 4 of 4 — Ready to generate";
 }
 function updateContinueState(){
   document.getElementById("btn-continue").disabled = !(currentDocument && selectedAction && selectedResult);
@@ -1129,12 +1178,22 @@ const RESULT_PRESETS = {
   detailed:{lengths:"détaillé", style:"simple", format:"paragraphes"},
   professional:{lengths:"moyen", style:"professionnel", format:"paragraphes"},
   table:{lengths:"moyen", style:"professionnel", format:"tableau"},
-  presentation:{lengths:"moyen", style:"exécutif", format:"plan"}
+  presentation:{lengths:"moyen", style:"exécutif", format:"plan"},
+  quiz:{lengths:"moyen", style:"simple", format:"quiz"},
+  flashcards:{lengths:"court", style:"simple", format:"flashcards"}
 };
-const TYPE_MAP = {summarize:"résumé", analyze:"analyse", extract:"extraction", transform:"transformation", ask:"conversation"};
+const TYPE_MAP = {summarize:"résumé", analyze:"analyse", extract:"extraction", transform:"transformation", ask:"conversation", keypoints:"points clés", actionitems:"actions à réaliser"};
 
 let currentConversation = null;
 let currentResultObject = null;
+
+function buildSources(doc){
+  const fileType = (doc.get("fileType")||"").toLowerCase();
+  if(fileType === "xlsx" || fileType === "xls"){
+    return [{cell:"Sheet1!B4", note:"Sample citation — will point to the real cell once the engine is connected."}];
+  }
+  return [{page:1, paragraph:3, note:"Sample citation — will point to the real passage once the engine is connected."}];
+}
 
 async function handleContinue(){
   const btn = document.getElementById("btn-continue");
@@ -1157,6 +1216,9 @@ async function handleContinue(){
       openResultScreen("chat", [msg], null);
       createNotification("New conversation started on \"" + currentDocument.get("fileName") + "\"");
     } else {
+      // Key points and Action items always render as their own fixed list shape,
+      // regardless of which "Choose the result" preset was picked.
+      const renderKind = (selectedAction === "keypoints" || selectedAction === "actionitems") ? selectedAction : selectedResult;
       const result = new Parse.Object("Result");
       result.set("document", currentDocument);
       result.set("owner", Parse.User.current());
@@ -1170,12 +1232,12 @@ async function handleContinue(){
       const contentText = "This is placeholder content — the AI engine isn't connected yet in this build. Once it is, the real "
         + (TYPE_MAP[selectedAction]) + " of \"" + currentDocument.get("fileName") + "\" will appear here, formatted as "
         + selectedResult + "." + preview;
-      const sources = [{page: 1, note: "Sample citation — will point to the real passage once the engine is connected."}];
+      const sources = buildSources(currentDocument);
       result.set("content", contentText);
       result.set("sources", sources);
       await result.save();
       currentResultObject = result;
-      openResultScreen(selectedResult, contentText, sources);
+      openResultScreen(renderKind, contentText, sources);
       createNotification((TYPE_MAP[selectedAction]) + " generated for \"" + currentDocument.get("fileName") + "\"");
     }
   }catch(err){
@@ -1185,7 +1247,8 @@ async function handleContinue(){
 }
 
 const RESULT_BADGE = {
-  short:"Short", detailed:"Detailed", professional:"Professional", table:"Table", presentation:"Presentation"
+  short:"Short", detailed:"Detailed", professional:"Professional", table:"Table", presentation:"Presentation",
+  quiz:"Quiz", flashcards:"Flashcards"
 };
 
 function showResAlert(msg, danger){
@@ -1291,6 +1354,24 @@ function openResultScreen(kind, payload, sources){
     setupSlides();
     actions.innerHTML = resultActionsHtml();
     wireResultActions(payload);
+  } else if(kind === "quiz"){
+    box.innerHTML = `<div id="quiz-box"></div>${citationsHtml(sources, docLink)}`;
+    setupQuiz();
+    actions.innerHTML = resultActionsHtml();
+    wireResultActions(payload);
+  } else if(kind === "flashcards"){
+    box.innerHTML = `<div id="flash-box"></div>${citationsHtml(sources, docLink)}`;
+    setupFlashcards();
+    actions.innerHTML = resultActionsHtml();
+    wireResultActions(payload);
+  } else if(kind === "keypoints"){
+    box.innerHTML = `<div class="result-content">${buildKeyPointsContent()}</div>${citationsHtml(sources, docLink)}`;
+    actions.innerHTML = resultActionsHtml();
+    wireResultActions(payload);
+  } else if(kind === "actionitems"){
+    box.innerHTML = `<div class="result-content">${buildActionItemsContent()}</div>${citationsHtml(sources, docLink)}`;
+    actions.innerHTML = resultActionsHtml();
+    wireResultActions(payload);
   } else {
     box.innerHTML = `<div class="result-content">${buildStructuredContent(kind, doc.get("fileName"), extracted)}</div>${citationsHtml(sources, docLink)}`;
     actions.innerHTML = resultActionsHtml();
@@ -1299,23 +1380,47 @@ function openResultScreen(kind, payload, sources){
   showScreen("screen-result");
 }
 
+function buildKeyPointsContent(){
+  return `<ul>
+    <li>Key point one will appear here once the AI engine is connected.</li>
+    <li>Key point two will appear here.</li>
+    <li>Key point three will appear here.</li>
+  </ul>`;
+}
+function buildActionItemsContent(){
+  return `<ul style="list-style:none;padding-left:0;">
+    <li style="margin-bottom:10px;">☐ Action item one will appear here once the AI engine is connected.</li>
+    <li style="margin-bottom:10px;">☐ Action item two will appear here.</li>
+    <li style="margin-bottom:10px;">☐ Action item three will appear here.</li>
+  </ul>`;
+}
+
 function citationsHtml(sources, docLink){
   if(!sources || !sources.length) return "";
-  return `<div class="citations">${sources.map(s=>`
+  return `<div class="citations">${sources.map(s=>{
+    const label = s.cell ? ("Source · " + s.cell) : ("Source · Page " + s.page + (s.paragraph ? (", paragraph " + s.paragraph) : ""));
+    return `
     <div class="citation">
       <span class="cic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 15l6-6M10 6l1-1a3 3 0 0 1 4 4l-1 1M14 18l-1 1a3 3 0 0 1-4-4l1-1"/></svg></span>
       <div class="ct-body">
-        <div class="ct-head">Source · Page ${s.page}</div>
+        <div class="ct-head">${label}</div>
         <div class="ct-sub">${escapeHtml(s.note)}</div>
       </div>
       ${docLink ? `<a href="${docLink}" target="_blank">View in document &rarr;</a>` : ""}
-    </div>`).join("")}</div>`;
+    </div>`;
+  }).join("")}</div>`;
 }
 function resultActionsHtml(){
   return `
     <div class="res-actions-primary">
       <button class="btn btn-outline btn-sm" id="btn-copy">Copy</button>
       <button class="btn btn-outline btn-sm" id="btn-share">Share</button>
+      <select class="btn btn-outline btn-sm" id="btn-translate" style="padding:0 8px;">
+        <option value="">Translate</option>
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+      </select>
       <button class="btn btn-primary btn-sm" id="btn-export">Export</button>
     </div>
     <button class="btn-ghost-nav" id="btn-back-dash">&larr; Back to dashboard</button>
@@ -1326,12 +1431,77 @@ function wireResultActions(content){
   document.getElementById("btn-share").onclick = ()=>shareItem("summaries", currentResultObject);
   document.getElementById("btn-export").onclick = ()=>exportResult(currentResultObject);
   document.getElementById("btn-back-dash").onclick = backToDashboard;
+  document.getElementById("btn-translate").onchange = async (e)=>{
+    const lang = e.target.value;
+    if(!lang) return;
+    const names = {en:"English", fr:"Français", es:"Español"};
+    if(currentResultObject){ currentResultObject.set("language", lang); await currentResultObject.save(); }
+    showResAlert("Showing a simulated " + names[lang] + " translation — real translation will appear once the AI engine is connected.", false);
+    e.target.value = "";
+  };
 }
 document.addEventListener("click", (e)=>{
   if(e.target.id === "res-back") backToDashboard();
 });
 
-// ---- Presentation (slides) ----
+// ---- Quiz ----
+const SAMPLE_QUIZ = [
+  {q:"Sample question 1 based on the document?", options:["Option A","Option B","Option C","Option D"], correct:0},
+  {q:"Sample question 2 based on the document?", options:["Option A","Option B","Option C","Option D"], correct:1},
+  {q:"Sample question 3 based on the document?", options:["Option A","Option B","Option C","Option D"], correct:2}
+];
+function setupQuiz(){
+  const box = document.getElementById("quiz-box");
+  box.innerHTML = SAMPLE_QUIZ.map((item,qi)=>`
+    <div class="quiz-q">
+      <p class="quiz-q-text">${qi+1}. ${escapeHtml(item.q)}</p>
+      <div class="quiz-options">
+        ${item.options.map((opt,oi)=>`<label class="quiz-opt"><input type="radio" name="q${qi}" value="${oi}"> ${escapeHtml(opt)}</label>`).join("")}
+      </div>
+    </div>`).join("") + `<button class="btn btn-primary btn-sm" id="quiz-check">Check answers</button><p class="quiz-score" id="quiz-score"></p>`;
+  document.getElementById("quiz-check").onclick = ()=>{
+    let correct = 0;
+    SAMPLE_QUIZ.forEach((item,qi)=>{
+      const opts = box.querySelectorAll(`input[name="q${qi}"]`);
+      let picked = null;
+      opts.forEach(o=>{ if(o.checked) picked = Number(o.value); });
+      opts.forEach((o,oi)=>{
+        const label = o.closest(".quiz-opt");
+        label.classList.remove("correct","wrong");
+        if(oi === item.correct) label.classList.add("correct");
+        else if(oi === picked) label.classList.add("wrong");
+      });
+      if(picked === item.correct) correct++;
+    });
+    document.getElementById("quiz-score").textContent = "Score: " + correct + " / " + SAMPLE_QUIZ.length;
+  };
+}
+
+// ---- Flashcards ----
+const SAMPLE_FLASHCARDS = [
+  {q:"Sample flashcard question 1?", a:"Sample answer 1 — will reflect the document once the AI engine is connected."},
+  {q:"Sample flashcard question 2?", a:"Sample answer 2."},
+  {q:"Sample flashcard question 3?", a:"Sample answer 3."}
+];
+function setupFlashcards(){
+  const box = document.getElementById("flash-box");
+  box.innerHTML = SAMPLE_FLASHCARDS.map((c,i)=>`
+    <div class="flashcard" id="fc-${i}" data-flipped="0">
+      <div class="fc-face fc-front">${escapeHtml(c.q)}</div>
+      <div class="fc-face fc-back" hidden>${escapeHtml(c.a)}</div>
+      <span class="fc-hint">Tap to flip</span>
+    </div>`).join("");
+  SAMPLE_FLASHCARDS.forEach((c,i)=>{
+    document.getElementById("fc-"+i).onclick = function(){
+      const flipped = this.dataset.flipped === "1";
+      this.querySelector(".fc-front").hidden = !flipped;
+      this.querySelector(".fc-back").hidden = flipped;
+      this.dataset.flipped = flipped ? "0" : "1";
+    };
+  });
+}
+
+
 const SAMPLE_SLIDES = [
   {title:"Overview", points:["Key point will appear here", "Once the AI engine is connected"]},
   {title:"Details", points:["Placeholder bullet 1", "Placeholder bullet 2", "Placeholder bullet 3"]},
