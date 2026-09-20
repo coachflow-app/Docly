@@ -438,6 +438,28 @@
   .modal-box textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:inherit;font-size:13.5px;resize:vertical;}
   .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;}
   .doc-note-dot{width:6px;height:6px;border-radius:50%;background:var(--yellow);flex-shrink:0;display:inline-block;}
+
+  .citation-link{background:none;border:none;font-size:12px;color:var(--indigo);text-decoration:none;font-weight:500;white-space:nowrap;flex-shrink:0;cursor:pointer;font-family:inherit;padding:0;}
+
+  .viewer-box{background:var(--surface);border-radius:16px;width:100%;max-width:820px;height:84vh;display:flex;flex-direction:column;overflow:hidden;}
+  .viewer-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);}
+  .viewer-head span{font-size:14px;font-weight:600;color:var(--indigo);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .viewer-head button{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1;padding:2px 6px;}
+  .viewer-body{flex:1;overflow:auto;padding:18px;background:var(--paper);}
+  .viewer-body canvas{max-width:100%;display:block;margin:0 auto;box-shadow:0 2px 10px rgba(0,0,0,.08);}
+  .viewer-controls{display:flex;align-items:center;justify-content:center;gap:14px;padding:12px;border-top:1px solid var(--line);}
+  .viewer-pre{white-space:pre-wrap;font-size:13px;line-height:1.6;}
+  .docx-view{font-size:14px;line-height:1.7;}
+  .docx-view p{margin:0 0 14px;}
+  .cell-highlight{background:var(--yellow-tint) !important;outline:2px solid var(--yellow);}
+  .para-highlight{background:var(--yellow-tint);border-radius:4px;padding:2px 4px;}
+
+  .compare-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+  @media (min-width:700px){ .compare-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));} }
+  .compare-card{border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--surface);}
+  .compare-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .compare-card-name{font-size:13.5px;font-weight:600;color:var(--ink);overflow-wrap:anywhere;}
+  .compare-card-excerpt{font-size:12.5px;color:var(--muted);line-height:1.5;margin:0;}
 </style>
 </head>
 <body>
@@ -584,6 +606,7 @@
           <span class="fic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="6"/><path d="M15 15l5 5" stroke-linecap="round"/></svg></span>
           <input type="text" class="db-search" id="db-search" placeholder="Search documents…">
         </div>
+        <button class="btn btn-outline" id="btn-compare" hidden>Compare</button>
         <button class="btn btn-primary" id="btn-new-doc">+ New document</button>
       </div>
       <div class="db-sortfilter-row">
@@ -703,6 +726,18 @@
     <div class="result-actions" id="res-actions"></div>
   </div>
 </section>
+
+<!-- ============ DOCUMENT VIEWER ============ -->
+<div class="modal-overlay" id="viewer-overlay" hidden>
+  <div class="viewer-box">
+    <div class="viewer-head">
+      <span id="viewer-title"></span>
+      <button id="viewer-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="viewer-body" id="viewer-body"></div>
+    <div class="viewer-controls" id="viewer-controls"></div>
+  </div>
+</div>
 
 <!-- ============ PUBLIC SHARED VIEW ============ -->
 <section id="screen-shared" hidden>
@@ -884,6 +919,9 @@ async function loadTab(tab){
 
 function renderList(tab, items){
   const list = document.getElementById("db-list");
+  docObjectsById = {};
+  selectedDocIds.clear();
+  updateCompareButton();
   if(items.length === 0){
     list.innerHTML = `
       <div class="empty-state">
@@ -921,11 +959,34 @@ function renderList(tab, items){
       closeAllMenus();
       openMenu(row, tab, item);
     };
+    if(tab === "documents"){
+      docObjectsById[item.id] = item;
+      row.querySelector('input[type=checkbox]').onchange = (e)=>{
+        if(e.target.checked) selectedDocIds.add(item.id);
+        else selectedDocIds.delete(item.id);
+        updateCompareButton();
+      };
+    } else {
+      row.querySelector('input[type=checkbox]').style.visibility = "hidden";
+    }
     wrap.appendChild(row);
   });
   list.innerHTML = "";
   list.appendChild(wrap);
 }
+
+let selectedDocIds = new Set();
+let docObjectsById = {};
+function updateCompareButton(){
+  const btn = document.getElementById("btn-compare");
+  if(currentTab === "documents" && selectedDocIds.size >= 2){
+    btn.hidden = false;
+    btn.textContent = "Compare (" + selectedDocIds.size + ")";
+  } else {
+    btn.hidden = true;
+  }
+}
+
 
 function badgeText(tab, item){
   if(tab === "documents") return (item.get("fileType")||"FILE").toUpperCase().slice(0,4);
@@ -1037,6 +1098,67 @@ let selectedAction = null;
 let selectedResult = null;
 
 document.getElementById("btn-new-doc").onclick = openWizard;
+document.getElementById("btn-compare").onclick = handleCompare;
+
+async function handleCompare(){
+  const ids = Array.from(selectedDocIds);
+  const docs = ids.map(id=>docObjectsById[id]).filter(Boolean);
+  if(docs.length < 2) return;
+  const btn = document.getElementById("btn-compare");
+  btn.disabled = true; btn.textContent = "Comparing…";
+  try{
+    const result = new Parse.Object("Result");
+    result.set("owner", Parse.User.current());
+    result.set("type", "comparaison");
+    result.set("documents", docs);
+    result.set("language", "en");
+    const contentText = "This is placeholder content — the AI engine isn't connected yet. Once it is, a real comparison of "
+      + docs.map(d=>'"'+d.get("fileName")+'"').join(" and ") + " will appear here.";
+    const sources = docs.map((d,i)=>({page:1, paragraph:1, docName:d.get("fileName"), note:"Sample citation for "+d.get("fileName")+"."}));
+    result.set("content", contentText);
+    result.set("sources", sources);
+    await result.save();
+    currentResultObject = result;
+    openComparisonScreen(docs, sources);
+    createNotification("Comparison generated for " + docs.length + " documents");
+  }catch(err){
+    alert("Could not create the comparison: " + err.message);
+  }
+  btn.disabled = false;
+  updateCompareButton();
+}
+
+function openComparisonScreen(docs, sources){
+  resultBackTarget = "dashboard";
+  document.getElementById("res-back").textContent = "← Back to dashboard";
+  document.getElementById("res-filename").textContent = "Comparing " + docs.length + " documents";
+  document.getElementById("res-meta").textContent = docs.map(d=>d.get("fileName")).join(" · ");
+  document.getElementById("res-badge").textContent = "Comparison";
+  hideResAlert();
+  const box = document.getElementById("res-content");
+  const cards = docs.map((d,i)=>{
+    const excerpt = (d.get("extractedText")||"").trim().slice(0,220);
+    return `
+      <div class="compare-card">
+        <div class="compare-card-head"><span class="doc-icon">${(d.get("fileType")||"FILE").toUpperCase().slice(0,4)}</span><span class="compare-card-name">${escapeHtml(d.get("fileName"))}</span></div>
+        <p class="compare-card-excerpt">${excerpt ? escapeHtml(excerpt)+"…" : "No text extracted yet."}</p>
+      </div>`;
+  }).join("");
+  box.innerHTML = `
+    <div class="compare-grid">${cards}</div>
+    <div class="result-content" style="margin-top:16px;">
+      <h3>Similarities</h3>
+      <p>A real breakdown of what these documents have in common will appear here once the AI engine is connected.</p>
+      <h3>Differences</h3>
+      <p>A real breakdown of how these documents differ will appear here once the AI engine is connected.</p>
+    </div>
+    ${citationsHtml(sources, null)}
+  `;
+  wireCitationLinks(sources, docs);
+  document.getElementById("res-actions").innerHTML = resultActionsHtml();
+  wireResultActions(currentResultObject.get("content"));
+  showScreen("screen-result");
+}
 function openWizard(){
   resetWizard();
   showScreen("screen-wizard");
@@ -1044,6 +1166,8 @@ function openWizard(){
 document.getElementById("wiz-back").onclick = backToDashboard;
 document.getElementById("btn-wiz-back-2").onclick = backToDashboard;
 function backToDashboard(){ showScreen("screen-dashboard"); loadTab(currentTab); }
+let resultBackTarget = "wizard";
+function backToWizardStep(){ showScreen("screen-wizard"); }
 
 function resetWizard(){
   currentDocument = null; selectedAction = null; selectedResult = null;
@@ -1293,6 +1417,8 @@ function buildStructuredContent(kind, docName, extracted){
 
 function openResultScreen(kind, payload, sources){
   const doc = currentDocument;
+  resultBackTarget = "wizard";
+  document.getElementById("res-back").textContent = "← Back";
   document.getElementById("res-filename").textContent = doc.get("fileName");
   const sizeTxt = doc.get("fileSize") ? formatSize(doc.get("fileSize")) : "";
   const pagesTxt = doc.get("pageCount") ? doc.get("pageCount") + " pages" : "";
@@ -1305,7 +1431,6 @@ function openResultScreen(kind, payload, sources){
   const box = document.getElementById("res-content");
   const actions = document.getElementById("res-actions");
   const extracted = (doc.get("extractedText")||"").trim();
-  const docLink = (doc.get("fileUrl") && doc.get("fileUrl").url()) ? doc.get("fileUrl").url() : null;
 
   if(kind === "chat"){
     box.innerHTML = `
@@ -1325,6 +1450,7 @@ function openResultScreen(kind, payload, sources){
       <button class="btn-ghost-nav" id="btn-back-dash">&larr; Back to dashboard</button>`;
     document.getElementById("btn-share").onclick = ()=>shareItem("conversations", currentConversation);
     document.getElementById("btn-back-dash").onclick = backToDashboard;
+    return;
   } else if(kind === "table"){
     box.innerHTML = `
       <div class="res-table-wrap">
@@ -1337,10 +1463,8 @@ function openResultScreen(kind, payload, sources){
           </tbody>
         </table>
       </div>
-      ${citationsHtml(sources, docLink)}
+      ${citationsHtml(sources)}
     `;
-    actions.innerHTML = resultActionsHtml();
-    wireResultActions(payload);
   } else if(kind === "presentation"){
     box.innerHTML = `
       <div class="slide-box" id="slide-box"></div>
@@ -1349,34 +1473,25 @@ function openResultScreen(kind, payload, sources){
         <span class="slide-counter" id="slide-counter"></span>
         <button id="slide-next" aria-label="Next">&rarr;</button>
       </div>
-      ${citationsHtml(sources, docLink)}
+      ${citationsHtml(sources)}
     `;
     setupSlides();
-    actions.innerHTML = resultActionsHtml();
-    wireResultActions(payload);
   } else if(kind === "quiz"){
-    box.innerHTML = `<div id="quiz-box"></div>${citationsHtml(sources, docLink)}`;
+    box.innerHTML = `<div id="quiz-box"></div>${citationsHtml(sources)}`;
     setupQuiz();
-    actions.innerHTML = resultActionsHtml();
-    wireResultActions(payload);
   } else if(kind === "flashcards"){
-    box.innerHTML = `<div id="flash-box"></div>${citationsHtml(sources, docLink)}`;
+    box.innerHTML = `<div id="flash-box"></div>${citationsHtml(sources)}`;
     setupFlashcards();
-    actions.innerHTML = resultActionsHtml();
-    wireResultActions(payload);
   } else if(kind === "keypoints"){
-    box.innerHTML = `<div class="result-content">${buildKeyPointsContent()}</div>${citationsHtml(sources, docLink)}`;
-    actions.innerHTML = resultActionsHtml();
-    wireResultActions(payload);
+    box.innerHTML = `<div class="result-content">${buildKeyPointsContent()}</div>${citationsHtml(sources)}`;
   } else if(kind === "actionitems"){
-    box.innerHTML = `<div class="result-content">${buildActionItemsContent()}</div>${citationsHtml(sources, docLink)}`;
-    actions.innerHTML = resultActionsHtml();
-    wireResultActions(payload);
+    box.innerHTML = `<div class="result-content">${buildActionItemsContent()}</div>${citationsHtml(sources)}`;
   } else {
-    box.innerHTML = `<div class="result-content">${buildStructuredContent(kind, doc.get("fileName"), extracted)}</div>${citationsHtml(sources, docLink)}`;
-    actions.innerHTML = resultActionsHtml();
-    wireResultActions(payload);
+    box.innerHTML = `<div class="result-content">${buildStructuredContent(kind, doc.get("fileName"), extracted)}</div>${citationsHtml(sources)}`;
   }
+  wireCitationLinks(sources, [doc]);
+  actions.innerHTML = resultActionsHtml();
+  wireResultActions(payload);
   showScreen("screen-result");
 }
 
@@ -1395,21 +1510,33 @@ function buildActionItemsContent(){
   </ul>`;
 }
 
-function citationsHtml(sources, docLink){
+function citationsHtml(sources){
   if(!sources || !sources.length) return "";
-  return `<div class="citations">${sources.map(s=>{
+  return `<div class="citations">${sources.map((s,i)=>{
     const label = s.cell ? ("Source · " + s.cell) : ("Source · Page " + s.page + (s.paragraph ? (", paragraph " + s.paragraph) : ""));
+    const sub = s.docName ? (s.docName + " — " + s.note) : s.note;
     return `
     <div class="citation">
       <span class="cic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 15l6-6M10 6l1-1a3 3 0 0 1 4 4l-1 1M14 18l-1 1a3 3 0 0 1-4-4l1-1"/></svg></span>
       <div class="ct-body">
         <div class="ct-head">${label}</div>
-        <div class="ct-sub">${escapeHtml(s.note)}</div>
+        <div class="ct-sub">${escapeHtml(sub)}</div>
       </div>
-      ${docLink ? `<a href="${docLink}" target="_blank">View in document &rarr;</a>` : ""}
+      <button class="citation-link" data-idx="${i}">View in document &rarr;</button>
     </div>`;
   }).join("")}</div>`;
 }
+function wireCitationLinks(sources, docs){
+  if(!sources || !sources.length) return;
+  document.querySelectorAll(".citation-link").forEach(btn=>{
+    btn.onclick = ()=>{
+      const s = sources[Number(btn.dataset.idx)];
+      const targetDoc = (s.docName ? docs.find(d=>d.get("fileName") === s.docName) : docs[0]) || docs[0];
+      if(targetDoc) openDocumentViewer(targetDoc, s);
+    };
+  });
+}
+
 function resultActionsHtml(){
   return `
     <div class="res-actions-primary">
@@ -1441,7 +1568,10 @@ function wireResultActions(content){
   };
 }
 document.addEventListener("click", (e)=>{
-  if(e.target.id === "res-back") backToDashboard();
+  if(e.target.id === "res-back"){
+    if(resultBackTarget === "dashboard") backToDashboard();
+    else backToWizardStep();
+  }
 });
 
 // ---- Quiz ----
@@ -1816,6 +1946,89 @@ async function renderSharedView(type, id){
   showScreen("screen-shared");
 }
 
+// ---------------- Document viewer (in-app, real) ----------------
+let viewerPdfDoc = null;
+let viewerPdfPage = 1;
+
+document.getElementById("viewer-close").onclick = ()=>{ document.getElementById("viewer-overlay").hidden = true; };
+document.getElementById("viewer-overlay").addEventListener("click", (e)=>{
+  if(e.target.id === "viewer-overlay") document.getElementById("viewer-overlay").hidden = true;
+});
+
+async function openDocumentViewer(doc, citation){
+  const overlay = document.getElementById("viewer-overlay");
+  overlay.hidden = false;
+  document.getElementById("viewer-title").textContent = doc.get("fileName");
+  const body = document.getElementById("viewer-body");
+  const controls = document.getElementById("viewer-controls");
+  body.innerHTML = "<p style='padding:20px;color:var(--muted);font-size:13px;text-align:center;'>Loading document…</p>";
+  controls.innerHTML = "";
+  const fileType = (doc.get("fileType")||"").toLowerCase();
+  const file = doc.get("fileUrl");
+  if(!file || !file.url()){ body.innerHTML = "<p style='padding:20px;color:var(--danger);'>No file available for this document.</p>"; return; }
+  try{
+    const resp = await fetch(file.url());
+    const buf = await resp.arrayBuffer();
+    if(fileType === "pdf"){
+      viewerPdfDoc = await pdfjsLib.getDocument({data:buf}).promise;
+      viewerPdfPage = (citation && citation.page) ? Math.min(citation.page, viewerPdfDoc.numPages) : 1;
+      await renderViewerPdfPage();
+      controls.innerHTML = `
+        <button id="vw-prev" class="btn btn-outline btn-sm">&larr;</button>
+        <span id="vw-pageinfo" style="font-size:13px;color:var(--muted);"></span>
+        <button id="vw-next" class="btn btn-outline btn-sm">&rarr;</button>`;
+      document.getElementById("vw-prev").onclick = ()=>{ if(viewerPdfPage>1){ viewerPdfPage--; renderViewerPdfPage(); } };
+      document.getElementById("vw-next").onclick = ()=>{ if(viewerPdfPage<viewerPdfDoc.numPages){ viewerPdfPage++; renderViewerPdfPage(); } };
+    } else if(fileType === "xlsx" || fileType === "xls"){
+      const wb = XLSX.read(buf, {type:"array"});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const aoa = XLSX.utils.sheet_to_json(ws, {header:1});
+      let html = "<div class='res-table-wrap'><table class='res-table'>";
+      aoa.forEach((row,ri)=>{
+        html += "<tr>";
+        row.forEach((cell,ci)=>{
+          const ref = XLSX.utils.encode_cell({r:ri, c:ci});
+          html += `<td data-cell="${ref}">${escapeHtml(cell===undefined||cell===null?"":String(cell))}</td>`;
+        });
+        html += "</tr>";
+      });
+      html += "</table></div>";
+      body.innerHTML = html;
+      if(citation && citation.cell){
+        const cellRef = citation.cell.split("!").pop();
+        const td = body.querySelector(`td[data-cell="${cellRef}"]`);
+        if(td){ td.classList.add("cell-highlight"); setTimeout(()=>td.scrollIntoView({block:"center", behavior:"smooth"}), 60); }
+      }
+    } else if(fileType === "docx"){
+      const result = await mammoth.convertToHtml({arrayBuffer:buf});
+      body.innerHTML = `<div class="docx-view">${result.value}</div>`;
+      if(citation && citation.paragraph){
+        const paras = body.querySelectorAll("p");
+        const target = paras[citation.paragraph-1];
+        if(target){ target.classList.add("para-highlight"); setTimeout(()=>target.scrollIntoView({block:"center", behavior:"smooth"}), 60); }
+      }
+    } else if(["png","jpg","jpeg","webp"].includes(fileType)){
+      body.innerHTML = `<img src="${file.url()}" style="max-width:100%;display:block;margin:0 auto;">`;
+    } else {
+      const text = new TextDecoder().decode(buf);
+      body.innerHTML = `<pre class="viewer-pre">${escapeHtml(text)}</pre>`;
+    }
+  }catch(err){
+    body.innerHTML = `<p style="padding:20px;color:var(--danger);">Could not open this file: ${escapeHtml(err.message)}</p>`;
+  }
+}
+async function renderViewerPdfPage(){
+  const page = await viewerPdfDoc.getPage(viewerPdfPage);
+  const viewport = page.getViewport({scale:1.3});
+  const canvas = document.createElement("canvas");
+  canvas.width = viewport.width; canvas.height = viewport.height;
+  await page.render({canvasContext:canvas.getContext("2d"), viewport}).promise;
+  const body = document.getElementById("viewer-body");
+  body.innerHTML = "";
+  body.appendChild(canvas);
+  const info = document.getElementById("vw-pageinfo");
+  if(info) info.textContent = "Page " + viewerPdfPage + " / " + viewerPdfDoc.numPages;
+}
 
 (async function boot(){
   if(window.__DOCLY_SHARE__ && window.__DOCLY_SHARE_ID__){
