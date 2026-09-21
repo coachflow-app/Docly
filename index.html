@@ -13,6 +13,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
     --yellow:#F5D134; --yellow-ink:#6B5300; --yellow-tint:#FCF3CF;
@@ -178,7 +179,7 @@
   .db-toolbar .btn{white-space:nowrap;flex-shrink:0;}
   @media (max-width:640px){ .db-toolbar .btn{width:100%;} }
 
-  .db-sortfilter-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .db-sortfilter-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;justify-content:flex-end;}
   .db-section-head{display:flex;align-items:baseline;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
   .db-section-head h1{font-size:clamp(26px,5vw,34px);font-weight:500;margin:0;}
   .db-count{font-size:13px;color:var(--faint);}
@@ -684,8 +685,8 @@
       </div>
 
       <div class="wiz-section">
-        <div class="wiz-section-head"><span class="bar"></span><h2>Choose the result</h2></div>
-        <p class="wiz-section-sub">Select the format and style of your output.</p>
+        <div class="wiz-section-head"><span class="bar"></span><h2 id="result-section-title">Choose the result</h2></div>
+        <p class="wiz-section-sub" id="result-section-sub">Select the format and style of your output.</p>
         <div class="pill-row" id="result-pills">
           <button class="pill" data-value="short"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 9h8M8 13h5" stroke-linecap="round"/></svg>Short</button>
           <button class="pill" data-value="detailed"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 11h8M8 14h8M8 17h5" stroke-linecap="round"/></svg>Detailed</button>
@@ -694,6 +695,11 @@
           <button class="pill" data-value="presentation"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4" stroke-linecap="round"/></svg>Presentation</button>
           <button class="pill" data-value="quiz"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.8-2 1.8-2 3.5" stroke-linecap="round"/><circle cx="12" cy="16.3" r=".2" fill="currentColor"/></svg>Quiz</button>
           <button class="pill" data-value="flashcards"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="M7 3h14v12" /></svg>Flashcards</button>
+        </div>
+        <div class="pill-row" id="transform-pills" hidden>
+          <button class="pill" data-value="presentation"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4" stroke-linecap="round"/></svg>Presentation</button>
+          <button class="pill" data-value="studysheet"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h5" stroke-linecap="round"/><circle cx="15.5" cy="14.5" r="2"/></svg>Study sheet</button>
+          <button class="pill" data-value="report"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 11h8M8 14h5" stroke-linecap="round"/></svg>Report</button>
         </div>
       </div>
 
@@ -1156,7 +1162,7 @@ function openComparisonScreen(docs, sources){
   `;
   wireCitationLinks(sources, docs);
   document.getElementById("res-actions").innerHTML = resultActionsHtml();
-  wireResultActions(currentResultObject.get("content"));
+  wireResultActions();
   showScreen("screen-result");
 }
 function openWizard(){
@@ -1176,7 +1182,11 @@ function resetWizard(){
   document.getElementById("file-ready-wrap").hidden = true;
   document.getElementById("file-ready-wrap").innerHTML = "";
   document.getElementById("file-input").value = "";
-  document.querySelectorAll("#action-pills .pill, #result-pills .pill").forEach(p=>p.classList.remove("selected"));
+  document.querySelectorAll("#action-pills .pill, #result-pills .pill, #transform-pills .pill").forEach(p=>p.classList.remove("selected"));
+  document.getElementById("result-pills").hidden = false;
+  document.getElementById("transform-pills").hidden = true;
+  document.getElementById("result-section-title").textContent = "Choose the result";
+  document.getElementById("result-section-sub").textContent = "Select the format and style of your output.";
   document.getElementById("btn-continue").textContent = "Générer";
   document.getElementById("btn-continue").onclick = handleContinue;
   updateStepper(); updateContinueState();
@@ -1240,12 +1250,17 @@ async function handleFile(file){
     doc.set("uploadProgress", 100);
     await doc.save();
     currentDocument = doc;
-    document.getElementById("file-status").innerHTML = "Reading content…";
-    document.getElementById("file-progress").style.width = "100%";
     refreshPlanCount();
 
     const fileType = (file.name.split(".").pop()||"").toLowerCase();
-    const extracted = await extractFileContent(file, fileType);
+    const bar = document.getElementById("file-progress");
+    const statusEl = document.getElementById("file-status");
+    const onExtractProgress = (pct)=>{
+      statusEl.innerHTML = "Processing: " + pct + "%";
+      bar.style.width = pct + "%";
+    };
+    onExtractProgress(0);
+    const extracted = await extractFileContent(file, fileType, onExtractProgress);
     doc.set("extractedText", extracted.text || "");
     if(extracted.pageCount) doc.set("pageCount", extracted.pageCount);
     await doc.save();
@@ -1265,17 +1280,41 @@ function formatSize(bytes){
 
 document.querySelectorAll("#action-pills .pill").forEach(p=>{
   p.onclick = ()=>{
+    const already = p.classList.contains("selected");
     document.querySelectorAll("#action-pills .pill").forEach(x=>x.classList.remove("selected"));
-    p.classList.add("selected");
-    selectedAction = p.dataset.value;
+    if(already){
+      selectedAction = null;
+    } else {
+      p.classList.add("selected");
+      selectedAction = p.dataset.value;
+    }
+    // Transform has its own dedicated result options (Presentation / Study sheet / Report)
+    document.querySelectorAll("#result-pills .pill, #transform-pills .pill").forEach(x=>x.classList.remove("selected"));
+    selectedResult = null;
+    if(selectedAction === "transform"){
+      document.getElementById("result-pills").hidden = true;
+      document.getElementById("transform-pills").hidden = false;
+      document.getElementById("result-section-title").textContent = "Transform into";
+      document.getElementById("result-section-sub").textContent = "Choose what to turn this summary into.";
+    } else {
+      document.getElementById("result-pills").hidden = false;
+      document.getElementById("transform-pills").hidden = true;
+      document.getElementById("result-section-title").textContent = "Choose the result";
+      document.getElementById("result-section-sub").textContent = "Select the format and style of your output.";
+    }
     updateStepper(); updateContinueState();
   };
 });
-document.querySelectorAll("#result-pills .pill").forEach(p=>{
+document.querySelectorAll("#result-pills .pill, #transform-pills .pill").forEach(p=>{
   p.onclick = ()=>{
-    document.querySelectorAll("#result-pills .pill").forEach(x=>x.classList.remove("selected"));
-    p.classList.add("selected");
-    selectedResult = p.dataset.value;
+    const already = p.classList.contains("selected");
+    document.querySelectorAll("#result-pills .pill, #transform-pills .pill").forEach(x=>x.classList.remove("selected"));
+    if(already){
+      selectedResult = null;
+    } else {
+      p.classList.add("selected");
+      selectedResult = p.dataset.value;
+    }
     updateStepper(); updateContinueState();
   };
 });
@@ -1304,7 +1343,9 @@ const RESULT_PRESETS = {
   table:{lengths:"moyen", style:"professionnel", format:"tableau"},
   presentation:{lengths:"moyen", style:"exécutif", format:"plan"},
   quiz:{lengths:"moyen", style:"simple", format:"quiz"},
-  flashcards:{lengths:"court", style:"simple", format:"flashcards"}
+  flashcards:{lengths:"court", style:"simple", format:"flashcards"},
+  studysheet:{lengths:"court", style:"simple", format:"plan"},
+  report:{lengths:"détaillé", style:"professionnel", format:"paragraphes"}
 };
 const TYPE_MAP = {summarize:"résumé", analyze:"analyse", extract:"extraction", transform:"transformation", ask:"conversation", keypoints:"points clés", actionitems:"actions à réaliser"};
 
@@ -1372,7 +1413,7 @@ async function handleContinue(){
 
 const RESULT_BADGE = {
   short:"Short", detailed:"Detailed", professional:"Professional", table:"Table", presentation:"Presentation",
-  quiz:"Quiz", flashcards:"Flashcards"
+  quiz:"Quiz", flashcards:"Flashcards", studysheet:"Study sheet", report:"Report"
 };
 
 function showResAlert(msg, danger){
@@ -1486,12 +1527,16 @@ function openResultScreen(kind, payload, sources){
     box.innerHTML = `<div class="result-content">${buildKeyPointsContent()}</div>${citationsHtml(sources)}`;
   } else if(kind === "actionitems"){
     box.innerHTML = `<div class="result-content">${buildActionItemsContent()}</div>${citationsHtml(sources)}`;
+  } else if(kind === "studysheet"){
+    box.innerHTML = `<div class="result-content">${buildStudySheetContent(doc.get("fileName"))}</div>${citationsHtml(sources)}`;
+  } else if(kind === "report"){
+    box.innerHTML = `<div class="result-content">${buildReportContent(doc.get("fileName"))}</div>${citationsHtml(sources)}`;
   } else {
     box.innerHTML = `<div class="result-content">${buildStructuredContent(kind, doc.get("fileName"), extracted)}</div>${citationsHtml(sources)}`;
   }
   wireCitationLinks(sources, [doc]);
   actions.innerHTML = resultActionsHtml();
-  wireResultActions(payload);
+  wireResultActions();
   showScreen("screen-result");
 }
 
@@ -1508,6 +1553,30 @@ function buildActionItemsContent(){
     <li style="margin-bottom:10px;">☐ Action item two will appear here.</li>
     <li style="margin-bottom:10px;">☐ Action item three will appear here.</li>
   </ul>`;
+}
+function buildStudySheetContent(docName){
+  return `
+    <h3>Study sheet — "${escapeHtml(docName)}"</h3>
+    <h4>Key facts</h4>
+    <ul><li>Key fact one will appear here once the AI engine is connected.</li><li>Key fact two will appear here.</li></ul>
+    <h4>Important terms</h4>
+    <ul><li><strong>Term one</strong> — definition will appear here.</li><li><strong>Term two</strong> — definition will appear here.</li></ul>
+    <h4>Quick recap</h4>
+    <p>A one-paragraph recap for fast revision will appear here.</p>
+    <span class="demo-tag">Demo content — AI engine not connected yet.</span>`;
+}
+function buildReportContent(docName){
+  return `
+    <h3>Professional report — "${escapeHtml(docName)}"</h3>
+    <h4>Executive summary</h4>
+    <p>A concise executive summary will appear here once the AI engine is connected.</p>
+    <h4>Findings</h4>
+    <ul><li>Finding one will appear here.</li><li>Finding two will appear here.</li></ul>
+    <h4>Recommendations</h4>
+    <p>Actionable recommendations will appear here.</p>
+    <h4>Conclusion</h4>
+    <p>A short closing paragraph will appear here.</p>
+    <span class="demo-tag">Demo content — AI engine not connected yet.</span>`;
 }
 
 function citationsHtml(sources){
@@ -1548,24 +1617,54 @@ function resultActionsHtml(){
         <option value="fr">Français</option>
         <option value="es">Español</option>
       </select>
-      <button class="btn btn-primary btn-sm" id="btn-export">Export</button>
+      <select class="btn btn-primary btn-sm" id="btn-export" style="padding:0 8px;">
+        <option value="">Export</option>
+        <option value="txt">as TXT</option>
+        <option value="md">as Markdown</option>
+        <option value="pdf">as PDF</option>
+      </select>
     </div>
     <button class="btn-ghost-nav" id="btn-back-dash">&larr; Back to dashboard</button>
   `;
 }
-function wireResultActions(content){
-  document.getElementById("btn-copy").onclick = ()=>navigator.clipboard.writeText(typeof content === "string" ? content : "");
+function currentDisplayedText(){
+  const el = document.getElementById("res-content");
+  return el ? el.innerText.trim() : "";
+}
+function wireResultActions(){
+  document.getElementById("btn-copy").onclick = ()=>navigator.clipboard.writeText(currentDisplayedText());
   document.getElementById("btn-share").onclick = ()=>shareItem("summaries", currentResultObject);
-  document.getElementById("btn-export").onclick = ()=>exportResult(currentResultObject);
   document.getElementById("btn-back-dash").onclick = backToDashboard;
+  document.getElementById("btn-export").onchange = (e)=>{
+    const format = e.target.value;
+    if(!format) return;
+    exportResult(currentResultObject, currentDisplayedText(), format);
+    e.target.value = "";
+  };
   document.getElementById("btn-translate").onchange = async (e)=>{
     const lang = e.target.value;
     if(!lang) return;
     const names = {en:"English", fr:"Français", es:"Español"};
-    if(currentResultObject){ currentResultObject.set("language", lang); await currentResultObject.save(); }
-    showResAlert("Showing a simulated " + names[lang] + " translation — real translation will appear once the AI engine is connected.", false);
+    showResAlert("Translating to " + names[lang] + "…", false);
+    try{
+      const original = currentDisplayedText();
+      const translated = await translateText(original, lang);
+      const contentEl = document.getElementById("res-content");
+      contentEl.innerHTML = `<div class="result-content" style="white-space:pre-wrap;">${escapeHtml(translated)}</div>`;
+      if(currentResultObject){ currentResultObject.set("language", lang); currentResultObject.set("content", translated); await currentResultObject.save(); }
+      showResAlert("Translated to " + names[lang] + " using a free translation service (MyMemory) — quality may vary; a paid API is recommended for production use.", false);
+    }catch(err){
+      showResAlert("Translation failed: " + err.message, true);
+    }
     e.target.value = "";
   };
+}
+async function translateText(text, targetLang){
+  const chunk = text.slice(0, 480);
+  const resp = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(chunk) + "&langpair=en|" + targetLang);
+  const data = await resp.json();
+  if(data && data.responseData && data.responseData.translatedText) return data.responseData.translatedText;
+  throw new Error("Translation service returned no result.");
 }
 document.addEventListener("click", (e)=>{
   if(e.target.id === "res-back"){
@@ -1686,20 +1785,34 @@ async function sendChatMessage(){
 }
 
 // ---------------- File content extraction (real, no AI) ----------------
-async function extractFileContent(file, fileType){
+async function extractFileContent(file, fileType, onProgress){
   try{
-    if(fileType === "pdf") return await extractPdf(file);
-    if(fileType === "docx") return await extractDocx(file);
-    if(fileType === "xlsx" || fileType === "xls") return await extractXlsx(file);
-    if(fileType === "csv") return await extractCsv(file);
-    if(fileType === "txt" || fileType === "md") return await extractPlain(file);
-    if(["png","jpg","jpeg","webp"].includes(fileType)) return await extractImageOcr(file);
+    if(fileType === "pdf") return await extractPdf(file, onProgress);
+    if(fileType === "docx") return await withSimulatedProgress(onProgress, ()=>extractDocx(file));
+    if(fileType === "xlsx" || fileType === "xls") return await withSimulatedProgress(onProgress, ()=>extractXlsx(file));
+    if(fileType === "csv") return await withSimulatedProgress(onProgress, ()=>extractCsv(file));
+    if(fileType === "txt" || fileType === "md") return await withSimulatedProgress(onProgress, ()=>extractPlain(file));
+    if(["png","jpg","jpeg","webp"].includes(fileType)) return await withSimulatedProgress(onProgress, ()=>extractImageOcr(file));
+    if(onProgress) onProgress(100);
     return {text:"", pageCount:null, note:"Format not supported for content reading yet."};
   }catch(err){
     return {text:"", pageCount:null, note:"Could not read this file: " + err.message};
   }
 }
-async function extractPdf(file){
+// For formats where we can't observe real incremental progress, show the
+// large-document progress sequence (38% → 72% → 100%) from the spec.
+function withSimulatedProgress(onProgress, task){
+  return new Promise((resolve, reject)=>{
+    if(onProgress) onProgress(38);
+    const t1 = setTimeout(()=>{ if(onProgress) onProgress(72); }, 250);
+    task().then(result=>{
+      clearTimeout(t1);
+      if(onProgress) onProgress(100);
+      resolve(result);
+    }).catch(err=>{ clearTimeout(t1); reject(err); });
+  });
+}
+async function extractPdf(file, onProgress){
   const buf = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({data:buf}).promise;
   let text = "";
@@ -1707,9 +1820,11 @@ async function extractPdf(file){
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
     text += content.items.map(it=>it.str).join(" ") + "\n\n";
+    if(onProgress) onProgress(Math.round((i/pdf.numPages)*100));
   }
   if(text.trim().length < 20){
     text = await ocrPdfPages(pdf, Math.min(pdf.numPages,5));
+    if(onProgress) onProgress(100);
     return {text, pageCount:pdf.numPages, note:"Scanned PDF — read with OCR."};
   }
   return {text, pageCount:pdf.numPages};
@@ -1843,24 +1958,38 @@ function applyFilter(){
 }
 
 // ---------------- Export / Download (real) ----------------
-function buildFileText(kind, item){
-  if(kind === "result") return item.get("content") || "";
-  if(kind === "conversation-msgs") return item; // pre-built string passed in
-  return "";
-}
-async function exportResult(resultItem){
-  const text = buildFileText("result", resultItem);
-  const blob = new Blob([text], {type:"text/plain"});
-  const parseFile = new Parse.File((resultItem.get("type")||"export") + ".txt", blob);
+async function exportResult(resultItem, text, format){
+  format = format || "txt";
+  text = text || (resultItem ? (resultItem.get("content")||"") : "");
+  const baseName = (resultItem && resultItem.get("type")) ? resultItem.get("type") : "export";
+  let blob, filename, formatLabel;
+  if(format === "pdf"){
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+    const lines = pdf.splitTextToSize(text, 180);
+    pdf.text(lines, 15, 20);
+    blob = pdf.output("blob");
+    filename = baseName + ".pdf";
+    formatLabel = "PDF";
+  } else if(format === "md"){
+    blob = new Blob([text], {type:"text/markdown"});
+    filename = baseName + ".md";
+    formatLabel = "MD";
+  } else {
+    blob = new Blob([text], {type:"text/plain"});
+    filename = baseName + ".txt";
+    formatLabel = "TXT";
+  }
+  const parseFile = new Parse.File(filename, blob);
   await parseFile.save();
   const exp = new Parse.Object("Export");
-  exp.set("result", resultItem);
+  if(resultItem) exp.set("result", resultItem);
   exp.set("owner", Parse.User.current());
-  exp.set("format", "TXT");
+  exp.set("format", formatLabel);
   exp.set("fileUrl", parseFile);
   await exp.save();
-  triggerDownload(blob, (resultItem.get("type")||"export") + ".txt");
-  createNotification("Export ready: " + (resultItem.get("type")||"result") + ".txt");
+  triggerDownload(blob, filename);
+  createNotification("Export ready: " + filename);
 }
 function triggerDownload(blob, filename){
   const url = URL.createObjectURL(blob);
