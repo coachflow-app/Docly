@@ -271,6 +271,7 @@
   }
   .file-ready .fi{width:36px;height:36px;border-radius:8px;background:var(--yellow-tint);color:var(--yellow-ink);
     display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
+  .file-ready .fi-thumb{width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--line);}
   .file-ready .fname{font-size:14px;font-weight:500;}
   .file-ready .fmeta{font-size:12px;color:var(--faint);display:flex;align-items:center;gap:5px;}
   .file-ready .progress{height:4px;background:var(--line);border-radius:4px;margin-top:6px;overflow:hidden;}
@@ -379,27 +380,36 @@
   .db-bell-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--yellow);}
   .db-notif-menu{
     position:absolute;right:0;top:44px;background:var(--surface);border:1px solid var(--line);border-radius:10px;
-    box-shadow:0 6px 18px rgba(35,42,69,.08);width:280px;max-height:340px;overflow-y:auto;z-index:20;
+    box-shadow:0 6px 18px rgba(35,42,69,.08);width:min(240px, calc(100vw - 32px));max-height:240px;overflow-y:auto;z-index:20;
   }
-  .dnm-head{padding:10px 12px;font-size:12px;font-weight:600;color:var(--ink);border-bottom:1px solid var(--line);}
-  .dn-item{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink);}
+  .dnm-head{padding:9px 12px;font-size:11.5px;font-weight:600;color:var(--ink);border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);}
+  .dn-item{display:flex;gap:7px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--ink);}
   .dn-item:last-child{border-bottom:none;}
   .dn-item .dot{width:6px;height:6px;border-radius:50%;background:var(--yellow);margin-top:5px;flex-shrink:0;}
   .dn-item.read .dot{background:var(--line);}
-  .dn-item .txt{flex:1;}
-  .dn-item .when{font-size:10.5px;color:var(--faint);margin-top:2px;}
-  .dn-empty{padding:20px 12px;text-align:center;font-size:12.5px;color:var(--faint);}
+  .dn-item .txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .dn-item .when{font-size:10px;color:var(--faint);margin-top:2px;}
+  .dn-empty{padding:18px 12px;text-align:center;font-size:12px;color:var(--faint);}
 
-  .db-filter-wrap{position:relative;}
+  .db-filter-wrap, .db-sort-wrap{position:relative;}
   .db-filter-menu{
-    position:absolute;right:0;top:44px;background:var(--surface);border:1px solid var(--line);border-radius:10px;
-    box-shadow:0 6px 18px rgba(35,42,69,.08);width:260px;padding:14px;z-index:20;
+    position:absolute;right:0;top:42px;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    box-shadow:0 6px 18px rgba(35,42,69,.08);width:min(190px, calc(100vw - 32px));padding:8px;z-index:20;
   }
-  .dfm-label{font-size:11px;color:var(--faint);margin:0 0 8px;text-transform:uppercase;letter-spacing:.03em;}
-  .dfm-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
-  .dfm-row:last-child{margin-bottom:0;}
-  .dfm-chip{height:28px;padding:0 10px;border-radius:16px;border:1px solid var(--line);background:var(--surface);font-size:11.5px;color:var(--ink);cursor:pointer;}
-  .dfm-chip.active{background:var(--yellow-tint);border-color:var(--yellow);color:var(--yellow-ink);font-weight:500;}
+  .db-sort-menu{
+    position:absolute;left:0;top:42px;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    box-shadow:0 6px 18px rgba(35,42,69,.08);width:min(160px, calc(100vw - 32px));padding:6px;z-index:20;
+  }
+  .dfm-label{font-size:10px;color:var(--faint);margin:8px 6px 4px;text-transform:uppercase;letter-spacing:.03em;}
+  .dfm-label:first-child{margin-top:2px;}
+  .dfm-list{display:flex;flex-direction:column;}
+  .dfm-item, .dsm-item{
+    display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;
+    height:30px;padding:0 8px;border-radius:6px;border:none;background:none;font-size:12.5px;color:var(--ink);cursor:pointer;
+  }
+  .dfm-item:hover, .dsm-item:hover{background:var(--paper);}
+  .dfm-item.active, .dsm-item.active{background:var(--yellow-tint);color:var(--yellow-ink);font-weight:500;}
+  .dfm-item.active::after, .dsm-item.active::after{content:"✓";font-size:11px;}
 
   /* ---------- SHARED PUBLIC VIEW ---------- */
   #screen-shared{min-height:100vh;padding:0 20px 60px;}
@@ -497,7 +507,7 @@
           </div>
         </div>
         <div class="checkrow">
-          <label class="cr-left"><input type="checkbox" id="remember-check" checked> Remember me</label>
+          <label class="cr-left"><input type="checkbox" id="remember-check"> Remember me</label>
           <a href="#" id="link-forgot">Forgot password?</a>
         </div>
         <button type="submit" class="btn btn-primary btn-block" id="btn-login">Log in &rarr;</button>
@@ -611,26 +621,32 @@
         <button class="btn btn-primary" id="btn-new-doc">+ New document</button>
       </div>
       <div class="db-sortfilter-row">
-        <button class="db-sort" id="db-sort">Most recent</button>
+        <div class="db-sort-wrap">
+          <button class="db-sort" id="db-sort-btn">Most recent</button>
+          <div class="db-sort-menu" id="db-sort-menu" hidden>
+            <button class="dsm-item active" data-val="recent">Most recent</button>
+            <button class="dsm-item" data-val="oldest">Oldest first</button>
+          </div>
+        </div>
         <div class="db-filter-wrap">
           <button class="db-filter-btn" id="db-filter-btn" aria-label="Filter">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M7 12h10M10 18h4" stroke-linecap="round"/></svg>
           </button>
           <div class="db-filter-menu" id="db-filter-menu" hidden>
             <div class="dfm-label">File type</div>
-            <div class="dfm-row" id="dfm-type">
-              <button class="dfm-chip active" data-val="all">All</button>
-              <button class="dfm-chip" data-val="pdf">PDF</button>
-              <button class="dfm-chip" data-val="docx">DOCX</button>
-              <button class="dfm-chip" data-val="xlsx">XLSX</button>
-              <button class="dfm-chip" data-val="image">Images</button>
+            <div class="dfm-list" id="dfm-type">
+              <button class="dfm-item active" data-val="all">All</button>
+              <button class="dfm-item" data-val="pdf">PDF</button>
+              <button class="dfm-item" data-val="docx">DOCX</button>
+              <button class="dfm-item" data-val="xlsx">XLSX</button>
+              <button class="dfm-item" data-val="image">Images</button>
             </div>
             <div class="dfm-label">Date</div>
-            <div class="dfm-row" id="dfm-date">
-              <button class="dfm-chip active" data-val="all">Any time</button>
-              <button class="dfm-chip" data-val="today">Today</button>
-              <button class="dfm-chip" data-val="week">This week</button>
-              <button class="dfm-chip" data-val="month">This month</button>
+            <div class="dfm-list" id="dfm-date">
+              <button class="dfm-item active" data-val="all">Any time</button>
+              <button class="dfm-item" data-val="today">Today</button>
+              <button class="dfm-item" data-val="week">This week</button>
+              <button class="dfm-item" data-val="month">This month</button>
             </div>
           </div>
         </div>
@@ -665,8 +681,8 @@
       <div class="dropzone" id="dropzone">
         <div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v11M7 9l5-5 5 5M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <div class="dz-title">Drop your file, or <u>browse</u></div>
-        <div class="dz-formats">PDF · DOCX · XLSX · PPTX · TXT · EPUB · CSV · MD</div>
-        <input type="file" id="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.epub,.csv,.md">
+        <div class="dz-formats">PDF · DOCX · XLSX · PPTX · TXT · EPUB · CSV · MD · Images</div>
+        <input type="file" id="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.epub,.csv,.md,.png,.jpg,.jpeg,.webp">
       </div>
       <div id="file-ready-wrap" hidden></div>
 
@@ -873,6 +889,7 @@ function enterApp(){
   loadTab("documents");
   refreshPlanCount();
   refreshNotifications();
+  ensureNotificationPermission();
 }
 
 async function refreshPlanCount(){
@@ -897,11 +914,25 @@ document.querySelectorAll(".nav-item, .db-tab").forEach(btn=>{
   };
 });
 
-document.getElementById("db-sort").onclick = ()=>{
-  sortDesc = !sortDesc;
-  document.getElementById("db-sort").textContent = sortDesc ? "Most recent" : "Oldest first";
-  loadTab(currentTab);
+document.getElementById("db-sort-btn").onclick = (e)=>{
+  e.stopPropagation();
+  document.getElementById("db-notif-menu").hidden = true;
+  document.getElementById("db-filter-menu").hidden = true;
+  document.getElementById("db-sort-menu").hidden = !document.getElementById("db-sort-menu").hidden;
 };
+document.addEventListener("click", (e)=>{
+  if(!e.target.closest(".db-sort-wrap")) document.getElementById("db-sort-menu").hidden = true;
+});
+document.querySelectorAll(".dsm-item").forEach(item=>{
+  item.onclick = ()=>{
+    document.querySelectorAll(".dsm-item").forEach(x=>x.classList.remove("active"));
+    item.classList.add("active");
+    sortDesc = item.dataset.val === "recent";
+    document.getElementById("db-sort-btn").textContent = item.textContent;
+    document.getElementById("db-sort-menu").hidden = true;
+    loadTab(currentTab);
+  };
+});
 
 async function loadTab(tab){
   currentTab = tab;
@@ -1126,7 +1157,7 @@ async function handleCompare(){
     await result.save();
     currentResultObject = result;
     openComparisonScreen(docs, sources);
-    createNotification("Comparison generated for " + docs.length + " documents");
+    createNotification("Your comparison of " + docs.length + " documents is ready.");
   }catch(err){
     alert("Could not create the comparison: " + err.message);
   }
@@ -1207,9 +1238,14 @@ async function handleFile(file){
   if(currentDocument){ try{ await currentDocument.destroy(); }catch(e){} }
   const wrap = document.getElementById("file-ready-wrap");
   wrap.hidden = false;
+  const ext = (file.name.split(".").pop()||"?").toLowerCase();
+  const isImage = ["png","jpg","jpeg","webp"].includes(ext);
+  const thumbHtml = isImage
+    ? `<img src="${URL.createObjectURL(file)}" class="fi-thumb" alt="">`
+    : `<div class="fi">${ext.slice(0,3).toUpperCase()}</div>`;
   wrap.innerHTML = `
     <div class="file-ready">
-      <div class="fi">${(file.name.split(".").pop()||"?").slice(0,3).toUpperCase()}</div>
+      ${thumbHtml}
       <div style="flex:1;min-width:0;">
         <div class="fname">${escapeHtml(file.name)}</div>
         <div class="fmeta" id="file-status">Uploading…</div>
@@ -1253,10 +1289,11 @@ async function handleFile(file){
     refreshPlanCount();
 
     const fileType = (file.name.split(".").pop()||"").toLowerCase();
+    const isImageFile = ["png","jpg","jpeg","webp"].includes(fileType);
     const bar = document.getElementById("file-progress");
     const statusEl = document.getElementById("file-status");
     const onExtractProgress = (pct)=>{
-      statusEl.innerHTML = "Processing: " + pct + "%";
+      statusEl.innerHTML = (isImageFile ? "Reading with OCR: " : "Processing: ") + pct + "%";
       bar.style.width = pct + "%";
     };
     onExtractProgress(0);
@@ -1266,7 +1303,6 @@ async function handleFile(file){
     await doc.save();
     const noteTxt = extracted.note ? " · " + extracted.note : "";
     document.getElementById("file-status").innerHTML = formatSize(file.size) + " · <span style='color:var(--indigo);font-weight:500;'>Ready</span>" + noteTxt;
-    createNotification("\"" + file.name + "\" is ready" + (extracted.pageCount ? " (" + extracted.pageCount + " pages)" : ""));
   }catch(err){
     document.getElementById("file-status").textContent = "Upload failed: " + err.message;
   }
@@ -1379,7 +1415,6 @@ async function handleContinue(){
       await msg.save();
       currentConversation = convo;
       openResultScreen("chat", [msg], null);
-      createNotification("New conversation started on \"" + currentDocument.get("fileName") + "\"");
     } else {
       // Key points and Action items always render as their own fixed list shape,
       // regardless of which "Choose the result" preset was picked.
@@ -1403,7 +1438,7 @@ async function handleContinue(){
       await result.save();
       currentResultObject = result;
       openResultScreen(renderKind, contentText, sources);
-      createNotification((TYPE_MAP[selectedAction]) + " generated for \"" + currentDocument.get("fileName") + "\"");
+      createNotification("Your " + (TYPE_MAP[selectedAction]) + " for \"" + currentDocument.get("fileName") + "\" is ready.");
     }
   }catch(err){
     alert("Could not generate the result: " + err.message);
@@ -1792,7 +1827,7 @@ async function extractFileContent(file, fileType, onProgress){
     if(fileType === "xlsx" || fileType === "xls") return await withSimulatedProgress(onProgress, ()=>extractXlsx(file));
     if(fileType === "csv") return await withSimulatedProgress(onProgress, ()=>extractCsv(file));
     if(fileType === "txt" || fileType === "md") return await withSimulatedProgress(onProgress, ()=>extractPlain(file));
-    if(["png","jpg","jpeg","webp"].includes(fileType)) return await withSimulatedProgress(onProgress, ()=>extractImageOcr(file));
+    if(["png","jpg","jpeg","webp"].includes(fileType)) return await extractImageOcr(file, onProgress);
     if(onProgress) onProgress(100);
     return {text:"", pageCount:null, note:"Format not supported for content reading yet."};
   }catch(err){
@@ -1863,8 +1898,13 @@ async function extractPlain(file){
   const text = await file.text();
   return {text, pageCount:1};
 }
-async function extractImageOcr(file){
-  const {data} = await Tesseract.recognize(file, "eng");
+async function extractImageOcr(file, onProgress){
+  const {data} = await Tesseract.recognize(file, "eng", {
+    logger: (m)=>{
+      if(onProgress && m.status === "recognizing text") onProgress(Math.round(m.progress*100));
+    }
+  });
+  if(onProgress) onProgress(100);
   return {text:data.text, pageCount:1, note:"Read with OCR."};
 }
 
@@ -1877,7 +1917,33 @@ async function createNotification(message){
     n.set("read", false);
     await n.save();
     refreshNotifications();
+    fireBrowserNotification(message);
   }catch(e){}
+}
+// Real OS-level notification, shown even if the person has switched to
+// another tab or app (as long as this browser tab is still open).
+// Note: once the tab is fully closed, delivering a notification would need
+// Web Push (a subscription + a server trigger) — not included in this build.
+async function fireBrowserNotification(message){
+  if(!("Notification" in window)) return;
+  if(Notification.permission !== "granted") return;
+  try{
+    if(navigator.serviceWorker && navigator.serviceWorker.ready){
+      const reg = await navigator.serviceWorker.ready;
+      reg.showNotification("Docly", { body: message, icon: undefined, tag: "docly-content-ready" });
+    } else {
+      new Notification("Docly", { body: message });
+    }
+  }catch(e){}
+}
+async function ensureNotificationPermission(){
+  if(!("Notification" in window)) return;
+  if(Notification.permission === "default"){
+    try{ await Notification.requestPermission(); }catch(e){}
+  }
+  if("serviceWorker" in navigator){
+    try{ await navigator.serviceWorker.register("sw.js"); }catch(e){}
+  }
 }
 async function refreshNotifications(){
   try{
@@ -1909,6 +1975,7 @@ async function refreshNotifications(){
 document.getElementById("db-bell-btn").onclick = (e)=>{
   e.stopPropagation();
   document.getElementById("db-filter-menu").hidden = true;
+  document.getElementById("db-sort-menu").hidden = true;
   document.getElementById("db-notif-menu").hidden = !document.getElementById("db-notif-menu").hidden;
 };
 document.addEventListener("click", (e)=>{
@@ -1920,20 +1987,21 @@ let activeFilter = {type:"all", date:"all"};
 document.getElementById("db-filter-btn").onclick = (e)=>{
   e.stopPropagation();
   document.getElementById("db-notif-menu").hidden = true;
+  document.getElementById("db-sort-menu").hidden = true;
   document.getElementById("db-filter-menu").hidden = !document.getElementById("db-filter-menu").hidden;
 };
 document.addEventListener("click", (e)=>{
   if(!e.target.closest(".db-filter-wrap")) document.getElementById("db-filter-menu").hidden = true;
 });
-document.querySelectorAll("#dfm-type .dfm-chip").forEach(c=>{
+document.querySelectorAll("#dfm-type .dfm-item").forEach(c=>{
   c.onclick = ()=>{
-    document.querySelectorAll("#dfm-type .dfm-chip").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll("#dfm-type .dfm-item").forEach(x=>x.classList.remove("active"));
     c.classList.add("active"); activeFilter.type = c.dataset.val; applyFilter();
   };
 });
-document.querySelectorAll("#dfm-date .dfm-chip").forEach(c=>{
+document.querySelectorAll("#dfm-date .dfm-item").forEach(c=>{
   c.onclick = ()=>{
-    document.querySelectorAll("#dfm-date .dfm-chip").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll("#dfm-date .dfm-item").forEach(x=>x.classList.remove("active"));
     c.classList.add("active"); activeFilter.date = c.dataset.val; applyFilter();
   };
 });
@@ -1989,7 +2057,6 @@ async function exportResult(resultItem, text, format){
   exp.set("fileUrl", parseFile);
   await exp.save();
   triggerDownload(blob, filename);
-  createNotification("Export ready: " + filename);
 }
 function triggerDownload(blob, filename){
   const url = URL.createObjectURL(blob);
