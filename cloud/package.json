@@ -1,0 +1,10 @@
+{
+  "name": "docly-cloud-code",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloud Code Back4app de Docly — appel à l'API Groq pour la génération réelle des résultats.",
+  "engines": {
+    "node": "18.x"
+  },
+  "dependencies": {}
+}
