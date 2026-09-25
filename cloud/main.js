@@ -1,5 +1,5 @@
 // cloud/main.js
-// Docly — Cloud Code : génération réelle du contenu via l'API Groq
+// Docly — Cloud Code :   génération réelle du contenu via l'API Groq
 // La clé API est lue depuis une variable d'environnement Back4app (jamais écrite ici).
 
 const GROQ_MODEL = "openai/gpt-oss-120b";
