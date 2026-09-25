@@ -1,0 +1,21 @@
+name: Déploiement automatique vers Back4app
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "cloud/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code du dépôt
+        uses: actions/checkout@v4
+
+      - name: Déployer le Cloud Code sur Back4app
+        uses: omurilo/action-back4app@v3
+        with:
+          project: "Docly"
+          accountKey: ${{ secrets.BACK4APP_ACCOUNT_KEY }}
