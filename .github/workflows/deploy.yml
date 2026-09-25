@@ -15,7 +15,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Déployer le Cloud Code sur Back4app
-        uses: omurilo/action-back4app@v3
-        with:
-          project: "Docly"
-          accountKey: ${{ secrets.BACK4APP_ACCOUNT_KEY }}
+        uses: docker://raschidjfr/b4a-deploy:latest
+        env:
+          B4A_ACCOUNT_KEY: ${{ secrets.BACK4APP_ACCOUNT_KEY }}
+          B4A_APP_NAME: "Docly"
+          CLOUD_PATH: "cloud"
+          
