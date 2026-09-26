@@ -1385,15 +1385,41 @@ const RESULT_PRESETS = {
 };
 const TYPE_MAP = {summarize:"résumé", analyze:"analyse", extract:"extraction", transform:"transformation", ask:"conversation", keypoints:"points clés", actionitems:"actions à réaliser"};
 
+// Traduction des valeurs de l'interface vers les clés attendues par le Cloud Code (cloud/main.js)
+const ACTION_CLOUD_MAP = {
+  summarize:"summarize", analyze:"analyze", extract:"extract", transform:"transform",
+  ask:"ask", keypoints:"key-points", actionitems:"action-items"
+};
+const PRESET_CLOUD_MAP = {
+  short:"court", detailed:"detaille", professional:"professionnel", table:"tableau",
+  presentation:"presentation", quiz:"quiz", flashcards:"flashcards",
+  studysheet:"fiche-revision", report:"rapport"
+};
+
 let currentConversation = null;
 let currentResultObject = null;
 
-function buildSources(doc){
-  const fileType = (doc.get("fileType")||"").toLowerCase();
-  if(fileType === "xlsx" || fileType === "xls"){
-    return [{cell:"Sheet1!B4", note:"Sample citation — will point to the real cell once the engine is connected."}];
-  }
-  return [{page:1, paragraph:3, note:"Sample citation — will point to the real passage once the engine is connected."}];
+// Convertit un texte simple / markdown léger (titres ##, listes -) en HTML sûr
+function renderMarkdownLite(text){
+  if(!text) return "";
+  const lines = String(text).split(/\r?\n/);
+  let html = "", inList = false;
+  const closeList = ()=>{ if(inList){ html += "</ul>"; inList = false; } };
+  lines.forEach(raw=>{
+    const line = raw.trim();
+    if(!line){ closeList(); return; }
+    if(line.startsWith("## ")){ closeList(); html += `<h4>${escapeHtml(line.slice(3))}</h4>`; return; }
+    if(line.startsWith("# ")){ closeList(); html += `<h3>${escapeHtml(line.slice(2))}</h3>`; return; }
+    if(line.startsWith("- ") || line.startsWith("* ")){
+      if(!inList){ html += "<ul>"; inList = true; }
+      html += `<li>${escapeHtml(line.slice(2))}</li>`;
+      return;
+    }
+    closeList();
+    html += `<p>${escapeHtml(line)}</p>`;
+  });
+  closeList();
+  return html;
 }
 
 async function handleContinue(){
@@ -1408,17 +1434,24 @@ async function handleContinue(){
       convo.set("title", currentDocument.get("fileName"));
       convo.set("lastMessageAt", new Date());
       await convo.save();
-      const msg = new Parse.Object("Message");
-      msg.set("conversation", convo);
-      msg.set("role", "assistant");
-      msg.set("content", "Ask me anything about this document — this is a placeholder answer until the AI engine is connected.");
-      await msg.save();
       currentConversation = convo;
-      openResultScreen("chat", [msg], null);
+      openResultScreen("chat", [], null);
     } else {
       // Key points and Action items always render as their own fixed list shape,
       // regardless of which "Choose the result" preset was picked.
       const renderKind = (selectedAction === "keypoints" || selectedAction === "actionitems") ? selectedAction : selectedResult;
+      const cloudAction = ACTION_CLOUD_MAP[selectedAction] || "summarize";
+      const cloudPreset = (selectedAction === "keypoints" || selectedAction === "actionitems") ? undefined : PRESET_CLOUD_MAP[selectedResult];
+      const extracted = (currentDocument.get("extractedText")||"").trim();
+
+      const aiResponse = await Parse.Cloud.run("generateDocumentResult", {
+        text: extracted,
+        action: cloudAction,
+        preset: cloudPreset,
+        fileName: currentDocument.get("fileName"),
+        language: "français"
+      });
+
       const result = new Parse.Object("Result");
       result.set("document", currentDocument);
       result.set("owner", Parse.User.current());
@@ -1426,18 +1459,12 @@ async function handleContinue(){
       result.set("lengths", preset.lengths);
       result.set("style", preset.style);
       result.set("format", preset.format);
-      result.set("language", "en");
-      const extracted = (currentDocument.get("extractedText")||"").trim();
-      const preview = extracted ? ("\n\nReal extracted preview from your file:\n\"" + extracted.slice(0,500) + (extracted.length>500?"…":"") + "\"") : "\n\n(No text could be extracted from this file yet.)";
-      const contentText = "This is placeholder content — the AI engine isn't connected yet in this build. Once it is, the real "
-        + (TYPE_MAP[selectedAction]) + " of \"" + currentDocument.get("fileName") + "\" will appear here, formatted as "
-        + selectedResult + "." + preview;
-      const sources = buildSources(currentDocument);
-      result.set("content", contentText);
-      result.set("sources", sources);
+      result.set("language", "fr");
+      result.set("content", JSON.stringify(aiResponse.content));
+      result.set("sources", aiResponse.sources || []);
       await result.save();
       currentResultObject = result;
-      openResultScreen(renderKind, contentText, sources);
+      openResultScreen(renderKind, aiResponse.content, aiResponse.sources || []);
       createNotification("Your " + (TYPE_MAP[selectedAction]) + " for \"" + currentDocument.get("fileName") + "\" is ready.");
     }
   }catch(err){
@@ -1458,37 +1485,6 @@ function showResAlert(msg, danger){
 }
 function hideResAlert(){
   document.getElementById("res-alert").className = "res-alert";
-}
-
-function buildStructuredContent(kind, docName, extracted){
-  const excerptHtml = extracted
-    ? `<div class="excerpt">"${escapeHtml(extracted.slice(0,400))}${extracted.length>400?"…":""}"</div>`
-    : "";
-  if(kind === "short"){
-    return `<h3>Summary</h3><p>A condensed overview of "${escapeHtml(docName)}" will appear here once the AI engine is connected.</p>${excerptHtml}<span class="demo-tag">Demo content — AI engine not connected yet.</span>`;
-  }
-  if(kind === "table" || kind === "presentation") return ""; // handled separately
-  if(kind === "detailed"){
-    return `
-      <h3>Overview</h3>
-      <p>A detailed breakdown of "${escapeHtml(docName)}" will appear here, organized into clear sections once the AI engine is connected.</p>
-      <h4>Key points</h4>
-      <ul><li>Detailed point one will appear here</li><li>Detailed point two will appear here</li><li>Detailed point three will appear here</li></ul>
-      <h4>Context</h4>
-      <p>Additional context and explanation will be generated from the document once analysis is enabled.</p>
-      ${excerptHtml}
-      <span class="demo-tag">Demo content — AI engine not connected yet.</span>`;
-  }
-  // professional
-  return `
-    <h3>Executive overview</h3>
-    <p>A professional, structured read-out of "${escapeHtml(docName)}" will appear here once the AI engine is connected.</p>
-    <h4>Highlights</h4>
-    <ul><li>Highlight one will appear here</li><li>Highlight two will appear here</li></ul>
-    <h4>Recommendation</h4>
-    <p>A short recommendation section will appear here.</p>
-    ${excerptHtml}
-    <span class="demo-tag">Demo content — AI engine not connected yet.</span>`;
 }
 
 function openResultScreen(kind, payload, sources){
@@ -1528,15 +1524,12 @@ function openResultScreen(kind, payload, sources){
     document.getElementById("btn-back-dash").onclick = backToDashboard;
     return;
   } else if(kind === "table"){
+    const t = payload && payload.headers ? payload : {headers:[], rows:[]};
     box.innerHTML = `
       <div class="res-table-wrap">
         <table class="res-table">
-          <thead><tr><th>Item</th><th>Value</th><th>Change</th></tr></thead>
-          <tbody>
-            <tr><td>Sample row 1</td><td>—</td><td>—</td></tr>
-            <tr><td>Sample row 2</td><td>—</td><td>—</td></tr>
-            <tr><td>Sample row 3</td><td>—</td><td>—</td></tr>
-          </tbody>
+          <thead><tr>${t.headers.map(h=>`<th>${escapeHtml(h)}</th>`).join("")}</tr></thead>
+          <tbody>${t.rows.map(r=>`<tr>${r.map(c=>`<td>${escapeHtml(String(c))}</td>`).join("")}</tr>`).join("")}</tbody>
         </table>
       </div>
       ${citationsHtml(sources)}
@@ -1551,23 +1544,23 @@ function openResultScreen(kind, payload, sources){
       </div>
       ${citationsHtml(sources)}
     `;
-    setupSlides();
+    setupSlides(Array.isArray(payload) ? payload : []);
   } else if(kind === "quiz"){
     box.innerHTML = `<div id="quiz-box"></div>${citationsHtml(sources)}`;
-    setupQuiz();
+    setupQuiz(Array.isArray(payload) ? payload : []);
   } else if(kind === "flashcards"){
     box.innerHTML = `<div id="flash-box"></div>${citationsHtml(sources)}`;
-    setupFlashcards();
+    setupFlashcards(Array.isArray(payload) ? payload : []);
   } else if(kind === "keypoints"){
-    box.innerHTML = `<div class="result-content">${buildKeyPointsContent()}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content">${buildListContent(payload)}</div>${citationsHtml(sources)}`;
   } else if(kind === "actionitems"){
-    box.innerHTML = `<div class="result-content">${buildActionItemsContent()}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content">${buildListContent(payload, true)}</div>${citationsHtml(sources)}`;
   } else if(kind === "studysheet"){
-    box.innerHTML = `<div class="result-content">${buildStudySheetContent(doc.get("fileName"))}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content"><h3>Study sheet — "${escapeHtml(doc.get("fileName"))}"</h3>${renderMarkdownLite(payload)}</div>${citationsHtml(sources)}`;
   } else if(kind === "report"){
-    box.innerHTML = `<div class="result-content">${buildReportContent(doc.get("fileName"))}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content"><h3>Professional report — "${escapeHtml(doc.get("fileName"))}"</h3>${renderMarkdownLite(payload)}</div>${citationsHtml(sources)}`;
   } else {
-    box.innerHTML = `<div class="result-content">${buildStructuredContent(kind, doc.get("fileName"), extracted)}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content">${renderMarkdownLite(payload)}</div>${citationsHtml(sources)}`;
   }
   wireCitationLinks(sources, [doc]);
   actions.innerHTML = resultActionsHtml();
@@ -1575,49 +1568,22 @@ function openResultScreen(kind, payload, sources){
   showScreen("screen-result");
 }
 
-function buildKeyPointsContent(){
-  return `<ul>
-    <li>Key point one will appear here once the AI engine is connected.</li>
-    <li>Key point two will appear here.</li>
-    <li>Key point three will appear here.</li>
-  </ul>`;
-}
-function buildActionItemsContent(){
-  return `<ul style="list-style:none;padding-left:0;">
-    <li style="margin-bottom:10px;">☐ Action item one will appear here once the AI engine is connected.</li>
-    <li style="margin-bottom:10px;">☐ Action item two will appear here.</li>
-    <li style="margin-bottom:10px;">☐ Action item three will appear here.</li>
-  </ul>`;
-}
-function buildStudySheetContent(docName){
-  return `
-    <h3>Study sheet — "${escapeHtml(docName)}"</h3>
-    <h4>Key facts</h4>
-    <ul><li>Key fact one will appear here once the AI engine is connected.</li><li>Key fact two will appear here.</li></ul>
-    <h4>Important terms</h4>
-    <ul><li><strong>Term one</strong> — definition will appear here.</li><li><strong>Term two</strong> — definition will appear here.</li></ul>
-    <h4>Quick recap</h4>
-    <p>A one-paragraph recap for fast revision will appear here.</p>
-    <span class="demo-tag">Demo content — AI engine not connected yet.</span>`;
-}
-function buildReportContent(docName){
-  return `
-    <h3>Professional report — "${escapeHtml(docName)}"</h3>
-    <h4>Executive summary</h4>
-    <p>A concise executive summary will appear here once the AI engine is connected.</p>
-    <h4>Findings</h4>
-    <ul><li>Finding one will appear here.</li><li>Finding two will appear here.</li></ul>
-    <h4>Recommendations</h4>
-    <p>Actionable recommendations will appear here.</p>
-    <h4>Conclusion</h4>
-    <p>A short closing paragraph will appear here.</p>
-    <span class="demo-tag">Demo content — AI engine not connected yet.</span>`;
+function buildListContent(items, asChecklist){
+  const list = Array.isArray(items) ? items : [];
+  if(!list.length) return "<p>No items were returned.</p>";
+  if(asChecklist){
+    return `<ul style="list-style:none;padding-left:0;">${list.map(i=>`<li style="margin-bottom:10px;">☐ ${escapeHtml(String(i))}</li>`).join("")}</ul>`;
+  }
+  return `<ul>${list.map(i=>`<li>${escapeHtml(String(i))}</li>`).join("")}</ul>`;
 }
 
 function citationsHtml(sources){
   if(!sources || !sources.length) return "";
   return `<div class="citations">${sources.map((s,i)=>{
-    const label = s.cell ? ("Source · " + s.cell) : ("Source · Page " + s.page + (s.paragraph ? (", paragraph " + s.paragraph) : ""));
+    const label = s.cell ? ("Source · " + s.cell)
+      : s.page ? ("Source · Page " + s.page + (s.paragraph ? (", paragraph " + s.paragraph) : ""))
+      : s.paragraph ? ("Source · Paragraph " + s.paragraph)
+      : "Source";
     const sub = s.docName ? (s.docName + " — " + s.note) : s.note;
     return `
     <div class="citation">
@@ -1709,53 +1675,45 @@ document.addEventListener("click", (e)=>{
 });
 
 // ---- Quiz ----
-const SAMPLE_QUIZ = [
-  {q:"Sample question 1 based on the document?", options:["Option A","Option B","Option C","Option D"], correct:0},
-  {q:"Sample question 2 based on the document?", options:["Option A","Option B","Option C","Option D"], correct:1},
-  {q:"Sample question 3 based on the document?", options:["Option A","Option B","Option C","Option D"], correct:2}
-];
-function setupQuiz(){
+function setupQuiz(questions){
   const box = document.getElementById("quiz-box");
-  box.innerHTML = SAMPLE_QUIZ.map((item,qi)=>`
+  if(!questions.length){ box.innerHTML = "<p>No quiz questions were returned.</p>"; return; }
+  box.innerHTML = questions.map((item,qi)=>`
     <div class="quiz-q">
-      <p class="quiz-q-text">${qi+1}. ${escapeHtml(item.q)}</p>
+      <p class="quiz-q-text">${qi+1}. ${escapeHtml(item.question)}</p>
       <div class="quiz-options">
         ${item.options.map((opt,oi)=>`<label class="quiz-opt"><input type="radio" name="q${qi}" value="${oi}"> ${escapeHtml(opt)}</label>`).join("")}
       </div>
     </div>`).join("") + `<button class="btn btn-primary btn-sm" id="quiz-check">Check answers</button><p class="quiz-score" id="quiz-score"></p>`;
   document.getElementById("quiz-check").onclick = ()=>{
     let correct = 0;
-    SAMPLE_QUIZ.forEach((item,qi)=>{
+    questions.forEach((item,qi)=>{
       const opts = box.querySelectorAll(`input[name="q${qi}"]`);
       let picked = null;
       opts.forEach(o=>{ if(o.checked) picked = Number(o.value); });
       opts.forEach((o,oi)=>{
         const label = o.closest(".quiz-opt");
         label.classList.remove("correct","wrong");
-        if(oi === item.correct) label.classList.add("correct");
+        if(oi === item.correctIndex) label.classList.add("correct");
         else if(oi === picked) label.classList.add("wrong");
       });
-      if(picked === item.correct) correct++;
+      if(picked === item.correctIndex) correct++;
     });
-    document.getElementById("quiz-score").textContent = "Score: " + correct + " / " + SAMPLE_QUIZ.length;
+    document.getElementById("quiz-score").textContent = "Score: " + correct + " / " + questions.length;
   };
 }
 
 // ---- Flashcards ----
-const SAMPLE_FLASHCARDS = [
-  {q:"Sample flashcard question 1?", a:"Sample answer 1 — will reflect the document once the AI engine is connected."},
-  {q:"Sample flashcard question 2?", a:"Sample answer 2."},
-  {q:"Sample flashcard question 3?", a:"Sample answer 3."}
-];
-function setupFlashcards(){
+function setupFlashcards(cards){
   const box = document.getElementById("flash-box");
-  box.innerHTML = SAMPLE_FLASHCARDS.map((c,i)=>`
+  if(!cards.length){ box.innerHTML = "<p>No flashcards were returned.</p>"; return; }
+  box.innerHTML = cards.map((c,i)=>`
     <div class="flashcard" id="fc-${i}" data-flipped="0">
-      <div class="fc-face fc-front">${escapeHtml(c.q)}</div>
-      <div class="fc-face fc-back" hidden>${escapeHtml(c.a)}</div>
+      <div class="fc-face fc-front">${escapeHtml(c.front)}</div>
+      <div class="fc-face fc-back" hidden>${escapeHtml(c.back)}</div>
       <span class="fc-hint">Tap to flip</span>
     </div>`).join("");
-  SAMPLE_FLASHCARDS.forEach((c,i)=>{
+  cards.forEach((c,i)=>{
     document.getElementById("fc-"+i).onclick = function(){
       const flipped = this.dataset.flipped === "1";
       this.querySelector(".fc-front").hidden = !flipped;
@@ -1765,33 +1723,35 @@ function setupFlashcards(){
   });
 }
 
-
-const SAMPLE_SLIDES = [
-  {title:"Overview", points:["Key point will appear here", "Once the AI engine is connected"]},
-  {title:"Details", points:["Placeholder bullet 1", "Placeholder bullet 2", "Placeholder bullet 3"]},
-  {title:"Next steps", points:["Placeholder recommendation"]}
-];
 let slideIndex = 0;
-function setupSlides(){
+let currentSlides = [];
+function setupSlides(slides){
+  currentSlides = slides || [];
   slideIndex = 0;
   renderSlide();
   document.getElementById("slide-prev").onclick = ()=>{ slideIndex = Math.max(0, slideIndex-1); renderSlide(); };
-  document.getElementById("slide-next").onclick = ()=>{ slideIndex = Math.min(SAMPLE_SLIDES.length-1, slideIndex+1); renderSlide(); };
+  document.getElementById("slide-next").onclick = ()=>{ slideIndex = Math.min(currentSlides.length-1, slideIndex+1); renderSlide(); };
 }
 function renderSlide(){
-  const s = SAMPLE_SLIDES[slideIndex];
-  document.getElementById("slide-box").innerHTML = `<h3>${escapeHtml(s.title)}</h3><ul>${s.points.map(p=>`<li>${escapeHtml(p)}</li>`).join("")}</ul>`;
-  document.getElementById("slide-counter").textContent = (slideIndex+1) + " / " + SAMPLE_SLIDES.length;
+  if(!currentSlides.length){ document.getElementById("slide-box").innerHTML = "<p>No slides were returned.</p>"; document.getElementById("slide-counter").textContent = "0 / 0"; return; }
+  const s = currentSlides[slideIndex];
+  document.getElementById("slide-box").innerHTML = `<h3>${escapeHtml(s.title)}</h3><ul>${(s.bullets||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("")}</ul>`;
+  document.getElementById("slide-counter").textContent = (slideIndex+1) + " / " + currentSlides.length;
   document.getElementById("slide-prev").disabled = slideIndex === 0;
-  document.getElementById("slide-next").disabled = slideIndex === SAMPLE_SLIDES.length-1;
+  document.getElementById("slide-next").disabled = slideIndex === currentSlides.length-1;
 }
 
 // ---- Chat (ask questions) ----
 function renderChatMessages(messages){
   const wrap = document.getElementById("chat-messages");
+  if(!messages.length){
+    wrap.innerHTML = `<div class="msg assistant">Ask a question about this document to get started.</div>`;
+    return;
+  }
   wrap.innerHTML = messages.map(m=>{
     const isAssistant = m.get("role") === "assistant";
-    return `<div class="msg ${m.get("role")}">${escapeHtml(m.get("content"))}${isAssistant?'<div class="msg-citation">Source · Page 1</div>':''}</div>`;
+    const src = m.get("sourceNote");
+    return `<div class="msg ${m.get("role")}">${escapeHtml(m.get("content"))}${isAssistant && src ? `<div class="msg-citation">Source · ${escapeHtml(src)}</div>`:''}</div>`;
   }).join("");
   wrap.scrollTop = wrap.scrollHeight;
 }
@@ -1805,10 +1765,30 @@ async function sendChatMessage(){
   userMsg.set("role", "user");
   userMsg.set("content", text);
   await userMsg.save();
+
+  const extracted = (currentDocument.get("extractedText")||"").trim();
+  let replyText = "Sorry, something went wrong while getting an answer.";
+  let sourceNote = "";
+  try{
+    const aiResponse = await Parse.Cloud.run("generateDocumentResult", {
+      text: extracted,
+      action: "ask",
+      question: text,
+      fileName: currentDocument.get("fileName"),
+      language: "français"
+    });
+    replyText = aiResponse.content;
+    const s = (aiResponse.sources||[])[0];
+    if(s) sourceNote = s.paragraph ? ("Paragraph " + s.paragraph) : (s.note || "");
+  }catch(err){
+    replyText = "Sorry, I couldn't get an answer: " + err.message;
+  }
+
   const replyMsg = new Parse.Object("Message");
   replyMsg.set("conversation", currentConversation);
   replyMsg.set("role", "assistant");
-  replyMsg.set("content", "Placeholder answer — the real AI engine isn't connected yet.");
+  replyMsg.set("content", replyText);
+  if(sourceNote) replyMsg.set("sourceNote", sourceNote);
   await replyMsg.save();
   currentConversation.set("lastMessageAt", new Date());
   await currentConversation.save();
