@@ -1,5 +1,5 @@
 // cloud/main.js
-// Docly — Cloud Code :   génération réelle du contenu via l'API Groq
+// Docly — Cloud Code : génération réelle du contenu via l'API Groq
 // La clé API est lue depuis une variable d'environnement Back4app (jamais écrite ici).
 
 const GROQ_MODEL = "openai/gpt-oss-120b";
@@ -33,9 +33,15 @@ function buildInstructions(action, preset) {
     transform: "Transforme le contenu du document selon le format demandé."
   };
 
-  const shape = shapeByPreset[preset] || "Réponds sous forme de texte clair et bien structuré. Le champ 'content' est une chaîne de texte.";
   const actionInstruction = actionByType[action] || "Traite le document selon la demande de l'utilisateur.";
 
+  // key-points et action-items imposent déjà leur propre forme (tableau de chaînes) :
+  // ne pas ajouter l'instruction de forme du preset, qui la contredirait.
+  if (action === "key-points" || action === "action-items") {
+    return `${base}\n${actionInstruction}`;
+  }
+
+  const shape = shapeByPreset[preset] || "Réponds sous forme de texte clair et bien structuré. Le champ 'content' est une chaîne de texte.";
   return `${base}\n${actionInstruction}\n${shape}`;
 }
 
@@ -117,4 +123,3 @@ Parse.Cloud.define("generateDocumentResult", async (request) => {
     sources: Array.isArray(parsed.sources) ? parsed.sources : []
   };
 });
-  
