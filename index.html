@@ -14,6 +14,8 @@
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <style>
   :root{
     --yellow:#F5D134; --yellow-ink:#6B5300; --yellow-tint:#FCF3CF;
@@ -226,73 +228,73 @@
   .empty-state p.sub{font-size:13px;color:var(--muted);margin:0 0 18px;line-height:1.5;}
 
   /* ---------- WIZARD ---------- */
-  #screen-wizard{min-height:100vh;padding:0 20px 60px;position:relative;overflow:hidden;border-bottom:3px solid transparent;}
+  #screen-wizard{min-height:100vh;padding:0 20px 24px;position:relative;overflow:hidden;border-bottom:3px solid transparent;}
   .wiz-topbar{
-    height:60px;display:flex;align-items:center;justify-content:center;position:relative;
-    border-bottom:3px solid var(--yellow);margin:0 -20px 26px;padding:0 20px;
+    height:48px;display:flex;align-items:center;justify-content:center;position:relative;
+    border-bottom:3px solid var(--yellow);margin:0 -20px 14px;padding:0 20px;
   }
   .wiz-back{
     position:absolute;left:24px;top:50%;transform:translateY(-50%);background:none;border:none;
     color:var(--muted);font-size:12.5px;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;
   }
-  .wiz-topbar .brand-word{font-size:17px;font-weight:600;}
+  .wiz-topbar .brand-word{font-size:16px;font-weight:600;}
   .wiz-topbar .db-user{position:absolute;right:20px;top:50%;transform:translateY(-50%);}
 
   .wiz-wrap{max-width:760px;margin:0 auto;position:relative;z-index:1;}
 
-  .stepper{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px;}
+  .stepper{display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:5px;}
   .step-circle{
-    width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);color:var(--faint);
-    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:var(--surface);
+    width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);color:var(--faint);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--surface);
   }
   .step-circle.done{background:var(--yellow);border-color:var(--yellow);color:var(--yellow-ink);}
-  .step-line{width:26px;height:1.5px;background:var(--line);}
+  .step-line{width:20px;height:1.5px;background:var(--line);}
   .step-line.done{background:var(--yellow);}
-  .step-caption{text-align:center;font-size:12px;color:var(--indigo);font-weight:500;margin:0 0 22px;}
+  .step-caption{text-align:center;font-size:11.5px;color:var(--indigo);font-weight:500;margin:0 0 12px;}
 
   .dropzone{
-    border:1.5px dashed var(--line);border-radius:14px;padding:22px 20px;text-align:center;
-    display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--surface);
+    border:1.5px dashed var(--line);border-radius:14px;padding:14px 16px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--surface);
     cursor:pointer;max-width:520px;margin:0 auto;
   }
   .dropzone.drag{border-color:var(--indigo);background:#F4F5FC;}
   .dropzone .icon{
-    width:36px;height:36px;border-radius:50%;background:#EEF0FA;color:var(--indigo);
+    width:30px;height:30px;border-radius:50%;background:#EEF0FA;color:var(--indigo);
     display:flex;align-items:center;justify-content:center;
   }
-  .dropzone .dz-title{font-size:14px;font-weight:500;color:var(--ink);}
+  .dropzone .dz-title{font-size:13.5px;font-weight:500;color:var(--ink);}
   .dropzone .dz-title u{color:var(--indigo);}
-  .dropzone .dz-formats{font-size:11.5px;color:var(--faint);}
+  .dropzone .dz-formats{font-size:11px;color:var(--faint);}
   .dropzone input[type=file]{display:none;}
 
   .file-ready{
     display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:var(--radius);
-    padding:12px 14px;background:var(--surface);margin:12px auto 0;max-width:520px;
+    padding:10px 14px;background:var(--surface);margin:8px auto 0;max-width:520px;
   }
-  .file-ready .fi{width:36px;height:36px;border-radius:8px;background:var(--yellow-tint);color:var(--yellow-ink);
+  .file-ready .fi{width:32px;height:32px;border-radius:8px;background:var(--yellow-tint);color:var(--yellow-ink);
     display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
-  .file-ready .fi-thumb{width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--line);}
-  .file-ready .fname{font-size:14px;font-weight:500;}
-  .file-ready .fmeta{font-size:12px;color:var(--faint);display:flex;align-items:center;gap:5px;}
-  .file-ready .progress{height:4px;background:var(--line);border-radius:4px;margin-top:6px;overflow:hidden;}
+  .file-ready .fi-thumb{width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--line);}
+  .file-ready .fname{font-size:13.5px;font-weight:500;}
+  .file-ready .fmeta{font-size:11.5px;color:var(--faint);display:flex;align-items:center;gap:5px;}
+  .file-ready .progress{height:4px;background:var(--line);border-radius:4px;margin-top:5px;overflow:hidden;}
   .file-ready .progress i{display:block;height:100%;background:var(--indigo);width:0%;transition:width .2s;}
   .file-ready .remove{margin-left:auto;background:none;border:none;color:var(--faint);cursor:pointer;font-size:16px;}
 
-  .wiz-section{margin-top:22px;}
-  .wiz-section-head{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
-  .wiz-section-head .bar{width:3px;height:15px;background:var(--yellow);border-radius:2px;}
-  .wiz-section-head h2{font-size:15px;font-weight:600;margin:0;color:var(--ink);}
-  .wiz-section-sub{font-size:12px;color:var(--muted);margin:0 0 12px 11px;}
-  .pill-row{display:flex;flex-wrap:wrap;gap:11px;}
+  .wiz-section{margin-top:12px;}
+  .wiz-section-head{display:flex;align-items:center;gap:8px;margin-bottom:2px;}
+  .wiz-section-head .bar{width:3px;height:14px;background:var(--yellow);border-radius:2px;}
+  .wiz-section-head h2{font-size:14px;font-weight:600;margin:0;color:var(--ink);}
+  .wiz-section-sub{font-size:11.5px;color:var(--muted);margin:0 0 8px 11px;}
+  .pill-row{display:flex;flex-wrap:wrap;gap:8px;}
   .pill{
-    display:inline-flex;align-items:center;gap:6px;height:46px;padding:0 15px;border-radius:23px;border:1px solid var(--line);
-    font-size:13.5px;font-weight:500;background:var(--surface);color:var(--ink);cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 13px;border-radius:19px;border:1px solid var(--line);
+    font-size:13px;font-weight:500;background:var(--surface);color:var(--ink);cursor:pointer;
   }
   .pill svg{color:var(--indigo);}
   .pill.selected{border-color:var(--yellow);background:var(--yellow);color:var(--yellow-ink);}
   .pill.selected svg{color:var(--yellow-ink);}
 
-  .wiz-actions{display:flex;justify-content:space-between;gap:10px;margin-top:24px;}
+  .wiz-actions{display:flex;justify-content:space-between;gap:10px;margin-top:14px;}
 
   /* ---------- RESULT SCREEN ---------- */
   .app-topbar{height:58px;display:flex;align-items:center;justify-content:center;border-bottom:3px solid var(--yellow);margin:0 -20px 22px;}
@@ -330,6 +332,14 @@
     padding:12px 14px;font-size:13.5px;color:var(--ink);font-style:italic;margin-top:6px;
   }
   .result-content .demo-tag{display:inline-block;font-size:10.5px;color:var(--faint);margin-top:18px;padding-top:12px;border-top:1px solid var(--line);}
+  .result-content.res-compact{padding:18px 18px;font-size:15px;}
+  .result-content.res-compact h3{font-size:17px;margin-bottom:8px;}
+  .result-content.res-compact h4{margin:14px 0 6px;}
+  .result-content.res-spacious{padding:26px 20px;}
+  @media (min-width:768px){ .result-content.res-spacious{padding:36px;} }
+  .result-content.res-spacious h4{margin:28px 0 10px;}
+  .cite-ref{color:var(--indigo);font-weight:600;cursor:pointer;font-size:0.82em;padding:0 1px;}
+  .cite-ref:hover{text-decoration:underline;}
 
   .citations{margin-top:16px;display:flex;flex-direction:column;gap:10px;}
   .citation{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);}
@@ -1144,19 +1154,25 @@ async function handleCompare(){
   const btn = document.getElementById("btn-compare");
   btn.disabled = true; btn.textContent = "Comparing…";
   try{
+    const aiResponse = await Parse.Cloud.run("generateDocumentResult", {
+      action: "compare",
+      documents: docs.map(d=>({
+        fileName: d.get("fileName"),
+        fileType: d.get("fileType"),
+        text: (d.get("extractedText")||"").trim()
+      })),
+      language: "français"
+    });
     const result = new Parse.Object("Result");
     result.set("owner", Parse.User.current());
     result.set("type", "comparaison");
     result.set("documents", docs);
-    result.set("language", "en");
-    const contentText = "This is placeholder content — the AI engine isn't connected yet. Once it is, a real comparison of "
-      + docs.map(d=>'"'+d.get("fileName")+'"').join(" and ") + " will appear here.";
-    const sources = docs.map((d,i)=>({page:1, paragraph:1, docName:d.get("fileName"), note:"Sample citation for "+d.get("fileName")+"."}));
-    result.set("content", contentText);
-    result.set("sources", sources);
+    result.set("language", "fr");
+    result.set("content", JSON.stringify(aiResponse.content));
+    result.set("sources", aiResponse.sources || []);
     await result.save();
     currentResultObject = result;
-    openComparisonScreen(docs, sources);
+    openComparisonScreen(docs, aiResponse.content, aiResponse.sources || []);
     createNotification("Your comparison of " + docs.length + " documents is ready.");
   }catch(err){
     alert("Could not create the comparison: " + err.message);
@@ -1165,7 +1181,9 @@ async function handleCompare(){
   updateCompareButton();
 }
 
-function openComparisonScreen(docs, sources){
+function openComparisonScreen(docs, content, sources){
+  currentResultKind = "compare";
+  currentResultPayload = content;
   resultBackTarget = "dashboard";
   document.getElementById("res-back").textContent = "← Back to dashboard";
   document.getElementById("res-filename").textContent = "Comparing " + docs.length + " documents";
@@ -1173,6 +1191,7 @@ function openComparisonScreen(docs, sources){
   document.getElementById("res-badge").textContent = "Comparison";
   hideResAlert();
   const box = document.getElementById("res-content");
+  const n = (sources||[]).length;
   const cards = docs.map((d,i)=>{
     const excerpt = (d.get("extractedText")||"").trim().slice(0,220);
     return `
@@ -1181,15 +1200,17 @@ function openComparisonScreen(docs, sources){
         <p class="compare-card-excerpt">${excerpt ? escapeHtml(excerpt)+"…" : "No text extracted yet."}</p>
       </div>`;
   }).join("");
+  const similarities = (content && content.similarities) || [];
+  const differences = (content && content.differences) || [];
   box.innerHTML = `
     <div class="compare-grid">${cards}</div>
-    <div class="result-content" style="margin-top:16px;">
+    <div class="result-content res-spacious" style="margin-top:16px;">
       <h3>Similarities</h3>
-      <p>A real breakdown of what these documents have in common will appear here once the AI engine is connected.</p>
-      <h3>Differences</h3>
-      <p>A real breakdown of how these documents differ will appear here once the AI engine is connected.</p>
+      ${linkifyCitations(buildListContent(similarities), n)}
+      <h3 style="margin-top:20px;">Differences</h3>
+      ${linkifyCitations(buildListContent(differences), n)}
     </div>
-    ${citationsHtml(sources, null)}
+    ${citationsHtml(sources)}
   `;
   wireCitationLinks(sources, docs);
   document.getElementById("res-actions").innerHTML = resultActionsHtml();
@@ -1398,8 +1419,19 @@ const PRESET_CLOUD_MAP = {
 
 let currentConversation = null;
 let currentResultObject = null;
+let currentResultKind = null;
+let currentResultPayload = null;
 
 // Convertit un texte simple / markdown léger (titres ##, listes -) en HTML sûr
+// Turns literal "[1]" markers left by the AI into clickable citation refs
+function linkifyCitations(html, sourceCount){
+  if(!sourceCount) return html;
+  return html.replace(/\[(\d+)\]/g, (m, n)=>{
+    const idx = Number(n) - 1;
+    if(idx < 0 || idx >= sourceCount) return m;
+    return `<sup class="cite-ref" data-idx="${idx}">[${n}]</sup>`;
+  });
+}
 function renderMarkdownLite(text){
   if(!text) return "";
   const lines = String(text).split(/\r?\n/);
@@ -1437,11 +1469,12 @@ async function handleContinue(){
       currentConversation = convo;
       openResultScreen("chat", [], null);
     } else {
-      // Key points and Action items always render as their own fixed list shape,
+      // Key points / Action items / Extract always render as their own fixed shape,
       // regardless of which "Choose the result" preset was picked.
-      const renderKind = (selectedAction === "keypoints" || selectedAction === "actionitems") ? selectedAction : selectedResult;
+      const FIXED_KIND_ACTIONS = new Set(["keypoints", "actionitems", "extract"]);
+      const renderKind = FIXED_KIND_ACTIONS.has(selectedAction) ? selectedAction : selectedResult;
       const cloudAction = ACTION_CLOUD_MAP[selectedAction] || "summarize";
-      const cloudPreset = (selectedAction === "keypoints" || selectedAction === "actionitems") ? undefined : PRESET_CLOUD_MAP[selectedResult];
+      const cloudPreset = FIXED_KIND_ACTIONS.has(selectedAction) ? undefined : PRESET_CLOUD_MAP[selectedResult];
       const extracted = (currentDocument.get("extractedText")||"").trim();
 
       const aiResponse = await Parse.Cloud.run("generateDocumentResult", {
@@ -1449,6 +1482,7 @@ async function handleContinue(){
         action: cloudAction,
         preset: cloudPreset,
         fileName: currentDocument.get("fileName"),
+        fileType: currentDocument.get("fileType"),
         language: "français"
       });
 
@@ -1487,14 +1521,19 @@ function hideResAlert(){
   document.getElementById("res-alert").className = "res-alert";
 }
 
+// Kinds whose content is typically short → compact spacing; the rest get the spacious/sectioned layout
+const COMPACT_KINDS = new Set(["short","table","extract","quiz","flashcards","presentation","keypoints","actionitems"]);
+
 function openResultScreen(kind, payload, sources){
   const doc = currentDocument;
+  currentResultKind = kind;
+  currentResultPayload = payload;
   resultBackTarget = "wizard";
   document.getElementById("res-back").textContent = "← Back";
   document.getElementById("res-filename").textContent = doc.get("fileName");
   const sizeTxt = doc.get("fileSize") ? formatSize(doc.get("fileSize")) : "";
   const pagesTxt = doc.get("pageCount") ? doc.get("pageCount") + " pages" : "";
-  document.getElementById("res-meta").textContent = [((doc.get("fileType")||"").toUpperCase()), pagesTxt, sizeTxt].filter(Boolean).join(" · ");
+  document.getElementById("res-meta").textContent = ["Document analysé", pagesTxt, "Généré en français"].filter(Boolean).join(" · ");
   document.getElementById("res-badge").textContent = (selectedAction === "ask")
     ? "Ask questions"
     : (TYPE_MAP[selectedAction] + " · " + RESULT_BADGE[selectedResult]);
@@ -1503,6 +1542,7 @@ function openResultScreen(kind, payload, sources){
   const box = document.getElementById("res-content");
   const actions = document.getElementById("res-actions");
   const extracted = (doc.get("extractedText")||"").trim();
+  const spacingClass = COMPACT_KINDS.has(kind) ? "res-compact" : "res-spacious";
 
   if(kind === "chat"){
     box.innerHTML = `
@@ -1529,7 +1569,18 @@ function openResultScreen(kind, payload, sources){
       <div class="res-table-wrap">
         <table class="res-table">
           <thead><tr>${t.headers.map(h=>`<th>${escapeHtml(h)}</th>`).join("")}</tr></thead>
-          <tbody>${t.rows.map(r=>`<tr>${r.map(c=>`<td>${escapeHtml(String(c))}</td>`).join("")}</tr>`).join("")}</tbody>
+          <tbody>${t.rows.map(r=>`<tr>${r.map(c=>`<td>${linkifyCitations(escapeHtml(String(c)), (sources||[]).length)}</td>`).join("")}</tr>`).join("")}</tbody>
+        </table>
+      </div>
+      ${citationsHtml(sources)}
+    `;
+  } else if(kind === "extract"){
+    const rows = Array.isArray(payload) ? payload : [];
+    box.innerHTML = `
+      <div class="res-table-wrap">
+        <table class="res-table">
+          <thead><tr><th>Information</th><th>Valeur</th></tr></thead>
+          <tbody>${rows.length ? rows.map(r=>`<tr><td>${escapeHtml(r.label||"")}</td><td>${linkifyCitations(escapeHtml(r.value||""), (sources||[]).length)}</td></tr>`).join("") : `<tr><td colspan="2">Aucune information extraite.</td></tr>`}</tbody>
         </table>
       </div>
       ${citationsHtml(sources)}
@@ -1552,15 +1603,15 @@ function openResultScreen(kind, payload, sources){
     box.innerHTML = `<div id="flash-box"></div>${citationsHtml(sources)}`;
     setupFlashcards(Array.isArray(payload) ? payload : []);
   } else if(kind === "keypoints"){
-    box.innerHTML = `<div class="result-content">${buildListContent(payload)}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content ${spacingClass}">${linkifyCitations(buildListContent(payload), (sources||[]).length)}</div>${citationsHtml(sources)}`;
   } else if(kind === "actionitems"){
-    box.innerHTML = `<div class="result-content">${buildListContent(payload, true)}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content ${spacingClass}">${linkifyCitations(buildListContent(payload, true), (sources||[]).length)}</div>${citationsHtml(sources)}`;
   } else if(kind === "studysheet"){
-    box.innerHTML = `<div class="result-content"><h3>Study sheet — "${escapeHtml(doc.get("fileName"))}"</h3>${renderMarkdownLite(payload)}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content ${spacingClass}"><h3>Study sheet — "${escapeHtml(doc.get("fileName"))}"</h3>${linkifyCitations(renderMarkdownLite(payload), (sources||[]).length)}</div>${citationsHtml(sources)}`;
   } else if(kind === "report"){
-    box.innerHTML = `<div class="result-content"><h3>Professional report — "${escapeHtml(doc.get("fileName"))}"</h3>${renderMarkdownLite(payload)}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content ${spacingClass}"><h3>Professional report — "${escapeHtml(doc.get("fileName"))}"</h3>${linkifyCitations(renderMarkdownLite(payload), (sources||[]).length)}</div>${citationsHtml(sources)}`;
   } else {
-    box.innerHTML = `<div class="result-content">${renderMarkdownLite(payload)}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content ${spacingClass}">${linkifyCitations(renderMarkdownLite(payload), (sources||[]).length)}</div>${citationsHtml(sources)}`;
   }
   wireCitationLinks(sources, [doc]);
   actions.innerHTML = resultActionsHtml();
@@ -1598,12 +1649,17 @@ function citationsHtml(sources){
 }
 function wireCitationLinks(sources, docs){
   if(!sources || !sources.length) return;
+  const openSource = (idx)=>{
+    const s = sources[idx];
+    if(!s) return;
+    const targetDoc = (s.docName ? docs.find(d=>d.get("fileName") === s.docName) : docs[0]) || docs[0];
+    if(targetDoc) openDocumentViewer(targetDoc, s);
+  };
   document.querySelectorAll(".citation-link").forEach(btn=>{
-    btn.onclick = ()=>{
-      const s = sources[Number(btn.dataset.idx)];
-      const targetDoc = (s.docName ? docs.find(d=>d.get("fileName") === s.docName) : docs[0]) || docs[0];
-      if(targetDoc) openDocumentViewer(targetDoc, s);
-    };
+    btn.onclick = ()=>openSource(Number(btn.dataset.idx));
+  });
+  document.querySelectorAll(".cite-ref").forEach(sup=>{
+    sup.onclick = ()=>openSource(Number(sup.dataset.idx));
   });
 }
 
@@ -1611,19 +1667,16 @@ function resultActionsHtml(){
   return `
     <div class="res-actions-primary">
       <button class="btn btn-outline btn-sm" id="btn-copy">Copy</button>
-      <button class="btn btn-outline btn-sm" id="btn-share">Share</button>
-      <select class="btn btn-outline btn-sm" id="btn-translate" style="padding:0 8px;">
-        <option value="">Translate</option>
-        <option value="en">English</option>
-        <option value="fr">Français</option>
-        <option value="es">Español</option>
-      </select>
       <select class="btn btn-primary btn-sm" id="btn-export" style="padding:0 8px;">
         <option value="">Export</option>
         <option value="txt">as TXT</option>
         <option value="md">as Markdown</option>
         <option value="pdf">as PDF</option>
+        <option value="docx">as DOCX</option>
+        <option value="xlsx">as XLSX</option>
+        <option value="pptx">as PPTX</option>
       </select>
+      <button class="btn btn-outline btn-sm" id="btn-share">Share</button>
     </div>
     <button class="btn-ghost-nav" id="btn-back-dash">&larr; Back to dashboard</button>
   `;
@@ -1642,30 +1695,6 @@ function wireResultActions(){
     exportResult(currentResultObject, currentDisplayedText(), format);
     e.target.value = "";
   };
-  document.getElementById("btn-translate").onchange = async (e)=>{
-    const lang = e.target.value;
-    if(!lang) return;
-    const names = {en:"English", fr:"Français", es:"Español"};
-    showResAlert("Translating to " + names[lang] + "…", false);
-    try{
-      const original = currentDisplayedText();
-      const translated = await translateText(original, lang);
-      const contentEl = document.getElementById("res-content");
-      contentEl.innerHTML = `<div class="result-content" style="white-space:pre-wrap;">${escapeHtml(translated)}</div>`;
-      if(currentResultObject){ currentResultObject.set("language", lang); currentResultObject.set("content", translated); await currentResultObject.save(); }
-      showResAlert("Translated to " + names[lang] + " using a free translation service (MyMemory) — quality may vary; a paid API is recommended for production use.", false);
-    }catch(err){
-      showResAlert("Translation failed: " + err.message, true);
-    }
-    e.target.value = "";
-  };
-}
-async function translateText(text, targetLang){
-  const chunk = text.slice(0, 480);
-  const resp = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(chunk) + "&langpair=en|" + targetLang);
-  const data = await resp.json();
-  if(data && data.responseData && data.responseData.translatedText) return data.responseData.translatedText;
-  throw new Error("Translation service returned no result.");
 }
 document.addEventListener("click", (e)=>{
   if(e.target.id === "res-back"){
@@ -1775,6 +1804,7 @@ async function sendChatMessage(){
       action: "ask",
       question: text,
       fileName: currentDocument.get("fileName"),
+      fileType: currentDocument.get("fileType"),
       language: "français"
     });
     replyText = aiResponse.content;
@@ -1834,7 +1864,8 @@ async function extractPdf(file, onProgress){
   for(let i=1;i<=pdf.numPages;i++){
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    text += content.items.map(it=>it.str).join(" ") + "\n\n";
+    // Page marker so the AI can cite a real page number instead of guessing one
+    text += `[[page ${i}]]\n` + content.items.map(it=>it.str).join(" ") + "\n\n";
     if(onProgress) onProgress(Math.round((i/pdf.numPages)*100));
   }
   if(text.trim().length < 20){
@@ -2006,10 +2037,53 @@ function applyFilter(){
 }
 
 // ---------------- Export / Download (real) ----------------
+// Extracts plain rows/lines for formats that need structured data (docx/xlsx/pptx)
+function exportableRows(){
+  const k = currentResultKind, p = currentResultPayload;
+  if(k === "table" && p && p.headers) return {headers:p.headers, rows:p.rows};
+  if(k === "extract" && Array.isArray(p)) return {headers:["Information","Valeur"], rows:p.map(r=>[r.label||"", r.value||""])};
+  if((k === "keypoints" || k === "actionitems") && Array.isArray(p)) return {headers:["Item"], rows:p.map(x=>[String(x)])};
+  return null;
+}
+function exportableSlides(){
+  if(currentResultKind === "presentation" && Array.isArray(currentResultPayload)) return currentResultPayload;
+  return null;
+}
+async function buildDocxBlob(title, text, rows){
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell } = docx;
+  const children = [ new Paragraph({ text: title, heading: HeadingLevel.HEADING_1 }) ];
+  if(rows){
+    const mkRow = (cells, bold)=> new TableRow({ children: cells.map(c=> new TableCell({ children:[new Paragraph({ children:[new TextRun({text:String(c), bold:!!bold})] })] })) });
+    children.push(new Table({ rows: [mkRow(rows.headers, true), ...rows.rows.map(r=>mkRow(r))] }));
+  } else {
+    text.split(/\r?\n/).forEach(line=>{ if(line.trim()) children.push(new Paragraph({ text: line })); });
+  }
+  const doc = new Document({ sections: [{ children }] });
+  return await Packer.toBlob(doc);
+}
+function buildXlsxBlob(rows, text){
+  const wb = XLSX.utils.book_new();
+  const aoa = rows ? [rows.headers, ...rows.rows] : text.split(/\r?\n/).filter(Boolean).map(l=>[l]);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  XLSX.utils.book_append_sheet(wb, ws, "Docly");
+  const out = XLSX.write(wb, {bookType:"xlsx", type:"array"});
+  return new Blob([out], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+}
+async function buildPptxBlob(title, text, slides){
+  const pres = new PptxGenJS();
+  const deck = slides && slides.length ? slides : [{title: title, bullets: text.split(/\r?\n/).filter(Boolean)}];
+  deck.forEach(s=>{
+    const slide = pres.addSlide();
+    slide.addText(s.title || title, {x:0.5, y:0.4, fontSize:24, bold:true});
+    slide.addText((s.bullets||[]).map(b=>({text:b, options:{bullet:true, breakLine:true}})), {x:0.5, y:1.2, fontSize:16});
+  });
+  return await pres.write({outputType:"blob"});
+}
 async function exportResult(resultItem, text, format){
   format = format || "txt";
   text = text || (resultItem ? (resultItem.get("content")||"") : "");
   const baseName = (resultItem && resultItem.get("type")) ? resultItem.get("type") : "export";
+  const title = (currentDocument && currentDocument.get("fileName")) || baseName;
   let blob, filename, formatLabel;
   if(format === "pdf"){
     const { jsPDF } = window.jspdf;
@@ -2023,6 +2097,24 @@ async function exportResult(resultItem, text, format){
     blob = new Blob([text], {type:"text/markdown"});
     filename = baseName + ".md";
     formatLabel = "MD";
+  } else if(format === "docx"){
+    try{
+      blob = await buildDocxBlob(title, text, exportableRows());
+    }catch(err){ alert("DOCX export failed: " + err.message); return; }
+    filename = baseName + ".docx";
+    formatLabel = "DOCX";
+  } else if(format === "xlsx"){
+    try{
+      blob = buildXlsxBlob(exportableRows(), text);
+    }catch(err){ alert("XLSX export failed: " + err.message); return; }
+    filename = baseName + ".xlsx";
+    formatLabel = "XLSX";
+  } else if(format === "pptx"){
+    try{
+      blob = await buildPptxBlob(title, text, exportableSlides());
+    }catch(err){ alert("PPTX export failed: " + err.message); return; }
+    filename = baseName + ".pptx";
+    formatLabel = "PPTX";
   } else {
     blob = new Blob([text], {type:"text/plain"});
     filename = baseName + ".txt";
@@ -2073,14 +2165,22 @@ async function downloadItem(tab, item){
   }
 }
 
-// ---------------- Share (real public link + public page) ----------------
+// ---------------- Share (native OS share sheet, real public link) ----------------
+async function nativeShare(title, url){
+  if(navigator.share){
+    try{ await navigator.share({ title: title || "Docly", url }); return true; }
+    catch(err){ if(err.name === "AbortError") return true; /* user cancelled, not an error */ }
+  }
+  await navigator.clipboard.writeText(url);
+  alert("Link copied to clipboard:\n" + url);
+  return false;
+}
 async function shareItem(tab, item){
   try{
     if(tab === "documents"){
       const file = item.get("fileUrl");
       if(!file || !file.url()){ alert("No file to share yet."); return; }
-      await navigator.clipboard.writeText(file.url());
-      alert("Link copied to clipboard.");
+      await nativeShare(item.get("fileName"), file.url());
       return;
     }
     const type = (tab === "conversations") ? "conversation" : "result";
@@ -2090,8 +2190,7 @@ async function shareItem(tab, item){
     item.setACL(acl);
     await item.save();
     const url = location.origin + location.pathname + "?share=" + type + "&id=" + item.id;
-    await navigator.clipboard.writeText(url);
-    alert("Public link copied to clipboard:\n" + url);
+    await nativeShare(item.get("title") || item.get("type") || "Docly", url);
   }catch(err){
     alert("Could not create the share link: " + err.message);
   }
