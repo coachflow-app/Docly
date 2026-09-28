@@ -211,9 +211,13 @@
     position:absolute;top:42px;right:10px;background:var(--surface);border:1px solid var(--line);
     border-radius:8px;box-shadow:0 4px 14px rgba(35,42,69,.08);z-index:5;min-width:140px;overflow:hidden;
   }
-  .doc-menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:9px 12px;font-size:13px;color:var(--ink);cursor:pointer;}
+  .doc-menu button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:none;padding:9px 12px;font-size:13px;color:var(--ink);cursor:pointer;}
   .doc-menu button:hover{background:var(--paper);}
   .doc-menu button.danger{color:var(--danger);}
+  .btn-ic{display:inline-flex;align-items:center;gap:6px;}
+  .sel-ic{position:relative;display:inline-flex;align-items:center;}
+  .sel-ic .ic{position:absolute;left:10px;pointer-events:none;color:var(--yellow-ink);}
+  .sel-ic select{padding-left:32px !important;}
 
   .empty-state{
     max-width:360px;margin:24px auto;text-align:center;padding:36px 24px;
@@ -290,6 +294,7 @@
     display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 13px;border-radius:19px;border:1px solid var(--line);
     font-size:13px;font-weight:500;background:var(--surface);color:var(--ink);cursor:pointer;
   }
+  .pill[hidden]{display:none;}
   .pill svg{color:var(--indigo);}
   .pill.selected{border-color:var(--yellow);background:var(--yellow);color:var(--yellow-ink);}
   .pill.selected svg{color:var(--yellow-ink);}
@@ -338,8 +343,10 @@
   .result-content.res-spacious{padding:26px 20px;}
   @media (min-width:768px){ .result-content.res-spacious{padding:36px;} }
   .result-content.res-spacious h4{margin:28px 0 10px;}
-  .cite-ref{color:var(--indigo);font-weight:600;cursor:pointer;font-size:0.82em;padding:0 1px;}
-  .cite-ref:hover{text-decoration:underline;}
+  .cite-inline{font-size:0.86em;color:var(--muted);}
+  .cite-ref{color:var(--indigo);font-weight:600;cursor:pointer;text-decoration:underline;}
+  .inline-sources{margin:14px 0 0;line-height:1.7;}
+  .msg .res-table-wrap{margin:8px 0;overflow-x:auto;}
 
   .citations{margin-top:16px;display:flex;flex-direction:column;gap:10px;}
   .citation{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);}
@@ -454,6 +461,18 @@
   .flashcard .fc-hint{position:absolute;bottom:8px;right:12px;font-size:10px;color:var(--faint);}
 
   .modal-overlay{position:fixed;inset:0;background:rgba(35,42,69,.4);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .rename-box{background:var(--surface);border-radius:12px;width:100%;max-width:400px;overflow:hidden;}
+  .rename-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--paper);}
+  .rename-head h3{margin:0;font-size:19px;font-weight:600;color:var(--indigo);}
+  .rename-x{width:30px;height:30px;border-radius:50%;border:none;background:var(--yellow-off);color:var(--muted);font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .rename-body{padding:16px 20px 18px;border-bottom:1px solid var(--line);}
+  .rename-body label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;}
+  .rename-body input{width:100%;height:42px;border:1px solid var(--line);border-radius:8px;padding:0 12px;font-family:inherit;font-size:14px;color:var(--ink);}
+  .rename-body input:focus{outline:none;border-color:var(--indigo);}
+  .rename-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;}
+  .rename-foot button{height:40px;padding:0 20px;border:none;border-radius:8px;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;}
+  .rename-cancel{background:var(--yellow-off);color:var(--ink);}
+  .rename-ok{background:var(--yellow);color:var(--yellow-ink);}
   .modal-box{background:var(--surface);border-radius:14px;padding:20px;width:100%;max-width:420px;}
   .modal-box h3{margin:0 0 12px;font-size:16px;color:var(--indigo);}
   .modal-box textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:inherit;font-size:13.5px;resize:vertical;}
@@ -462,7 +481,8 @@
 
   .citation-link{background:none;border:none;font-size:12px;color:var(--indigo);text-decoration:none;font-weight:500;white-space:nowrap;flex-shrink:0;cursor:pointer;font-family:inherit;padding:0;}
 
-  .viewer-box{background:var(--surface);border-radius:16px;width:100%;max-width:820px;height:84vh;display:flex;flex-direction:column;overflow:hidden;}
+  #viewer-overlay{padding:0;align-items:stretch;background:var(--surface);}
+  .viewer-box{background:var(--surface);border-radius:0;width:100%;max-width:none;height:100%;display:flex;flex-direction:column;overflow:hidden;}
   .viewer-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);}
   .viewer-head span{font-size:14px;font-weight:600;color:var(--indigo);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .viewer-head button{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1;padding:2px 6px;}
@@ -560,16 +580,6 @@
     </button>
     <p class="brand-word">Docly</p>
     <div class="db-topbar-icons">
-      <div class="db-notif">
-        <button class="db-bell" id="db-bell-btn" aria-label="Notifications">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
-          <span class="db-bell-dot" id="db-bell-dot" hidden></span>
-        </button>
-        <div class="db-notif-menu" id="db-notif-menu" hidden>
-          <div class="dnm-head">Notifications</div>
-          <div id="db-notif-list"></div>
-        </div>
-      </div>
       <div class="db-user">
         <button class="db-user-btn" id="db-user-btn">
           <span class="avatar" id="db-avatar">·</span>
@@ -898,7 +908,6 @@ function enterApp(){
   showScreen("screen-dashboard");
   loadTab("documents");
   refreshPlanCount();
-  refreshNotifications();
   ensureNotificationPermission();
 }
 
@@ -926,7 +935,6 @@ document.querySelectorAll(".nav-item, .db-tab").forEach(btn=>{
 
 document.getElementById("db-sort-btn").onclick = (e)=>{
   e.stopPropagation();
-  document.getElementById("db-notif-menu").hidden = true;
   document.getElementById("db-filter-menu").hidden = true;
   document.getElementById("db-sort-menu").hidden = !document.getElementById("db-sort-menu").hidden;
 };
@@ -1061,6 +1069,7 @@ function timeAgo(date){
 }
 function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
+const IC = {'trash': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>', 'export': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11l4 4 4-4M5 20h14"/></svg>', 'copy': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>', 'share': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.6M8.2 13.2l7.6 4.6"/></svg>'};
 function closeAllMenus(){ document.querySelectorAll(".doc-menu").forEach(m=>m.remove()); }
 document.addEventListener("click", closeAllMenus);
 
@@ -1072,18 +1081,17 @@ function openMenu(row, tab, item){
     ${canRename ? '<button data-act="rename">Rename</button>' : ""}
     <button data-act="notes">${item.get("notes") ? "Edit note" : "Add note"}</button>
     <button data-act="download">Download</button>
-    <button data-act="share">Share</button>
-    <button data-act="delete" class="danger">Delete</button>
+    <button data-act="share">${IC.share}<span>Share</span></button>
+    <button data-act="delete" class="danger">${IC.trash}<span>Delete</span></button>
   `;
   row.appendChild(menu);
   menu.onclick = async (e)=>{
     e.stopPropagation();
-    const act = e.target.dataset.act;
+    const act = (e.target.closest("button")||{dataset:{}}).dataset.act;
     if(!act) return;
     if(act === "rename"){
       const field = tab === "documents" ? "fileName" : "title";
-      const val = prompt("New name:", item.get(field) || "");
-      if(val){ item.set(field, val); await item.save(); loadTab(tab); }
+      openRenameModal(async (val)=>{ item.set(field, val); await item.save(); loadTab(tab); });
     } else if(act === "notes"){
       openNotesModal(item, tab);
     } else if(act === "delete"){
@@ -1094,6 +1102,33 @@ function openMenu(row, tab, item){
       shareItem(tab, item);
     }
   };
+}
+
+function openRenameModal(onConfirm){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="rename-box" role="dialog" aria-label="Rename">
+      <div class="rename-head"><h3>Rename</h3><button class="rename-x" id="rename-x" aria-label="Close">&times;</button></div>
+      <div class="rename-body">
+        <label for="rename-input">Rename to</label>
+        <input type="text" id="rename-input" autocomplete="off">
+      </div>
+      <div class="rename-foot">
+        <button class="rename-cancel" id="rename-cancel">Cancel</button>
+        <button class="rename-ok" id="rename-ok">Rename</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const input = document.getElementById("rename-input");
+  const close = ()=>overlay.remove();
+  const confirmIt = async ()=>{ const v = input.value.trim(); if(!v){ input.focus(); return; } close(); await onConfirm(v); };
+  overlay.onclick = (e)=>{ if(e.target === overlay) close(); };
+  document.getElementById("rename-x").onclick = close;
+  document.getElementById("rename-cancel").onclick = close;
+  document.getElementById("rename-ok").onclick = confirmIt;
+  input.onkeydown = (e)=>{ if(e.key === "Enter") confirmIt(); if(e.key === "Escape") close(); };
+  input.focus();
 }
 
 function openNotesModal(item, tab){
@@ -1184,6 +1219,7 @@ async function handleCompare(){
 function openComparisonScreen(docs, content, sources){
   currentResultKind = "compare";
   currentResultPayload = content;
+  activeSources = sources || []; activeDocs = docs;
   resultBackTarget = "dashboard";
   document.getElementById("res-back").textContent = "← Back to dashboard";
   document.getElementById("res-filename").textContent = "Comparing " + docs.length + " documents";
@@ -1191,7 +1227,6 @@ function openComparisonScreen(docs, content, sources){
   document.getElementById("res-badge").textContent = "Comparison";
   hideResAlert();
   const box = document.getElementById("res-content");
-  const n = (sources||[]).length;
   const cards = docs.map((d,i)=>{
     const excerpt = (d.get("extractedText")||"").trim().slice(0,220);
     return `
@@ -1206,12 +1241,13 @@ function openComparisonScreen(docs, content, sources){
     <div class="compare-grid">${cards}</div>
     <div class="result-content res-spacious" style="margin-top:16px;">
       <h3>Similarities</h3>
-      ${linkifyCitations(buildListContent(similarities), n)}
+      ${linkifyCitations(buildListContent(similarities), sources)}
       <h3 style="margin-top:20px;">Differences</h3>
-      ${linkifyCitations(buildListContent(differences), n)}
+      ${linkifyCitations(buildListContent(differences), sources)}
     </div>
     ${citationsHtml(sources)}
   `;
+  if(!hasCitationMarkers(content, sources)) box.insertAdjacentHTML("beforeend", fallbackSourcesHtml(sources));
   wireCitationLinks(sources, docs);
   document.getElementById("res-actions").innerHTML = resultActionsHtml();
   wireResultActions();
@@ -1235,6 +1271,7 @@ function resetWizard(){
   document.getElementById("file-ready-wrap").innerHTML = "";
   document.getElementById("file-input").value = "";
   document.querySelectorAll("#action-pills .pill, #result-pills .pill, #transform-pills .pill").forEach(p=>p.classList.remove("selected"));
+  document.querySelectorAll("#result-pills .pill").forEach(p=>p.hidden = false);
   document.getElementById("result-pills").hidden = false;
   document.getElementById("transform-pills").hidden = true;
   document.getElementById("result-section-title").textContent = "Choose the result";
@@ -1359,6 +1396,9 @@ document.querySelectorAll("#action-pills .pill").forEach(p=>{
       document.getElementById("result-section-title").textContent = "Choose the result";
       document.getElementById("result-section-sub").textContent = "Select the format and style of your output.";
     }
+    // "Cartes mémoire" does not exist for Questions/Réponses
+    const fcPill = document.querySelector('#result-pills .pill[data-value="flashcards"]');
+    if(fcPill) fcPill.hidden = (selectedAction === "ask");
     updateStepper(); updateContinueState();
   };
 });
@@ -1419,26 +1459,67 @@ const PRESET_CLOUD_MAP = {
 
 let currentConversation = null;
 let currentResultObject = null;
+let currentChatPreset = "short";
 let currentResultKind = null;
 let currentResultPayload = null;
 
 // Convertit un texte simple / markdown léger (titres ##, listes -) en HTML sûr
-// Turns literal "[1]" markers left by the AI into clickable citation refs
-function linkifyCitations(html, sourceCount){
-  if(!sourceCount) return html;
+// ---- Inline citations: "(Source page X, paragraphe X — view in documents)" ----
+function sourceLabel(s, withDoc){
+  let where;
+  if(s.cell) where = "Source cellule " + s.cell;
+  else if(s.page) where = "Source page " + s.page + (s.paragraph ? ", paragraphe " + s.paragraph : "");
+  else if(s.paragraph) where = "Source paragraphe " + s.paragraph;
+  else where = "Source";
+  if(withDoc && s.docName) where = s.docName + " · " + where;
+  return where;
+}
+function inlineCite(s, idx){
+  return `<span class="cite-inline">(${escapeHtml(sourceLabel(s, true))} — <a class="cite-ref" data-idx="${idx}" role="button" tabindex="0">view in documents</a>)</span>`;
+}
+// Replaces literal "[n]" markers left by the AI with the inline citation above
+function linkifyCitations(html, sources){
+  if(!sources || !sources.length) return html;
   return html.replace(/\[(\d+)\]/g, (m, n)=>{
     const idx = Number(n) - 1;
-    if(idx < 0 || idx >= sourceCount) return m;
-    return `<sup class="cite-ref" data-idx="${idx}">[${n}]</sup>`;
+    if(idx < 0 || idx >= sources.length) return m;
+    return inlineCite(sources[idx], idx);
   });
 }
+function hasCitationMarkers(payload, sources){
+  if(!sources || !sources.length) return false;
+  const txt = typeof payload === "string" ? payload : JSON.stringify(payload || "");
+  const re = /\[(\d+)\]/g; let m;
+  while((m = re.exec(txt))){ const i = Number(m[1]) - 1; if(i >= 0 && i < sources.length) return true; }
+  return false;
+}
+// When the AI cited nothing inline (quiz, flashcards…), still show sources inside the result, same format
+function fallbackSourcesHtml(sources){
+  if(!sources || !sources.length) return "";
+  return `<p class="inline-sources">${sources.map((s,i)=>inlineCite(s,i)).join(" ")}</p>`;
+}
+// Converts light markdown (## titles, - lists, | tables |) to safe HTML
 function renderMarkdownLite(text){
   if(!text) return "";
   const lines = String(text).split(/\r?\n/);
-  let html = "", inList = false;
+  let html = "", inList = false, tableRows = null;
   const closeList = ()=>{ if(inList){ html += "</ul>"; inList = false; } };
+  const flushTable = ()=>{
+    if(!tableRows) return;
+    const [head, ...body] = tableRows;
+    html += `<div class="res-table-wrap"><table class="res-table"><thead><tr>${head.map(c=>`<th>${escapeHtml(c)}</th>`).join("")}</tr></thead><tbody>${body.map(r=>`<tr>${r.map(c=>`<td>${escapeHtml(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    tableRows = null;
+  };
   lines.forEach(raw=>{
     const line = raw.trim();
+    if(line.startsWith("|")){
+      closeList();
+      if(/^\|[\s\-:|]+\|?$/.test(line)) return; // separator row
+      if(!tableRows) tableRows = [];
+      tableRows.push(line.replace(/^\||\|$/g,"").split("|").map(c=>c.trim()));
+      return;
+    }
+    flushTable();
     if(!line){ closeList(); return; }
     if(line.startsWith("## ")){ closeList(); html += `<h4>${escapeHtml(line.slice(3))}</h4>`; return; }
     if(line.startsWith("# ")){ closeList(); html += `<h3>${escapeHtml(line.slice(2))}</h3>`; return; }
@@ -1450,7 +1531,7 @@ function renderMarkdownLite(text){
     closeList();
     html += `<p>${escapeHtml(line)}</p>`;
   });
-  closeList();
+  closeList(); flushTable();
   return html;
 }
 
@@ -1459,7 +1540,9 @@ async function handleContinue(){
   btn.disabled = true; btn.textContent = "Generating…";
   const preset = RESULT_PRESETS[selectedResult];
   try{
-    if(selectedAction === "ask"){
+    if(selectedAction === "ask" && selectedResult !== "quiz"){
+      // Chat: the chosen preset drives the style of every answer
+      currentChatPreset = selectedResult;
       const convo = new Parse.Object("Conversation");
       convo.set("document", currentDocument);
       convo.set("owner", Parse.User.current());
@@ -1469,12 +1552,11 @@ async function handleContinue(){
       currentConversation = convo;
       openResultScreen("chat", [], null);
     } else {
-      // Key points / Action items / Extract always render as their own fixed shape,
-      // regardless of which "Choose the result" preset was picked.
-      const FIXED_KIND_ACTIONS = new Set(["keypoints", "actionitems", "extract"]);
-      const renderKind = FIXED_KIND_ACTIONS.has(selectedAction) ? selectedAction : selectedResult;
+      // Ask + Quiz → static list of questions/answers ("qa"); every other action renders in the chosen preset.
+      const isQa = (selectedAction === "ask");
+      const renderKind = isQa ? "qa" : selectedResult;
       const cloudAction = ACTION_CLOUD_MAP[selectedAction] || "summarize";
-      const cloudPreset = FIXED_KIND_ACTIONS.has(selectedAction) ? undefined : PRESET_CLOUD_MAP[selectedResult];
+      const cloudPreset = PRESET_CLOUD_MAP[selectedResult];
       const extracted = (currentDocument.get("extractedText")||"").trim();
 
       const aiResponse = await Parse.Cloud.run("generateDocumentResult", {
@@ -1489,7 +1571,7 @@ async function handleContinue(){
       const result = new Parse.Object("Result");
       result.set("document", currentDocument);
       result.set("owner", Parse.User.current());
-      result.set("type", TYPE_MAP[selectedAction] || "résumé");
+      result.set("type", isQa ? "questions-réponses" : (TYPE_MAP[selectedAction] || "résumé"));
       result.set("lengths", preset.lengths);
       result.set("style", preset.style);
       result.set("format", preset.format);
@@ -1499,7 +1581,7 @@ async function handleContinue(){
       await result.save();
       currentResultObject = result;
       openResultScreen(renderKind, aiResponse.content, aiResponse.sources || []);
-      createNotification("Your " + (TYPE_MAP[selectedAction]) + " for \"" + currentDocument.get("fileName") + "\" is ready.");
+      createNotification("Your " + (isQa ? "questions-réponses" : TYPE_MAP[selectedAction]) + " for \"" + currentDocument.get("fileName") + "\" is ready.");
     }
   }catch(err){
     alert("Could not generate the result: " + err.message);
@@ -1528,6 +1610,7 @@ function openResultScreen(kind, payload, sources){
   const doc = currentDocument;
   currentResultKind = kind;
   currentResultPayload = payload;
+  activeSources = sources || []; activeDocs = [doc];
   resultBackTarget = "wizard";
   document.getElementById("res-back").textContent = "← Back";
   document.getElementById("res-filename").textContent = doc.get("fileName");
@@ -1535,7 +1618,7 @@ function openResultScreen(kind, payload, sources){
   const pagesTxt = doc.get("pageCount") ? doc.get("pageCount") + " pages" : "";
   document.getElementById("res-meta").textContent = ["Document analysé", pagesTxt, "Généré en français"].filter(Boolean).join(" · ");
   document.getElementById("res-badge").textContent = (selectedAction === "ask")
-    ? "Ask questions"
+    ? (kind === "qa" ? "Ask questions · " + RESULT_BADGE[selectedResult] : "Ask questions")
     : (TYPE_MAP[selectedAction] + " · " + RESULT_BADGE[selectedResult]);
   hideResAlert();
 
@@ -1558,7 +1641,7 @@ function openResultScreen(kind, payload, sources){
     document.getElementById("chat-send").onclick = sendChatMessage;
     document.getElementById("chat-input").onkeydown = (e)=>{ if(e.key === "Enter") sendChatMessage(); };
     actions.innerHTML = `
-      <div class="res-actions-primary"><button class="btn btn-outline btn-sm" id="btn-share">Share</button></div>
+      <div class="res-actions-primary"><button class="btn btn-outline btn-sm btn-ic" id="btn-share">${IC.share}Share</button></div>
       <button class="btn-ghost-nav" id="btn-back-dash">&larr; Back to dashboard</button>`;
     document.getElementById("btn-share").onclick = ()=>shareItem("conversations", currentConversation);
     document.getElementById("btn-back-dash").onclick = backToDashboard;
@@ -1569,18 +1652,21 @@ function openResultScreen(kind, payload, sources){
       <div class="res-table-wrap">
         <table class="res-table">
           <thead><tr>${t.headers.map(h=>`<th>${escapeHtml(h)}</th>`).join("")}</tr></thead>
-          <tbody>${t.rows.map(r=>`<tr>${r.map(c=>`<td>${linkifyCitations(escapeHtml(String(c)), (sources||[]).length)}</td>`).join("")}</tr>`).join("")}</tbody>
+          <tbody>${t.rows.map(r=>`<tr>${r.map(c=>`<td>${linkifyCitations(escapeHtml(String(c)), sources)}</td>`).join("")}</tr>`).join("")}</tbody>
         </table>
       </div>
       ${citationsHtml(sources)}
     `;
+  } else if(kind === "qa"){
+    const items = Array.isArray(payload) ? payload : [];
+    box.innerHTML = `<div class="result-content res-spacious">${items.map((it,i)=>`<h4>${i+1}. ${escapeHtml(it.question||"")}</h4><p>${linkifyCitations(escapeHtml(it.answer||""), sources)}</p>`).join("")}</div>`;
   } else if(kind === "extract"){
     const rows = Array.isArray(payload) ? payload : [];
     box.innerHTML = `
       <div class="res-table-wrap">
         <table class="res-table">
           <thead><tr><th>Information</th><th>Valeur</th></tr></thead>
-          <tbody>${rows.length ? rows.map(r=>`<tr><td>${escapeHtml(r.label||"")}</td><td>${linkifyCitations(escapeHtml(r.value||""), (sources||[]).length)}</td></tr>`).join("") : `<tr><td colspan="2">Aucune information extraite.</td></tr>`}</tbody>
+          <tbody>${rows.length ? rows.map(r=>`<tr><td>${escapeHtml(r.label||"")}</td><td>${linkifyCitations(escapeHtml(r.value||""), sources)}</td></tr>`).join("") : `<tr><td colspan="2">Aucune information extraite.</td></tr>`}</tbody>
         </table>
       </div>
       ${citationsHtml(sources)}
@@ -1603,16 +1689,17 @@ function openResultScreen(kind, payload, sources){
     box.innerHTML = `<div id="flash-box"></div>${citationsHtml(sources)}`;
     setupFlashcards(Array.isArray(payload) ? payload : []);
   } else if(kind === "keypoints"){
-    box.innerHTML = `<div class="result-content ${spacingClass}">${linkifyCitations(buildListContent(payload), (sources||[]).length)}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content ${spacingClass}">${linkifyCitations(buildListContent(payload), sources)}</div>${citationsHtml(sources)}`;
   } else if(kind === "actionitems"){
-    box.innerHTML = `<div class="result-content ${spacingClass}">${linkifyCitations(buildListContent(payload, true), (sources||[]).length)}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content ${spacingClass}">${linkifyCitations(buildListContent(payload, true), sources)}</div>${citationsHtml(sources)}`;
   } else if(kind === "studysheet"){
-    box.innerHTML = `<div class="result-content ${spacingClass}"><h3>Study sheet — "${escapeHtml(doc.get("fileName"))}"</h3>${linkifyCitations(renderMarkdownLite(payload), (sources||[]).length)}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content ${spacingClass}"><h3>Study sheet — "${escapeHtml(doc.get("fileName"))}"</h3>${linkifyCitations(renderMarkdownLite(payload), sources)}</div>${citationsHtml(sources)}`;
   } else if(kind === "report"){
-    box.innerHTML = `<div class="result-content ${spacingClass}"><h3>Professional report — "${escapeHtml(doc.get("fileName"))}"</h3>${linkifyCitations(renderMarkdownLite(payload), (sources||[]).length)}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content ${spacingClass}"><h3>Professional report — "${escapeHtml(doc.get("fileName"))}"</h3>${linkifyCitations(renderMarkdownLite(payload), sources)}</div>${citationsHtml(sources)}`;
   } else {
-    box.innerHTML = `<div class="result-content ${spacingClass}">${linkifyCitations(renderMarkdownLite(payload), (sources||[]).length)}</div>${citationsHtml(sources)}`;
+    box.innerHTML = `<div class="result-content ${spacingClass}">${linkifyCitations(renderMarkdownLite(payload), sources)}</div>${citationsHtml(sources)}`;
   }
+  if(kind !== "chat" && !hasCitationMarkers(payload, sources)) box.insertAdjacentHTML("beforeend", fallbackSourcesHtml(sources));
   wireCitationLinks(sources, [doc]);
   actions.innerHTML = resultActionsHtml();
   wireResultActions();
@@ -1628,46 +1715,27 @@ function buildListContent(items, asChecklist){
   return `<ul>${list.map(i=>`<li>${escapeHtml(String(i))}</li>`).join("")}</ul>`;
 }
 
-function citationsHtml(sources){
-  if(!sources || !sources.length) return "";
-  return `<div class="citations">${sources.map((s,i)=>{
-    const label = s.cell ? ("Source · " + s.cell)
-      : s.page ? ("Source · Page " + s.page + (s.paragraph ? (", paragraph " + s.paragraph) : ""))
-      : s.paragraph ? ("Source · Paragraph " + s.paragraph)
-      : "Source";
-    const sub = s.docName ? (s.docName + " — " + s.note) : s.note;
-    return `
-    <div class="citation">
-      <span class="cic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 15l6-6M10 6l1-1a3 3 0 0 1 4 4l-1 1M14 18l-1 1a3 3 0 0 1-4-4l1-1"/></svg></span>
-      <div class="ct-body">
-        <div class="ct-head">${label}</div>
-        <div class="ct-sub">${escapeHtml(sub)}</div>
-      </div>
-      <button class="citation-link" data-idx="${i}">View in document &rarr;</button>
-    </div>`;
-  }).join("")}</div>`;
-}
+// Sources are no longer shown in a separate block: they live inline inside the result.
+function citationsHtml(){ return ""; }
+let activeSources = [], activeDocs = [];
 function wireCitationLinks(sources, docs){
-  if(!sources || !sources.length) return;
+  activeSources = sources || []; activeDocs = docs || [];
   const openSource = (idx)=>{
-    const s = sources[idx];
+    const s = activeSources[idx];
     if(!s) return;
-    const targetDoc = (s.docName ? docs.find(d=>d.get("fileName") === s.docName) : docs[0]) || docs[0];
+    const targetDoc = (s.docName ? activeDocs.find(d=>d.get("fileName") === s.docName) : activeDocs[0]) || activeDocs[0];
     if(targetDoc) openDocumentViewer(targetDoc, s);
   };
-  document.querySelectorAll(".citation-link").forEach(btn=>{
-    btn.onclick = ()=>openSource(Number(btn.dataset.idx));
-  });
-  document.querySelectorAll(".cite-ref").forEach(sup=>{
-    sup.onclick = ()=>openSource(Number(sup.dataset.idx));
+  document.querySelectorAll("#res-content .cite-ref").forEach(a=>{
+    a.onclick = (e)=>{ e.preventDefault(); openSource(Number(a.dataset.idx)); };
   });
 }
 
 function resultActionsHtml(){
   return `
     <div class="res-actions-primary">
-      <button class="btn btn-outline btn-sm" id="btn-copy">Copy</button>
-      <select class="btn btn-primary btn-sm" id="btn-export" style="padding:0 8px;">
+      <button class="btn btn-outline btn-sm btn-ic" id="btn-copy">${IC.copy}Copy</button>
+      <span class="sel-ic">${IC.export}<select class="btn btn-primary btn-sm" id="btn-export" style="padding:0 8px;">
         <option value="">Export</option>
         <option value="txt">as TXT</option>
         <option value="md">as Markdown</option>
@@ -1675,8 +1743,8 @@ function resultActionsHtml(){
         <option value="docx">as DOCX</option>
         <option value="xlsx">as XLSX</option>
         <option value="pptx">as PPTX</option>
-      </select>
-      <button class="btn btn-outline btn-sm" id="btn-share">Share</button>
+      </select></span>
+      <button class="btn btn-outline btn-sm btn-ic" id="btn-share">${IC.share}Share</button>
     </div>
     <button class="btn-ghost-nav" id="btn-back-dash">&larr; Back to dashboard</button>
   `;
@@ -1764,7 +1832,8 @@ function setupSlides(slides){
 function renderSlide(){
   if(!currentSlides.length){ document.getElementById("slide-box").innerHTML = "<p>No slides were returned.</p>"; document.getElementById("slide-counter").textContent = "0 / 0"; return; }
   const s = currentSlides[slideIndex];
-  document.getElementById("slide-box").innerHTML = `<h3>${escapeHtml(s.title)}</h3><ul>${(s.bullets||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("")}</ul>`;
+  document.getElementById("slide-box").innerHTML = `<h3>${escapeHtml(s.title)}</h3><ul>${(s.bullets||[]).map(p=>`<li>${linkifyCitations(escapeHtml(p), activeSources)}</li>`).join("")}</ul>`;
+  wireCitationLinks(activeSources, activeDocs);
   document.getElementById("slide-counter").textContent = (slideIndex+1) + " / " + currentSlides.length;
   document.getElementById("slide-prev").disabled = slideIndex === 0;
   document.getElementById("slide-next").disabled = slideIndex === currentSlides.length-1;
@@ -1777,11 +1846,20 @@ function renderChatMessages(messages){
     wrap.innerHTML = `<div class="msg assistant">Ask a question about this document to get started.</div>`;
     return;
   }
-  wrap.innerHTML = messages.map(m=>{
-    const isAssistant = m.get("role") === "assistant";
-    const src = m.get("sourceNote");
-    return `<div class="msg ${m.get("role")}">${escapeHtml(m.get("content"))}${isAssistant && src ? `<div class="msg-citation">Source · ${escapeHtml(src)}</div>`:''}</div>`;
+  wrap.innerHTML = messages.map((m,i)=>{
+    if(m.get("role") !== "assistant") return `<div class="msg user">${escapeHtml(m.get("content"))}</div>`;
+    const srcs = m.get("sources") || [];
+    const raw = m.get("content") || "";
+    let html = linkifyCitations(renderMarkdownLite(raw), srcs);
+    if(srcs.length && !hasCitationMarkers(raw, srcs)) html += fallbackSourcesHtml(srcs);
+    return `<div class="msg assistant" data-i="${i}">${html}</div>`;
   }).join("");
+  wrap.querySelectorAll(".msg.assistant[data-i]").forEach(el=>{
+    const srcs = messages[Number(el.dataset.i)].get("sources") || [];
+    el.querySelectorAll(".cite-ref").forEach(a=>{
+      a.onclick = ()=>{ const src = srcs[Number(a.dataset.idx)]; if(src && currentDocument) openDocumentViewer(currentDocument, src); };
+    });
+  });
   wrap.scrollTop = wrap.scrollHeight;
 }
 async function sendChatMessage(){
@@ -1797,19 +1875,19 @@ async function sendChatMessage(){
 
   const extracted = (currentDocument.get("extractedText")||"").trim();
   let replyText = "Sorry, something went wrong while getting an answer.";
-  let sourceNote = "";
+  let replySources = [];
   try{
     const aiResponse = await Parse.Cloud.run("generateDocumentResult", {
       text: extracted,
       action: "ask",
+      preset: PRESET_CLOUD_MAP[currentChatPreset],
       question: text,
       fileName: currentDocument.get("fileName"),
       fileType: currentDocument.get("fileType"),
       language: "français"
     });
-    replyText = aiResponse.content;
-    const s = (aiResponse.sources||[])[0];
-    if(s) sourceNote = s.paragraph ? ("Paragraph " + s.paragraph) : (s.note || "");
+    replyText = typeof aiResponse.content === "string" ? aiResponse.content : JSON.stringify(aiResponse.content);
+    replySources = aiResponse.sources || [];
   }catch(err){
     replyText = "Sorry, I couldn't get an answer: " + err.message;
   }
@@ -1818,7 +1896,7 @@ async function sendChatMessage(){
   replyMsg.set("conversation", currentConversation);
   replyMsg.set("role", "assistant");
   replyMsg.set("content", replyText);
-  if(sourceNote) replyMsg.set("sourceNote", sourceNote);
+  if(replySources.length) replyMsg.set("sources", replySources);
   await replyMsg.save();
   currentConversation.set("lastMessageAt", new Date());
   await currentConversation.save();
@@ -1921,15 +1999,7 @@ async function extractImageOcr(file, onProgress){
 
 // ---------------- Notifications ----------------
 async function createNotification(message){
-  try{
-    const n = new Parse.Object("Notification");
-    n.set("owner", Parse.User.current());
-    n.set("message", message);
-    n.set("read", false);
-    await n.save();
-    refreshNotifications();
-    fireBrowserNotification(message);
-  }catch(e){}
+  fireBrowserNotification(message);
 }
 // Real OS-level notification, shown even if the person has switched to
 // another tab or app (as long as this browser tab is still open).
@@ -1956,48 +2026,10 @@ async function ensureNotificationPermission(){
     try{ await navigator.serviceWorker.register("sw.js"); }catch(e){}
   }
 }
-async function refreshNotifications(){
-  try{
-    const q = new Parse.Query("Notification");
-    q.equalTo("owner", Parse.User.current());
-    q.descending("createdAt");
-    q.limit(15);
-    const items = await q.find();
-    const unread = items.filter(n=>!n.get("read")).length;
-    document.getElementById("db-bell-dot").hidden = unread === 0;
-    const list = document.getElementById("db-notif-list");
-    if(items.length === 0){
-      list.innerHTML = `<div class="dn-empty">No notifications yet.</div>`;
-      return;
-    }
-    list.innerHTML = items.map(n=>`
-      <div class="dn-item ${n.get('read')?'read':''}" data-id="${n.id}">
-        <span class="dot"></span>
-        <div class="txt">${escapeHtml(n.get("message"))}<div class="when">${timeAgo(n.get("createdAt"))}</div></div>
-      </div>`).join("");
-    list.querySelectorAll(".dn-item").forEach(el=>{
-      el.onclick = async ()=>{
-        const n = items.find(x=>x.id === el.dataset.id);
-        if(n && !n.get("read")){ n.set("read", true); await n.save(); refreshNotifications(); }
-      };
-    });
-  }catch(e){}
-}
-document.getElementById("db-bell-btn").onclick = (e)=>{
-  e.stopPropagation();
-  document.getElementById("db-filter-menu").hidden = true;
-  document.getElementById("db-sort-menu").hidden = true;
-  document.getElementById("db-notif-menu").hidden = !document.getElementById("db-notif-menu").hidden;
-};
-document.addEventListener("click", (e)=>{
-  if(!e.target.closest(".db-notif")) document.getElementById("db-notif-menu").hidden = true;
-});
-
 // ---------------- Filter ----------------
 let activeFilter = {type:"all", date:"all"};
 document.getElementById("db-filter-btn").onclick = (e)=>{
   e.stopPropagation();
-  document.getElementById("db-notif-menu").hidden = true;
   document.getElementById("db-sort-menu").hidden = true;
   document.getElementById("db-filter-menu").hidden = !document.getElementById("db-filter-menu").hidden;
 };
@@ -2042,6 +2074,7 @@ function exportableRows(){
   const k = currentResultKind, p = currentResultPayload;
   if(k === "table" && p && p.headers) return {headers:p.headers, rows:p.rows};
   if(k === "extract" && Array.isArray(p)) return {headers:["Information","Valeur"], rows:p.map(r=>[r.label||"", r.value||""])};
+  if(k === "qa" && Array.isArray(p)) return {headers:["Question","Réponse"], rows:p.map(r=>[r.question||"", r.answer||""])};
   if((k === "keypoints" || k === "actionitems") && Array.isArray(p)) return {headers:["Item"], rows:p.map(x=>[String(x)])};
   return null;
 }
