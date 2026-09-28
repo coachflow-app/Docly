@@ -31,45 +31,118 @@ const INLINE_CITATION_RULE =
   "'sources'. Insère ces marqueurs directement dans le texte du champ 'content' (ou dans chaque élément si " +
   "'content' est une liste). N'invente jamais un numéro qui ne correspond à aucune entrée de 'sources'.";
 
+// Résultat attendu pour chaque action × preset (repris tel quel du cahier des charges Docly)
+const EXPECTED = {
+  summarize: {
+    court: "Une synthèse très concise du document.",
+    detaille: "Une synthèse complète avec les idées et informations importantes.",
+    professionnel: "Un résumé structuré et formulé dans un style professionnel.",
+    tableau: "Les informations essentielles du résumé organisées dans un tableau.",
+    presentation: "Le résumé transformé en diapositives structurées.",
+    quiz: "Un questionnaire généré à partir des informations du résumé/document.",
+    flashcards: "Des cartes question/réponse basées sur les informations importantes."
+  },
+  "key-points": {
+    court: "Quelques points essentiels uniquement.",
+    detaille: "Une liste plus complète des principaux points du document.",
+    professionnel: "Points clés hiérarchisés et formulés pour une lecture professionnelle.",
+    tableau: "Points clés organisés en lignes et colonnes.",
+    presentation: "Les points clés transformés en diapositives.",
+    quiz: "Questions générées à partir des points clés.",
+    flashcards: "Chaque information importante transformée en carte question/réponse."
+  },
+  "action-items": {
+    court: "Les actions principales uniquement.",
+    detaille: "Toutes les actions/prochaines étapes identifiées avec leur contexte.",
+    professionnel: "Liste d'actions claire et structurée pour une utilisation professionnelle.",
+    tableau: "Actions présentées dans un tableau, par exemple : action / responsable / échéance lorsqu'ils sont présents dans le document.",
+    presentation: "Les actions transformées en diapositives.",
+    quiz: "Questions permettant de vérifier les actions à réaliser.",
+    flashcards: "Cartes permettant de mémoriser les actions et prochaines étapes."
+  },
+  ask: {
+    court: "Réponses courtes et directement basées sur le document.",
+    detaille: "Réponses développées avec davantage de contexte et de sources.",
+    professionnel: "Réponses formulées dans un style professionnel.",
+    tableau: "Les réponses et informations demandées présentées sous forme de tableau lorsque cela est pertinent.",
+    presentation: "Les réponses importantes organisées sous forme de présentation.",
+    quiz: "Une série de questions/réponses basée sur le document."
+  },
+  analyze: {
+    court: "Les principaux constats de l'analyse.",
+    detaille: "Analyse approfondie avec constats, informations importantes et conclusions.",
+    professionnel: "Analyse structurée dans un style professionnel/exécutif.",
+    tableau: "Résultats de l'analyse organisés en tableau.",
+    presentation: "Analyse transformée en présentation structurée.",
+    quiz: "Questions générées à partir des éléments analysés.",
+    flashcards: "Concepts et informations importantes de l'analyse transformés en cartes."
+  },
+  extract: {
+    court: "Uniquement les données demandées, sans explication inutile.",
+    detaille: "Données extraites avec leur contexte et leurs sources.",
+    professionnel: "Données présentées proprement pour une utilisation professionnelle.",
+    tableau: "Données extraites directement sous forme de tableau.",
+    presentation: "Données importantes transformées en diapositives.",
+    quiz: "Questions générées à partir des données extraites.",
+    flashcards: "Données importantes transformées en cartes question/réponse."
+  }
+};
+
+const ACTION_SUBJECT = {
+  summarize: "Résume fidèlement le document fourni.",
+  "key-points": "Travaille sur les points clés du document.",
+  "action-items": "Travaille sur les actions ou prochaines étapes présentes dans le document.",
+  analyze: "Analyse le contenu du document afin d'en faire ressortir les informations pertinentes.",
+  extract: "Recherche et extrait les informations importantes (données, chiffres, clauses...) présentes dans le document.",
+  ask: "Réponds à partir du contenu du document, STRICTEMENT.",
+  transform: "Transforme le contenu du document selon le format demandé."
+};
+
 // Construit les instructions données à l'IA selon l'action et le preset choisis dans le wizard
-function buildInstructions(action, preset, fileType) {
+function buildInstructions(action, preset, fileType, mode) {
   const base =
     "Tu es Docly, un assistant qui analyse des documents. " +
     "Tu réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, sans ```.";
 
+  const TEXT = "Le champ 'content' est une chaîne de texte (tu peux utiliser des lignes commençant par '- ' pour des listes et '## ' pour des titres de section).";
   const shapeByPreset = {
-    court: "Réponds en un seul paragraphe très court (3 à 4 phrases maximum). Le champ 'content' est une chaîne de texte.",
-    detaille: "Réponds en plusieurs paragraphes complets et détaillés, avec des sous-titres si utile. Le champ 'content' est une chaîne de texte (peut contenir des sauts de ligne).",
-    professionnel: "Réponds dans un ton professionnel et formel, prêt à être partagé tel quel. Le champ 'content' est une chaîne de texte.",
+    court: "Réponds de façon très concise. " + TEXT,
+    detaille: "Réponds de façon complète et détaillée, en plusieurs sections si utile. " + TEXT,
+    professionnel: "Réponds dans un style professionnel et formel, bien structuré, prêt à être partagé. " + TEXT,
     tableau: "Réponds avec un tableau de données structuré. Le champ 'content' doit être un objet {\"headers\": [\"...\"], \"rows\": [[\"...\"], [\"...\"]]}.",
     presentation: "Réponds sous forme de diapositives (5 à 8 slides). Le champ 'content' doit être un tableau de slides, chaque slide étant {\"title\": \"...\", \"bullets\": [\"...\"]}.",
-    quiz: "Génère un quiz de 5 questions à choix multiples basées sur le document. Le champ 'content' doit être un tableau de {\"question\": \"...\", \"options\": [\"...\"], \"correctIndex\": 0}.",
-    flashcards: "Génère 8 flashcards basées sur le document. Le champ 'content' doit être un tableau de {\"front\": \"...\", \"back\": \"...\"}.",
-    "fiche-revision": "Réponds sous forme de fiche de révision structurée (titres, définitions, points clés). Le champ 'content' est une chaîne de texte en markdown simple.",
-    rapport: "Réponds sous forme de rapport professionnel structuré (introduction, sections, conclusion). Le champ 'content' est une chaîne de texte en markdown simple."
+    quiz: "Génère un questionnaire de 5 questions à choix multiples. Le champ 'content' doit être un tableau de {\"question\": \"...\", \"options\": [\"...\"], \"correctIndex\": 0}.",
+    flashcards: "Génère 8 cartes mémoire. Le champ 'content' doit être un tableau de {\"front\": \"question\", \"back\": \"réponse\"}.",
+    "fiche-revision": "Réponds sous forme de fiche de révision structurée (titres, définitions, points clés). " + TEXT,
+    rapport: "Réponds sous forme de rapport professionnel structuré (introduction, sections, conclusion). " + TEXT
   };
 
-  const actionByType = {
-    summarize: "Résume fidèlement le document fourni.",
-    analyze: "Analyse le contenu du document afin d'en faire ressortir les informations pertinentes : thèmes principaux, structure, points saillants.",
-    ask: "Réponds à la question posée par l'utilisateur en te basant STRICTEMENT sur le contenu du document. Le champ 'content' est une chaîne de texte.",
-    "key-points": "Extrait uniquement les points clés du document, sous forme de liste (5 à 10 points). Le champ 'content' doit être un tableau de chaînes.",
-    "action-items": "Identifie les actions ou prochaines étapes présentes dans le document. Le champ 'content' doit être un tableau de chaînes.",
-    extract: "Recherche et extrait les informations demandées dans le document (données, chiffres, clauses...). Le champ 'content' doit être un tableau de {\"label\": \"nom de l'information\", \"value\": \"valeur trouvée\"}.",
-    transform: "Transforme le contenu du document selon le format demandé."
-  };
-
-  const actionInstruction = actionByType[action] || "Traite le document selon la demande de l'utilisateur.";
   const citationRule = citationInstructions(fileType);
+  const noMarkerRule =
+    "Pour les formes quiz et cartes mémoire, n'insère pas de marqueurs [n] dans les questions/réponses : renseigne seulement 'sources'.";
+  const subject = ACTION_SUBJECT[action] || "Traite le document selon la demande de l'utilisateur.";
 
-  // key-points, action-items et extract imposent déjà leur propre forme :
-  // ne pas ajouter l'instruction de forme du preset, qui la contredirait.
-  if (action === "key-points" || action === "action-items" || action === "extract") {
-    return `${base}\n${actionInstruction}\n${citationRule}\n${INLINE_CITATION_RULE}`;
+  // ---- Q/R en chat : la réponse est toujours une chaîne, dont le style suit le preset ----
+  if (mode === "chat") {
+    const style = (EXPECTED.ask[preset]) || "Réponse claire basée sur le document.";
+    let form = "Le champ 'content' est une chaîne de texte.";
+    if (preset === "tableau") form = "Si pertinent, présente les informations sous forme de tableau markdown (lignes commençant par '|', avec une ligne d'en-tête et une ligne '|---|---|'). Le champ 'content' est une chaîne de texte.";
+    if (preset === "presentation") form = "Organise la réponse en sections façon diapositives : chaque section commence par une ligne '## Titre' suivie de lignes '- '. Le champ 'content' est une chaîne de texte.";
+    return `${base}\n${subject}\nRésultat attendu : ${style}\n${form}\n${citationRule}\n${INLINE_CITATION_RULE}`;
   }
 
-  const shape = shapeByPreset[preset] || "Réponds sous forme de texte clair et bien structuré. Le champ 'content' est une chaîne de texte.";
-  return `${base}\n${actionInstruction}\n${shape}\n${citationRule}\n${INLINE_CITATION_RULE}`;
+  // ---- Q/R statique (preset Questionnaire) : liste de questions/réponses ----
+  if (mode === "qa") {
+    return `${base}\n${subject}\nRésultat attendu : ${EXPECTED.ask.quiz}\n` +
+      "Le champ 'content' doit être un tableau de 6 à 10 objets {\"question\": \"...\", \"answer\": \"...\"} basés sur le document. " +
+      `Dans chaque 'answer', termine par un marqueur [n] renvoyant à 'sources'.\n${citationRule}\n${INLINE_CITATION_RULE}`;
+  }
+
+  // ---- Toutes les autres actions : forme du preset + résultat attendu propre à l'action ----
+  const expected = EXPECTED[action] && EXPECTED[action][preset];
+  const expectedLine = expected ? `Résultat attendu : ${expected}\n` : "";
+  const shape = shapeByPreset[preset] || ("Réponds sous forme de texte clair et bien structuré. " + TEXT);
+  return `${base}\n${subject}\n${expectedLine}${shape}\n${citationRule}\n${INLINE_CITATION_RULE}\n${noMarkerRule}`;
 }
 
 function buildCompareInstructions(fileTypes) {
@@ -168,7 +241,8 @@ Parse.Cloud.define("generateDocumentResult", async (request) => {
   }
 
   const truncatedText = text.slice(0, 24000);
-  const systemPrompt = buildInstructions(action, preset, fileType);
+  const mode = action === "ask" ? (question ? "chat" : (preset === "quiz" ? "qa" : "chat")) : "standard";
+  const systemPrompt = buildInstructions(action, preset, fileType, mode);
   const questionPart = question ? `\n\nQuestion de l'utilisateur : "${question}"` : "";
 
   const userPrompt =
