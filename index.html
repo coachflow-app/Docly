@@ -18,11 +18,11 @@
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <style>
   :root{
-    --yellow:#F5D134; --yellow-ink:#6B5300; --yellow-tint:#FCF3CF;
-    --yellow-off:#ECECEF; --yellow-off-ink:#A7A8B3;
+    --yellow:#FFFF00; --yellow-ink:#5A4E00; --yellow-tint:#FFFDE0;
+    --yellow-off:#EDE7D6; --yellow-off-ink:#A79F86;
     --indigo:#2F3FA8; --indigo-soft:#6670C4;
     --ink:#232A45; --muted:#7C8093; --faint:#A6A9B8;
-    --paper:#FAFAFB; --surface:#FFFFFF; --line:#E4E5EE;
+    --paper:#F5F0E6; --surface:#FFFFFF; --line:#E8E0D0;
     --danger:#B3261E; --danger-tint:#FBEAEA;
     --radius:10px;
   }
@@ -49,14 +49,19 @@
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
     height:50px;padding:0 18px;border-radius:12px;
     font-size:14px;font-weight:500;cursor:pointer;border:1px solid transparent;
-    transition:transform .08s ease;position:relative;z-index:1;
+    transition:transform .08s ease, background .15s ease, border-color .15s ease, opacity .15s ease;
+    position:relative;z-index:1;
   }
   .btn:active{transform:scale(0.98);}
   .btn-primary{background:var(--yellow);color:var(--yellow-ink);}
-  .btn-primary:hover{background:#D9A400;}
+  .btn-primary:hover{background:#E6E600;}
   .btn-primary:disabled{background:var(--yellow-off);color:var(--yellow-off-ink);cursor:not-allowed;}
   .btn-outline{background:var(--surface);border:1px solid var(--line);color:var(--ink);}
   .btn-outline:hover{border-color:var(--indigo);}
+  .btn-danger{background:var(--danger);color:#fff;}
+  .btn-danger:hover{background:#8f1f19;}
+  .btn-icon{width:36px;height:36px;padding:0;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);}
+  .btn-icon:hover{border-color:var(--indigo);color:var(--indigo);}
   .btn-block{width:100%;}
   .btn-sm{height:38px;padding:0 12px;font-size:13px;border-radius:10px;}
 
@@ -91,6 +96,8 @@
   @media (max-width:480px){ .auth-card{padding:24px 20px;} }
   .auth-brand-mini{text-align:center;margin-bottom:24px;}
   .auth-brand-mini .brand-word{font-size:25px;font-weight:600;margin:0;}
+  .brand-lockup{display:inline-flex;align-items:center;gap:7px;}
+  .brand-mark{color:var(--indigo);flex-shrink:0;}
   .auth-brand-mini .slogan{font-size:14px;color:var(--muted);margin:3px 0 0;}
   .auth-forgot-center{text-align:right;font-size:13px;}
   .auth-forgot-center a{color:var(--indigo);text-decoration:none;font-weight:500;}
@@ -206,7 +213,8 @@
   .doc-info{flex:1;min-width:0;}
   .doc-name{font-size:14px;font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .doc-meta{font-size:12px;color:var(--faint);}
-  .doc-menu-btn{background:none;border:none;cursor:pointer;color:var(--faint);font-size:16px;padding:4px;flex-shrink:0;}
+  .doc-menu-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;color:var(--faint);font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .15s ease,color .15s ease;}
+  .doc-menu-btn:hover{border-color:var(--indigo);color:var(--indigo);}
   .doc-menu{
     position:absolute;top:42px;right:10px;background:var(--surface);border:1px solid var(--line);
     border-radius:8px;box-shadow:0 4px 14px rgba(35,42,69,.08);z-index:5;min-width:140px;overflow:hidden;
@@ -322,10 +330,10 @@
   .res-alert.danger{background:var(--danger-tint);color:var(--danger);}
 
   .result-content{
-    background:var(--surface);border:1px solid var(--line);border-radius:16px;
-    padding:22px 20px;font-size:16px;line-height:1.7;color:var(--ink);
+    padding:6px 0 0;font-size:16px;line-height:1.7;color:var(--ink);
+    animation:fadeIn .35s ease;
   }
-  @media (min-width:768px){ .result-content{padding:32px;} }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
   .result-content h3{margin:0 0 10px;font-size:19px;font-weight:600;color:var(--indigo);}
   .result-content h4{margin:20px 0 8px;font-size:15px;font-weight:600;color:var(--ink);}
   .result-content p{margin:0 0 18px;}
@@ -337,11 +345,10 @@
     padding:12px 14px;font-size:13.5px;color:var(--ink);font-style:italic;margin-top:6px;
   }
   .result-content .demo-tag{display:inline-block;font-size:10.5px;color:var(--faint);margin-top:18px;padding-top:12px;border-top:1px solid var(--line);}
-  .result-content.res-compact{padding:18px 18px;font-size:15px;}
+  .result-content.res-compact{padding-top:2px;font-size:15px;}
   .result-content.res-compact h3{font-size:17px;margin-bottom:8px;}
   .result-content.res-compact h4{margin:14px 0 6px;}
-  .result-content.res-spacious{padding:26px 20px;}
-  @media (min-width:768px){ .result-content.res-spacious{padding:36px;} }
+  .result-content.res-spacious{padding-top:6px;}
   .result-content.res-spacious h4{margin:28px 0 10px;}
   .cite-inline{font-size:0.86em;color:var(--muted);}
   .cite-ref{color:var(--indigo);font-weight:600;cursor:pointer;text-decoration:underline;}
@@ -473,6 +480,7 @@
   .rename-foot button{height:40px;padding:0 20px;border:none;border-radius:8px;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;}
   .rename-cancel{background:var(--yellow-off);color:var(--ink);}
   .rename-ok{background:var(--yellow);color:var(--yellow-ink);}
+  .rename-ok.danger{background:var(--danger);color:#fff;}
   .modal-box{background:var(--surface);border-radius:14px;padding:20px;width:100%;max-width:420px;}
   .modal-box h3{margin:0 0 12px;font-size:16px;color:var(--indigo);}
   .modal-box textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:inherit;font-size:13.5px;resize:vertical;}
@@ -485,9 +493,11 @@
   .viewer-box{background:var(--surface);border-radius:0;width:100%;max-width:none;height:100%;display:flex;flex-direction:column;overflow:hidden;}
   .viewer-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);}
   .viewer-head span{font-size:14px;font-weight:600;color:var(--indigo);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .viewer-head button{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1;padding:2px 6px;}
-  .viewer-body{flex:1;overflow:auto;padding:18px;background:var(--paper);}
-  .viewer-body canvas{max-width:100%;display:block;margin:0 auto;box-shadow:0 2px 10px rgba(0,0,0,.08);}
+  .viewer-head button{background:var(--surface);border:1px solid var(--line);border-radius:50%;width:34px;height:34px;font-size:19px;color:var(--muted);cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;transition:border-color .15s ease,color .15s ease;}
+  .viewer-head button:hover{border-color:var(--indigo);color:var(--indigo);}
+  .viewer-body{flex:1;overflow:auto;padding:0;background:#fff;}
+  .viewer-body canvas{width:100%;height:auto;display:block;}
+  .viewer-body .viewer-pad{padding:16px;}
   .viewer-controls{display:flex;align-items:center;justify-content:center;gap:14px;padding:12px;border-top:1px solid var(--line);}
   .viewer-pre{white-space:pre-wrap;font-size:13px;line-height:1.6;}
   .docx-view{font-size:14px;line-height:1.7;}
@@ -511,7 +521,7 @@
   <div class="bg-blob blob-indigo"></div>
   <div class="auth-card">
     <div class="auth-brand-mini">
-      <p class="brand-word">Docly</p>
+      <p class="brand-word brand-lockup"><svg class="brand-mark" width="1em" height="1em" viewBox="0 0 40 40" aria-hidden="true"><rect x="6" y="4" width="22" height="30" rx="5" fill="currentColor"/><path d="M13 13h11M13 19h11M13 25h7" stroke="var(--surface)" stroke-width="2" stroke-linecap="round"/><circle cx="30" cy="10" r="5" fill="#FFFF00"/></svg>Docly</p>
       <p class="slogan">Your documents. Finally understood.</p>
     </div>
     <div id="err-auth" class="error-msg" hidden></div>
@@ -578,7 +588,7 @@
     <button class="db-drawer-toggle" id="db-drawer-toggle" aria-label="Open menu">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></svg>
     </button>
-    <p class="brand-word">Docly</p>
+    <p class="brand-word brand-lockup"><svg class="brand-mark" width="1em" height="1em" viewBox="0 0 40 40" aria-hidden="true"><rect x="6" y="4" width="22" height="30" rx="5" fill="currentColor"/><path d="M13 13h11M13 19h11M13 25h7" stroke="var(--surface)" stroke-width="2" stroke-linecap="round"/><circle cx="30" cy="10" r="5" fill="#FFFF00"/></svg>Docly</p>
     <div class="db-topbar-icons">
       <div class="db-user">
         <button class="db-user-btn" id="db-user-btn">
@@ -686,7 +696,7 @@
   <div class="bg-blob blob-indigo"></div>
   <div class="wiz-topbar">
     <button class="wiz-back" id="wiz-back"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to dashboard</button>
-    <p class="brand-word">Docly</p>
+    <p class="brand-word brand-lockup"><svg class="brand-mark" width="1em" height="1em" viewBox="0 0 40 40" aria-hidden="true"><rect x="6" y="4" width="22" height="30" rx="5" fill="currentColor"/><path d="M13 13h11M13 19h11M13 25h7" stroke="var(--surface)" stroke-width="2" stroke-linecap="round"/><circle cx="30" cy="10" r="5" fill="#FFFF00"/></svg>Docly</p>
   </div>
   <div class="wiz-wrap">
     <div class="stepper">
@@ -749,7 +759,7 @@
 
 <!-- ============ RESULT SCREEN ============ -->
 <section id="screen-result" hidden>
-  <div class="app-topbar"><p class="brand-word">Docly</p></div>
+  <div class="app-topbar"><p class="brand-word brand-lockup"><svg class="brand-mark" width="1em" height="1em" viewBox="0 0 40 40" aria-hidden="true"><rect x="6" y="4" width="22" height="30" rx="5" fill="currentColor"/><path d="M13 13h11M13 19h11M13 25h7" stroke="var(--surface)" stroke-width="2" stroke-linecap="round"/><circle cx="30" cy="10" r="5" fill="#FFFF00"/></svg>Docly</p></div>
   <div class="res-wrap">
     <div class="res-top">
       <button class="res-back" id="res-back">&larr; Back to dashboard</button>
@@ -783,7 +793,7 @@
 
 <!-- ============ PUBLIC SHARED VIEW ============ -->
 <section id="screen-shared" hidden>
-  <div class="shared-topbar"><p class="brand-word">Docly</p></div>
+  <div class="shared-topbar"><p class="brand-word brand-lockup"><svg class="brand-mark" width="1em" height="1em" viewBox="0 0 40 40" aria-hidden="true"><rect x="6" y="4" width="22" height="30" rx="5" fill="currentColor"/><path d="M13 13h11M13 19h11M13 25h7" stroke="var(--surface)" stroke-width="2" stroke-linecap="round"/><circle cx="30" cy="10" r="5" fill="#FFFF00"/></svg>Docly</p></div>
   <div class="shared-wrap">
     <span class="shared-badge" id="shared-badge">Shared</span>
     <p class="res-filename" id="shared-title"></p>
@@ -1069,7 +1079,7 @@ function timeAgo(date){
 }
 function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
-const IC = {'trash': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>', 'export': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11l4 4 4-4M5 20h14"/></svg>', 'copy': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>', 'share': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.6M8.2 13.2l7.6 4.6"/></svg>'};
+const IC = {'trash': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>', 'export': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11l4 4 4-4M5 20h14"/></svg>', 'copy': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>', 'share': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.6M8.2 13.2l7.6 4.6"/></svg>', 'download': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>', 'rename': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/><path d="M13 7l3 3"/></svg>', 'note': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v13H6z"/><path d="M15 3v5h5M9 13h6M9 17h6"/></svg>'};
 function closeAllMenus(){ document.querySelectorAll(".doc-menu").forEach(m=>m.remove()); }
 document.addEventListener("click", closeAllMenus);
 
@@ -1078,9 +1088,9 @@ function openMenu(row, tab, item){
   menu.className = "doc-menu";
   const canRename = tab === "documents" || tab === "conversations";
   menu.innerHTML = `
-    ${canRename ? '<button data-act="rename">Rename</button>' : ""}
-    <button data-act="notes">${item.get("notes") ? "Edit note" : "Add note"}</button>
-    <button data-act="download">Download</button>
+    ${canRename ? `<button data-act="rename">${IC.rename}<span>Rename</span></button>` : ""}
+    <button data-act="notes">${IC.note}<span>${item.get("notes") ? "Edit note" : "Add note"}</span></button>
+    <button data-act="download">${IC.download}<span>Download</span></button>
     <button data-act="share">${IC.share}<span>Share</span></button>
     <button data-act="delete" class="danger">${IC.trash}<span>Delete</span></button>
   `;
@@ -1095,13 +1105,33 @@ function openMenu(row, tab, item){
     } else if(act === "notes"){
       openNotesModal(item, tab);
     } else if(act === "delete"){
-      if(confirm("Delete this item?")){ await item.destroy(); loadTab(tab); refreshPlanCount(); }
+      openConfirmModal("Delete", "Delete " + (item.get("fileName")||item.get("title")||"this item") + "? This can't be undone.", "Delete", async ()=>{ await item.destroy(); loadTab(tab); refreshPlanCount(); });
     } else if(act === "download"){
       downloadItem(tab, item);
     } else if(act === "share"){
       shareItem(tab, item);
     }
   };
+}
+
+function openConfirmModal(title, message, confirmLabel, onConfirm){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="rename-box" role="dialog" aria-label="${escapeHtml(title)}">
+      <div class="rename-head"><h3>${escapeHtml(title)}</h3><button class="rename-x" id="confirm-x" aria-label="Close">&times;</button></div>
+      <div class="rename-body"><p style="margin:0;font-size:13.5px;color:var(--ink);">${escapeHtml(message)}</p></div>
+      <div class="rename-foot">
+        <button class="rename-cancel" id="confirm-cancel">Cancel</button>
+        <button class="rename-ok danger" id="confirm-ok">${escapeHtml(confirmLabel)}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = ()=>overlay.remove();
+  overlay.onclick = (e)=>{ if(e.target === overlay) close(); };
+  document.getElementById("confirm-x").onclick = close;
+  document.getElementById("confirm-cancel").onclick = close;
+  document.getElementById("confirm-ok").onclick = async ()=>{ close(); await onConfirm(); };
 }
 
 function openRenameModal(onConfirm){
@@ -2282,16 +2312,16 @@ async function openDocumentViewer(doc, citation){
       viewerPdfPage = (citation && citation.page) ? Math.min(citation.page, viewerPdfDoc.numPages) : 1;
       await renderViewerPdfPage();
       controls.innerHTML = `
-        <button id="vw-prev" class="btn btn-outline btn-sm">&larr;</button>
+        <button id="vw-prev" class="btn btn-icon">&larr;</button>
         <span id="vw-pageinfo" style="font-size:13px;color:var(--muted);"></span>
-        <button id="vw-next" class="btn btn-outline btn-sm">&rarr;</button>`;
+        <button id="vw-next" class="btn btn-icon">&rarr;</button>`;
       document.getElementById("vw-prev").onclick = ()=>{ if(viewerPdfPage>1){ viewerPdfPage--; renderViewerPdfPage(); } };
       document.getElementById("vw-next").onclick = ()=>{ if(viewerPdfPage<viewerPdfDoc.numPages){ viewerPdfPage++; renderViewerPdfPage(); } };
     } else if(fileType === "xlsx" || fileType === "xls"){
       const wb = XLSX.read(buf, {type:"array"});
       const ws = wb.Sheets[wb.SheetNames[0]];
       const aoa = XLSX.utils.sheet_to_json(ws, {header:1});
-      let html = "<div class='res-table-wrap'><table class='res-table'>";
+      let html = "<div class='viewer-pad'><div class='res-table-wrap'><table class='res-table'>";
       aoa.forEach((row,ri)=>{
         html += "<tr>";
         row.forEach((cell,ci)=>{
@@ -2300,7 +2330,7 @@ async function openDocumentViewer(doc, citation){
         });
         html += "</tr>";
       });
-      html += "</table></div>";
+      html += "</table></div></div>";
       body.innerHTML = html;
       if(citation && citation.cell){
         const cellRef = citation.cell.split("!").pop();
@@ -2309,17 +2339,17 @@ async function openDocumentViewer(doc, citation){
       }
     } else if(fileType === "docx"){
       const result = await mammoth.convertToHtml({arrayBuffer:buf});
-      body.innerHTML = `<div class="docx-view">${result.value}</div>`;
+      body.innerHTML = `<div class="docx-view viewer-pad">${result.value}</div>`;
       if(citation && citation.paragraph){
         const paras = body.querySelectorAll("p");
         const target = paras[citation.paragraph-1];
         if(target){ target.classList.add("para-highlight"); setTimeout(()=>target.scrollIntoView({block:"center", behavior:"smooth"}), 60); }
       }
     } else if(["png","jpg","jpeg","webp"].includes(fileType)){
-      body.innerHTML = `<img src="${file.url()}" style="max-width:100%;display:block;margin:0 auto;">`;
+      body.innerHTML = `<img src="${file.url()}" style="width:100%;display:block;">`;
     } else {
       const text = new TextDecoder().decode(buf);
-      body.innerHTML = `<pre class="viewer-pre">${escapeHtml(text)}</pre>`;
+      body.innerHTML = `<pre class="viewer-pre viewer-pad">${escapeHtml(text)}</pre>`;
     }
   }catch(err){
     body.innerHTML = `<p style="padding:20px;color:var(--danger);">Could not open this file: ${escapeHtml(err.message)}</p>`;
@@ -2327,11 +2357,16 @@ async function openDocumentViewer(doc, citation){
 }
 async function renderViewerPdfPage(){
   const page = await viewerPdfDoc.getPage(viewerPdfPage);
-  const viewport = page.getViewport({scale:1.3});
+  const body = document.getElementById("viewer-body");
+  const containerWidth = body.clientWidth || window.innerWidth;
+  const baseViewport = page.getViewport({scale:1});
+  const dpr = window.devicePixelRatio || 1;
+  const fitScale = (containerWidth / baseViewport.width) * dpr; // fills the screen edge-to-edge, sharp on high-DPI phones
+  const viewport = page.getViewport({scale:fitScale});
   const canvas = document.createElement("canvas");
   canvas.width = viewport.width; canvas.height = viewport.height;
+  canvas.style.width = "100%";
   await page.render({canvasContext:canvas.getContext("2d"), viewport}).promise;
-  const body = document.getElementById("viewer-body");
   body.innerHTML = "";
   body.appendChild(canvas);
   const info = document.getElementById("vw-pageinfo");
