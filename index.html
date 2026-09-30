@@ -28,7 +28,7 @@
     --radius:10px;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;overscroll-behavior:none;}
   body{
     font-family:'IBM Plex Sans', sans-serif;
     color:var(--ink);
@@ -89,9 +89,9 @@
   }
 
   /* ---------- AUTH SCREEN ---------- */
-  #screen-auth{min-height:100vh;position:relative;overflow:hidden;background:var(--surface);}
+  #screen-auth{height:100vh;height:100dvh;position:relative;overflow:hidden;background:var(--surface);display:flex;flex-direction:column;}
   .auth-hero{
-    position:relative;height:250px;background:var(--indigo);overflow:hidden;
+    position:relative;flex:0 0 auto;height:clamp(150px,27dvh,250px);background:var(--indigo);overflow:hidden;
     border-radius:0 64px 0 min(48vw,230px);display:flex;flex-direction:column;align-items:center;justify-content:center;
     padding-bottom:14px;
   }
@@ -101,7 +101,12 @@
   .auth-hero .brand-word{color:#fff;font-size:26px;font-weight:600;margin:0;}
   .auth-hero .slogan{font-size:13px;color:rgba(255,255,255,.85);margin:4px 0 0;padding:0 16px;}
   .auth-corner{position:absolute;left:-60px;bottom:-60px;width:140px;height:140px;border-radius:50%;background:var(--yellow);pointer-events:none;}
-  .auth-card{width:100%;max-width:420px;margin:0 auto;padding:26px 24px 40px;position:relative;z-index:1;}
+  .auth-card{width:100%;max-width:420px;margin:0 auto;padding:clamp(14px,3dvh,32px) 28px clamp(14px,3dvh,32px);position:relative;z-index:1;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:clamp(10px,2.4dvh,22px);}
+  #pane-login:not([hidden]),#pane-signup:not([hidden]){display:flex;flex-direction:column;gap:clamp(12px,2.6dvh,24px);}
+  #screen-auth form{display:flex;flex-direction:column;gap:clamp(12px,2.4dvh,22px);}
+  #screen-auth .field{margin:0;}
+  #screen-auth .auth-welcome{margin:0;}
+  #screen-auth .checkrow{margin:0;}
   .auth-welcome{text-align:center;margin-bottom:20px;}
   .auth-welcome h1{font-size:28px;font-weight:600;margin:0;}
   .auth-welcome p{font-size:13.5px;color:var(--muted);margin:4px 0 0;}
@@ -158,7 +163,7 @@
   }
   .db-tab.active{border-bottom-color:var(--indigo);color:var(--indigo);font-weight:600;}
 
-  #screen-dashboard{display:flex;min-height:100vh;flex-direction:column;}
+  #screen-dashboard{display:flex;height:100vh;height:100dvh;flex-direction:column;overflow:hidden;}
   .db-body{display:flex;flex:1;min-height:0;}
   .db-sidebar{
     width:230px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);
@@ -187,7 +192,7 @@
   .db-plan .bar i{display:block;height:100%;width:40%;background:var(--indigo);}
   .db-plan a{color:var(--indigo);font-weight:600;text-decoration:none;font-size:12px;}
 
-  .db-main{flex:1;min-width:0;padding:24px 28px;}
+  .db-main{flex:1;min-width:0;padding:24px 28px;overflow-y:auto;overscroll-behavior:contain;}
   @media (max-width:640px){ .db-main{padding:18px 16px;} }
   .db-toolbar{display:flex;gap:12px;margin-bottom:18px;}
   @media (max-width:640px){ .db-toolbar{flex-direction:column;} }
@@ -262,7 +267,7 @@
   .empty-state p.sub{font-size:13px;color:var(--muted);margin:0 0 18px;line-height:1.5;}
 
   /* ---------- WIZARD ---------- */
-  #screen-wizard{min-height:100vh;padding:0 20px 24px;position:relative;overflow:hidden;border-bottom:3px solid transparent;}
+  #screen-wizard{height:100vh;height:100dvh;padding:0 20px 24px;position:relative;overflow:hidden;border-bottom:3px solid transparent;}
   .wiz-topbar{
     height:48px;display:flex;align-items:center;justify-content:center;position:relative;
     border-bottom:3px solid var(--yellow);margin:0 -20px 14px;padding:0 20px;
@@ -330,12 +335,23 @@
   .pill.selected svg{color:var(--yellow-ink);}
 
   .wiz-actions{display:flex;justify-content:space-between;gap:10px;margin-top:14px;}
+  #screen-wizard .wiz-wrap{display:flex;flex-direction:column;height:calc(100dvh - 62px);}
+  #screen-wizard .wiz-actions{margin-top:auto;padding-top:8px;flex-shrink:0;}
+  @media (max-height:820px){
+    #screen-wizard .wiz-topbar{height:42px;margin-bottom:8px;}
+    #screen-wizard .step-caption{margin-bottom:6px;}
+    #screen-wizard .dropzone{padding:8px 12px;gap:2px;}
+    #screen-wizard .wiz-section{margin-top:6px;}
+    #screen-wizard .wiz-section-sub{margin-bottom:5px;}
+    #screen-wizard .pill-row{gap:5px;}
+    #screen-wizard .pill{height:34px;font-size:12.5px;}
+  }
 
   /* ---------- RESULT SCREEN ---------- */
   .app-topbar{height:58px;display:flex;align-items:center;justify-content:center;border-bottom:3px solid var(--yellow);margin:0 -20px 22px;}
-  #screen-result{min-height:100vh;padding:0 20px 60px;}
+  #screen-result{height:100vh;height:100dvh;overflow-y:auto;overscroll-behavior:contain;padding:0 20px 60px;}
   .res-wrap{max-width:820px;margin:0 auto;}
-  .res-top{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+  .res-top{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;position:sticky;top:0;z-index:5;background:var(--paper);padding:12px 0 8px;}
   .res-back{background:none;border:none;color:var(--muted);font-size:14.5px;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;}
   .res-badge{font-size:11.5px;padding:5px 11px;border-radius:20px;background:var(--yellow-tint);color:var(--indigo);white-space:nowrap;font-weight:500;}
 
@@ -398,6 +414,10 @@
   table.res-table th{background:#ECE8FF;color:var(--indigo);text-align:left;padding:11px 14px;font-weight:600;white-space:nowrap;border-bottom:1px solid var(--line);}
   table.res-table td{padding:11px 14px;border-top:1px solid var(--line);white-space:nowrap;}
 
+  #screen-result .res-table-wrap{max-height:min(62dvh,560px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;}
+  #screen-result table.res-table{min-width:0;table-layout:auto;font-size:clamp(12px,2.7vw,13.5px);}
+  #screen-result table.res-table th,#screen-result table.res-table td{white-space:normal;overflow-wrap:anywhere;padding:9px 10px;vertical-align:top;}
+  #screen-result table.res-table th{position:sticky;top:0;z-index:1;}
   .slide-box{
     border:1px solid var(--line);border-radius:16px;aspect-ratio:16/9;padding:6%;
     display:flex;flex-direction:column;justify-content:center;gap:12px;background:var(--surface);
@@ -465,7 +485,7 @@
   .dsm-item.active::after{content:"✓";font-size:12px;}
 
   /* ---------- SHARED PUBLIC VIEW ---------- */
-  #screen-shared{min-height:100vh;padding:0 20px 60px;}
+  #screen-shared{height:100vh;height:100dvh;overflow-y:auto;overscroll-behavior:contain;padding:0 20px 60px;}
   .shared-topbar{height:60px;display:flex;align-items:center;justify-content:center;border-bottom:3px solid var(--yellow);margin:0 -20px 26px;}
   .shared-wrap{max-width:680px;margin:0 auto;}
   .shared-badge{font-size:11px;padding:4px 10px;border-radius:20px;background:var(--yellow-tint);color:var(--indigo);display:inline-block;margin-bottom:10px;}
@@ -1743,11 +1763,6 @@ function openResultScreen(kind, payload, sources){
   } else if(kind === "presentation"){
     box.innerHTML = `
       <div class="slide-box" id="slide-box"></div>
-      <div class="slide-nav">
-        <button id="slide-prev" aria-label="Previous">&larr;</button>
-        <span class="slide-counter" id="slide-counter"></span>
-        <button id="slide-next" aria-label="Next">&rarr;</button>
-      </div>
       ${citationsHtml(sources)}
     `;
     setupSlides(Array.isArray(payload) ? payload : []);
@@ -1870,42 +1885,51 @@ function setupQuiz(questions){
 }
 
 // ---- Flashcards ----
+let fcTimer = null;
 function setupFlashcards(cards){
   const box = document.getElementById("flash-box");
+  clearTimeout(fcTimer);
   if(!cards.length){ box.innerHTML = "<p>No flashcards were returned.</p>"; return; }
-  box.innerHTML = cards.map((c,i)=>`
-    <div class="flashcard" id="fc-${i}" data-flipped="0">
-      <div class="fc-face fc-front">${escapeHtml(c.front)}</div>
-      <div class="fc-face fc-back" hidden>${escapeHtml(c.back)}</div>
-      <span class="fc-hint">Tap to flip</span>
-    </div>`).join("");
-  cards.forEach((c,i)=>{
-    document.getElementById("fc-"+i).onclick = function(){
-      const flipped = this.dataset.flipped === "1";
-      this.querySelector(".fc-front").hidden = !flipped;
-      this.querySelector(".fc-back").hidden = flipped;
-      this.dataset.flipped = flipped ? "0" : "1";
+  let n = 0;
+  const show = ()=>{
+    if(!document.getElementById("flash-box")) return;
+    const c = cards[n];
+    box.innerHTML = `<div class="flashcard" id="fc-cur" data-flipped="0"><div class="fc-face fc-front">${escapeHtml(c.front)}</div><div class="fc-face fc-back" hidden>${escapeHtml(c.back)}</div><span class="fc-hint">Tap to flip</span></div>`;
+    document.getElementById("fc-cur").onclick = function(){
+      if(this.dataset.flipped === "1") return;
+      this.dataset.flipped = "1";
+      this.querySelector(".fc-front").hidden = true;
+      this.querySelector(".fc-back").hidden = false;
+      this.querySelector(".fc-hint").hidden = true;
+      clearTimeout(fcTimer);
+      fcTimer = setTimeout(()=>{ n = (n + 1) % cards.length; show(); }, 7000);
     };
-  });
+  };
+  show();
 }
 
 let slideIndex = 0;
 let currentSlides = [];
+let slideTimer = null;
 function setupSlides(slides){
   currentSlides = slides || [];
   slideIndex = 0;
+  clearInterval(slideTimer);
   renderSlide();
-  document.getElementById("slide-prev").onclick = ()=>{ slideIndex = Math.max(0, slideIndex-1); renderSlide(); };
-  document.getElementById("slide-next").onclick = ()=>{ slideIndex = Math.min(currentSlides.length-1, slideIndex+1); renderSlide(); };
+  if(currentSlides.length > 1){
+    slideTimer = setInterval(()=>{
+      if(!document.getElementById("slide-box")){ clearInterval(slideTimer); return; }
+      slideIndex = (slideIndex + 1) % currentSlides.length; renderSlide();
+    }, 15000);
+  }
 }
 function renderSlide(){
-  if(!currentSlides.length){ document.getElementById("slide-box").innerHTML = "<p>No slides were returned.</p>"; document.getElementById("slide-counter").textContent = "0 / 0"; return; }
+  const box = document.getElementById("slide-box");
+  if(!box) return;
+  if(!currentSlides.length){ box.innerHTML = "<p>No slides were returned.</p>"; return; }
   const s = currentSlides[slideIndex];
-  document.getElementById("slide-box").innerHTML = `<h3>${escapeHtml(s.title)}</h3><ul>${(s.bullets||[]).map(p=>`<li>${linkifyCitations(escapeHtml(p), activeSources)}</li>`).join("")}</ul>`;
+  box.innerHTML = `<h3>${escapeHtml(s.title)}</h3><ul>${(s.bullets||[]).map(p=>`<li>${linkifyCitations(escapeHtml(p), activeSources)}</li>`).join("")}</ul>`;
   wireCitationLinks(activeSources, activeDocs);
-  document.getElementById("slide-counter").textContent = (slideIndex+1) + " / " + currentSlides.length;
-  document.getElementById("slide-prev").disabled = slideIndex === 0;
-  document.getElementById("slide-next").disabled = slideIndex === currentSlides.length-1;
 }
 
 // ---- Chat (ask questions) ----
