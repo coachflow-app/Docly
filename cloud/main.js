@@ -42,15 +42,6 @@ const EXPECTED = {
     quiz: "Un questionnaire généré à partir des informations du résumé/document.",
     flashcards: "Des cartes question/réponse basées sur les informations importantes."
   },
-  "key-points": {
-    court: "Quelques points essentiels uniquement.",
-    detaille: "Une liste plus complète des principaux points du document.",
-    professionnel: "Points clés hiérarchisés et formulés pour une lecture professionnelle.",
-    tableau: "Points clés organisés en lignes et colonnes.",
-    presentation: "Les points clés transformés en diapositives.",
-    quiz: "Questions générées à partir des points clés.",
-    flashcards: "Chaque information importante transformée en carte question/réponse."
-  },
   "action-items": {
     court: "Les actions principales uniquement.",
     detaille: "Toutes les actions/prochaines étapes identifiées avec leur contexte.",
@@ -90,7 +81,6 @@ const EXPECTED = {
 
 const ACTION_SUBJECT = {
   summarize: "Résume fidèlement le document fourni.",
-  "key-points": "Travaille sur les points clés du document.",
   "action-items": "Travaille sur les actions ou prochaines étapes présentes dans le document.",
   analyze: "Analyse le contenu du document afin d'en faire ressortir les informations pertinentes.",
   extract: "Recherche et extrait les informations importantes (données, chiffres, clauses...) présentes dans le document.",
@@ -113,6 +103,10 @@ function buildInstructions(action, preset, fileType, mode) {
     presentation: "Réponds sous forme de diapositives (5 à 8 slides). Le champ 'content' doit être un tableau de slides, chaque slide étant {\"title\": \"...\", \"bullets\": [\"...\"]}.",
     quiz: "Génère un questionnaire de 5 questions à choix multiples. Le champ 'content' doit être un tableau de {\"question\": \"...\", \"options\": [\"...\"], \"correctIndex\": 0}.",
     flashcards: "Génère 8 cartes mémoire. Le champ 'content' doit être un tableau de {\"front\": \"question\", \"back\": \"réponse\"}.",
+    paragraphes: "Réponds comme un article ou un document professionnel aéré. Le champ 'content' est une chaîne : chaque section commence par une ligne '## Titre de section' (reprends les titres du document quand ils existent), suivie d'un ou plusieurs paragraphes rédigés naturellement, séparés par une ligne vide. INTERDIT : puces, listes, tirets en début de ligne, numérotation des titres ou des paragraphes.",
+    bullets: "Réponds en points clés concis. Le champ 'content' doit être un tableau d'objets {\"text\": \"idée courte\", \"sub\": [\"détail\", \"détail\"]} ('sub' peut être vide). Termine chaque 'text' et chaque élément de 'sub' par un marqueur [n].",
+    faq: "Réponds sous forme de FAQ de 6 à 10 questions. Le champ 'content' doit être un tableau d'objets {\"question\": \"...\", \"answer\": \"...\"}. Termine chaque 'answer' par un marqueur [n].",
+    plan: "Réponds sous forme de plan structuré du contenu. Le champ 'content' doit être un tableau d'objets {\"title\": \"...\", \"ref\": n, \"children\": [{\"title\": \"...\", \"ref\": n}]} où 'ref' est la position (à partir de 1) de la source correspondante dans 'sources'. N'ajoute pas de numérotation dans les titres.",
     "fiche-revision": "Réponds sous forme de fiche de révision structurée (titres, définitions, points clés). " + TEXT,
     rapport: "Réponds sous forme de rapport professionnel structuré (introduction, sections, conclusion). " + TEXT
   };
@@ -127,6 +121,10 @@ function buildInstructions(action, preset, fileType, mode) {
     const style = (EXPECTED.ask[preset]) || "Réponse claire basée sur le document.";
     let form = "Le champ 'content' est une chaîne de texte.";
     if (preset === "tableau") form = "Si pertinent, présente les informations sous forme de tableau markdown (lignes commençant par '|', avec une ligne d'en-tête et une ligne '|---|---|'). Le champ 'content' est une chaîne de texte.";
+    if (preset === "paragraphes") form = "Réponds en paragraphes rédigés, sans puces ni listes. Le champ 'content' est une chaîne de texte.";
+    if (preset === "bullets") form = "Réponds avec des lignes commençant par '- '. Le champ 'content' est une chaîne de texte.";
+    if (preset === "faq") form = "Structure la réponse en questions/réponses : chaque question sur une ligne '## Question' suivie de sa réponse. Le champ 'content' est une chaîne de texte.";
+    if (preset === "plan") form = "Structure la réponse en plan : lignes '## Titre' suivies de lignes '- ' pour les sous-points. Le champ 'content' est une chaîne de texte.";
     if (preset === "presentation") form = "Organise la réponse en sections façon diapositives : chaque section commence par une ligne '## Titre' suivie de lignes '- '. Le champ 'content' est une chaîne de texte.";
     return `${base}\n${subject}\nRésultat attendu : ${style}\n${form}\n${citationRule}\n${INLINE_CITATION_RULE}`;
   }
@@ -142,7 +140,10 @@ function buildInstructions(action, preset, fileType, mode) {
   const expected = EXPECTED[action] && EXPECTED[action][preset];
   const expectedLine = expected ? `Résultat attendu : ${expected}\n` : "";
   const shape = shapeByPreset[preset] || ("Réponds sous forme de texte clair et bien structuré. " + TEXT);
-  return `${base}\n${subject}\n${expectedLine}${shape}\n${citationRule}\n${INLINE_CITATION_RULE}\n${noMarkerRule}`;
+  const inlineRule = preset === "plan"
+    ? "Pour le plan, n'insère aucun marqueur [n] dans les titres : utilise uniquement le champ 'ref'."
+    : INLINE_CITATION_RULE;
+  return `${base}\n${subject}\n${expectedLine}${shape}\n${citationRule}\n${inlineRule}\n${noMarkerRule}`;
 }
 
 function buildCompareInstructions(fileTypes) {
@@ -205,7 +206,7 @@ Parse.Cloud.define("generateDocumentResult", async (request) => {
   const { text, action, preset, fileName, fileType, language, question, documents } = request.params;
 
   if (!action) {
-    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Action manquante (summarize, analyze, ask, extract, key-points, action-items, transform, compare).");
+    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Action manquante (summarize, analyze, ask, extract, action-items, transform, compare).");
   }
 
   const apiKey = process.env.GROQ_API_KEY;
