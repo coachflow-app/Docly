@@ -331,6 +331,8 @@
   .file-ready .progress i{display:block;height:100%;background:var(--indigo);width:0%;transition:width .2s;}
   .file-ready .remove{margin-left:auto;background:none;border:none;color:var(--faint);cursor:pointer;font-size:16px;}
 
+  #file-ready-wrap{min-height:74px;}
+  #screen-wizard.c2 #file-ready-wrap,#screen-wizard.c3 #file-ready-wrap{min-height:64px;}
   .wiz-section{margin-top:12px;}
   .wiz-section-head{display:flex;align-items:center;gap:8px;margin-bottom:2px;}
   .wiz-section-head .bar{width:3px;height:14px;background:var(--yellow);border-radius:2px;}
@@ -688,6 +690,28 @@
   #screen-auth .checkrow a{color:#A794FF;}
   #screen-auth .auth-switch a{color:#2EE6C5;}
   #screen-auth[data-mode="signup"] .auth-welcome h1{font-size:clamp(20px,3.6dvh,26px);}
+  /* --- nouveaux formats de résultat --- */
+  .res-article{max-width:760px;margin:0 auto;line-height:1.75;}
+  .res-article h4{font-size:17px;margin:28px 0 10px;}
+  .res-article h4:first-child{margin-top:0;}
+  .res-article p{margin:0 0 20px;overflow-wrap:anywhere;}
+  .bul-list{list-style:disc;margin:0 0 6px 20px;padding:0;}
+  .bul-list>li{margin-bottom:12px;overflow-wrap:anywhere;}
+  .bul-list ul{list-style:circle;margin:6px 0 0 18px;padding:0;color:var(--muted);}
+  .bul-list ul li{margin-bottom:4px;}
+  .faq-list{display:flex;flex-direction:column;gap:10px;}
+  .faq-item{border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  .faq-item summary{list-style:none;cursor:pointer;padding:12px 16px;min-height:48px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:12px;overflow-wrap:anywhere;}
+  .faq-item summary::-webkit-details-marker{display:none;}
+  .faq-item summary::after{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);flex-shrink:0;margin-right:4px;transition:transform .2s;}
+  .faq-item[open] summary::after{transform:rotate(-135deg);}
+  .faq-ans{padding:0 16px 16px;line-height:1.65;overflow-wrap:anywhere;}
+  .plan-list{display:flex;flex-direction:column;}
+  .plan-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);}
+  .plan-row .pt{min-width:0;overflow-wrap:anywhere;}
+  .plan-row.l1{font-weight:600;margin-top:6px;}
+  .plan-row.l2{padding-left:20px;font-weight:400;}
+  .plan-n{color:var(--muted);margin-right:8px;}
 </style>
 </head>
 <body>
@@ -898,7 +922,7 @@
         <div class="dz-formats">PDF · DOCX · XLSX · PPTX · TXT · EPUB · CSV · MD · Images</div>
         <input type="file" id="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.epub,.csv,.md,.png,.jpg,.jpeg,.webp">
       </div>
-      <div id="file-ready-wrap" hidden></div>
+      <div id="file-ready-wrap"></div>
 
       <div class="wiz-section">
         <div class="wiz-section-head"><span class="bar"></span><h2>What do you want to do?</h2></div>
@@ -909,7 +933,6 @@
           <button class="pill" data-value="ask"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16v10H8l-4 4V5z" stroke-linejoin="round"/></svg>Ask questions</button>
           <button class="pill" data-value="extract"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4v11M7 11l5 5 5-5M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg>Extract</button>
           <button class="pill" data-value="transform"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h13l-3-3M20 16H7l3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>Transform</button>
-          <button class="pill" data-value="keypoints"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5" cy="7" r="1.4" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="5" cy="17" r="1.4" fill="currentColor" stroke="none"/><path d="M9 7h11M9 12h11M9 17h11" stroke-linecap="round"/></svg>Key points</button>
           <button class="pill" data-value="actionitems"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="5" width="5" height="5" rx="1"/><path d="M6.3 7.3l.9.9 1.5-1.7" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="14" width="5" height="5" rx="1"/><path d="M12 7h9M12 16h9" stroke-linecap="round"/></svg>Action items</button>
         </div>
       </div>
@@ -921,6 +944,10 @@
           <button class="pill" data-value="short"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 9h8M8 13h5" stroke-linecap="round"/></svg>Short</button>
           <button class="pill" data-value="detailed"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 11h8M8 14h8M8 17h5" stroke-linecap="round"/></svg>Detailed</button>
           <button class="pill" data-value="professional"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="8" width="18" height="11" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Professional</button>
+          <button class="pill" data-value="paragraphs"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h14M5 10h14M5 14h14M5 18h9" stroke-linecap="round"/></svg>Paragraphs</button>
+          <button class="pill" data-value="bullets"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5" cy="7" r="1.4" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="5" cy="17" r="1.4" fill="currentColor" stroke="none"/><path d="M10 7h10M10 12h10M10 17h10" stroke-linecap="round"/></svg>Bullet points</button>
+          <button class="pill" data-value="faq"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.8-2 1.8-2 3.5" stroke-linecap="round"/></svg>FAQ</button>
+          <button class="pill" data-value="plan"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h14M9 12h10M9 18h10M5 12h1M5 18h1" stroke-linecap="round"/></svg>Plan</button>
           <button class="pill" data-value="table"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>Table</button>
           <button class="pill" data-value="presentation"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4" stroke-linecap="round"/></svg>Presentation</button>
           <button class="pill" data-value="quiz"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.8-2 1.8-2 3.5" stroke-linecap="round"/><circle cx="12" cy="16.3" r=".2" fill="currentColor"/></svg>Quiz</button>
@@ -1103,9 +1130,9 @@ document.addEventListener("click", (e)=>{
 // ---------------- Dashboard ----------------
 const TABS = {
   documents:{label:"All documents", cls:"Document"},
-  summaries:{label:"Summaries", cls:"Result", type:"résumé"},
+  summaries:{label:"Summaries", cls:"Result", types:["résumé","transformation"]},
   conversations:{label:"Conversations", cls:"Conversation"},
-  analyses:{label:"Analyses", cls:"Result", type:"analyse"},
+  analyses:{label:"Analyses", cls:"Result", types:["analyse","extraction","actions à réaliser"]},
   exports:{label:"Exports", cls:"Export"}
 };
 let currentTab = "documents";
@@ -1116,8 +1143,7 @@ function enterApp(){
   document.getElementById("db-email").textContent = user.get("email") || user.getUsername();
   document.getElementById("db-avatar").textContent = (user.get("email")||"?")[0].toUpperCase();
   showScreen("screen-dashboard");
-  loadTab("documents");
-  refreshPlanCount();
+  cleanupPendingDocs().then(()=>{ loadTab("documents"); refreshPlanCount(); });
   ensureNotificationPermission();
 }
 
@@ -1125,6 +1151,7 @@ async function refreshPlanCount(){
   try{
     const q = new Parse.Query("Document");
     q.equalTo("owner", Parse.User.current());
+    q.equalTo("status", "ready");
     const count = await q.count();
     document.getElementById("db-plan-count").textContent = Math.min(count,5) + " / 5";
     document.getElementById("db-plan-bar").style.width = Math.min(100, (count/5)*100) + "%";
@@ -1172,7 +1199,8 @@ async function loadTab(tab){
   try{
     const q = new Parse.Query(t.cls);
     q.equalTo("owner", Parse.User.current());
-    if(t.type) q.equalTo("type", t.type);
+    if(t.types) q.containedIn("type", t.types);
+    if(t.cls === "Document") q.equalTo("status", "ready");
     if(sortDesc) q.descending("createdAt"); else q.ascending("createdAt");
     q.limit(50);
     const results = await q.find();
@@ -1263,6 +1291,7 @@ function badgeText(tab, item){
 function displayName(tab, item){
   if(tab === "documents") return item.get("fileName") || "Untitled file";
   if(tab === "conversations") return item.get("title") || "Conversation";
+  if(item.get("title")) return item.get("title");
   if(tab === "exports") return "Export — " + (item.get("format")||"");
   return (item.get("type") || "Result") + " — " + (item.get("style")||"");
 }
@@ -1289,11 +1318,10 @@ document.addEventListener("click", closeAllMenus);
 function openMenu(row, tab, item){
   const menu = document.createElement("div");
   menu.className = "doc-menu";
-  const canRename = tab === "documents" || tab === "conversations";
+  const canRename = true;
   menu.innerHTML = `
     ${canRename ? `<button data-act="rename">${IC.rename}<span>Rename</span></button>` : ""}
     <button data-act="notes">${IC.note}<span>${item.get("notes") ? "Edit note" : "Add note"}</span></button>
-    <button data-act="download">${IC.download}<span>Download</span></button>
     <button data-act="share">${IC.share}<span>Share</span></button>
     <button data-act="delete" class="danger">${IC.trash}<span>Delete</span></button>
   `;
@@ -1304,13 +1332,11 @@ function openMenu(row, tab, item){
     if(!act) return;
     if(act === "rename"){
       const field = tab === "documents" ? "fileName" : "title";
-      openRenameModal(async (val)=>{ item.set(field, val); await item.save(); loadTab(tab); });
+      openRenameModal(async (val)=>{ item.set(field, val); await item.save(); loadTab(tab); }, displayName(tab, item));
     } else if(act === "notes"){
       openNotesModal(item, tab);
     } else if(act === "delete"){
       openConfirmModal("Delete", "Delete " + (item.get("fileName")||item.get("title")||"this item") + "? This can't be undone.", "Delete", async ()=>{ await item.destroy(); loadTab(tab); refreshPlanCount(); });
-    } else if(act === "download"){
-      downloadItem(tab, item);
     } else if(act === "share"){
       shareItem(tab, item);
     }
@@ -1337,7 +1363,7 @@ function openConfirmModal(title, message, confirmLabel, onConfirm){
   document.getElementById("confirm-ok").onclick = async ()=>{ close(); await onConfirm(); };
 }
 
-function openRenameModal(onConfirm){
+function openRenameModal(onConfirm, current){
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
   overlay.innerHTML = `
@@ -1361,7 +1387,8 @@ function openRenameModal(onConfirm){
   document.getElementById("rename-cancel").onclick = close;
   document.getElementById("rename-ok").onclick = confirmIt;
   input.onkeydown = (e)=>{ if(e.key === "Enter") confirmIt(); if(e.key === "Escape") close(); };
-  input.focus();
+  if(current){ input.value = current; }
+  input.focus(); input.select();
 }
 
 function openNotesModal(item, tab){
@@ -1492,7 +1519,32 @@ function openWizard(){
 }
 document.getElementById("wiz-back").onclick = backToDashboard;
 document.getElementById("btn-wiz-back-2").onclick = backToDashboard;
-function backToDashboard(){ showScreen("screen-dashboard"); loadTab(currentTab); }
+async function discardPendingDocument(){
+  const d = currentDocument;
+  if(d && d.get("status") !== "ready"){ currentDocument = null; try{ await d.destroy(); }catch(e){} }
+}
+function backToDashboard(){ discardPendingDocument(); showScreen("screen-dashboard"); loadTab(currentTab); refreshPlanCount(); }
+async function cleanupPendingDocs(){
+  try{
+    const q = new Parse.Query("Document");
+    q.equalTo("owner", Parse.User.current());
+    q.containedIn("status", ["pending","uploading"]);
+    q.limit(100);
+    const rows = await q.find();
+    if(rows.length) await Parse.Object.destroyAll(rows);
+  }catch(e){}
+}
+window.addEventListener("pagehide", ()=>{
+  try{
+    const d = currentDocument, u = Parse.User.current();
+    if(d && d.id && d.get("status") !== "ready" && u){
+      fetch(Parse.serverURL + "classes/Document/" + d.id, {
+        method:"DELETE", keepalive:true,
+        headers:{"X-Parse-Application-Id":Parse.applicationId,"X-Parse-Javascript-Key":Parse.javaScriptKey,"X-Parse-Session-Token":u.getSessionToken(),"Content-Type":"application/json"}
+      });
+    }
+  }catch(e){}
+});
 let resultBackTarget = "wizard";
 function backToWizardStep(){ showScreen("screen-wizard"); }
 
@@ -1500,7 +1552,7 @@ function resetWizard(){
   currentDocument = null; selectedAction = null; selectedResult = null;
   currentResultObject = null; currentConversation = null;
   document.getElementById("wiz-inputs").hidden = false;
-  document.getElementById("file-ready-wrap").hidden = true;
+  document.getElementById("file-ready-wrap").hidden = false;
   document.getElementById("file-ready-wrap").innerHTML = "";
   document.getElementById("file-input").value = "";
   document.querySelectorAll("#action-pills .pill, #result-pills .pill, #transform-pills .pill").forEach(p=>p.classList.remove("selected"));
@@ -1548,7 +1600,7 @@ async function handleFile(file){
   document.getElementById("file-remove").onclick = async ()=>{
     if(currentDocument){ try{ await currentDocument.destroy(); }catch(e){} }
     currentDocument = null;
-    wrap.hidden = true; wrap.innerHTML = "";
+    wrap.hidden = false; wrap.innerHTML = "";
     fileInput.value = "";
     updateStepper(); updateContinueState();
   };
@@ -1573,7 +1625,7 @@ async function handleFile(file){
       }
     });
     doc.set("fileUrl", parseFile);
-    doc.set("status", "ready");
+    doc.set("status", "pending");
     doc.set("uploadProgress", 100);
     await doc.save();
     currentDocument = doc;
@@ -1671,23 +1723,28 @@ const RESULT_PRESETS = {
   detailed:{lengths:"détaillé", style:"simple", format:"paragraphes"},
   professional:{lengths:"moyen", style:"professionnel", format:"paragraphes"},
   table:{lengths:"moyen", style:"professionnel", format:"tableau"},
-  presentation:{lengths:"moyen", style:"exécutif", format:"plan"},
+  presentation:{lengths:"moyen", style:"exécutif", format:"presentation"},
   quiz:{lengths:"moyen", style:"simple", format:"quiz"},
   flashcards:{lengths:"court", style:"simple", format:"flashcards"},
   studysheet:{lengths:"court", style:"simple", format:"plan"},
-  report:{lengths:"détaillé", style:"professionnel", format:"paragraphes"}
+  report:{lengths:"détaillé", style:"professionnel", format:"paragraphes"},
+  paragraphs:{lengths:"moyen", style:"simple", format:"paragraphes"},
+  bullets:{lengths:"moyen", style:"simple", format:"bullets"},
+  faq:{lengths:"moyen", style:"simple", format:"faq"},
+  plan:{lengths:"moyen", style:"simple", format:"plan"}
 };
-const TYPE_MAP = {summarize:"résumé", analyze:"analyse", extract:"extraction", transform:"transformation", ask:"conversation", keypoints:"points clés", actionitems:"actions à réaliser"};
+const TYPE_MAP = {summarize:"résumé", analyze:"analyse", extract:"extraction", transform:"transformation", ask:"conversation", actionitems:"actions à réaliser"};
 
 // Traduction des valeurs de l'interface vers les clés attendues par le Cloud Code (cloud/main.js)
 const ACTION_CLOUD_MAP = {
   summarize:"summarize", analyze:"analyze", extract:"extract", transform:"transform",
-  ask:"ask", keypoints:"key-points", actionitems:"action-items"
+  ask:"ask", actionitems:"action-items"
 };
 const PRESET_CLOUD_MAP = {
   short:"court", detailed:"detaille", professional:"professionnel", table:"tableau",
   presentation:"presentation", quiz:"quiz", flashcards:"flashcards",
-  studysheet:"fiche-revision", report:"rapport"
+  studysheet:"fiche-revision", report:"rapport",
+  paragraphs:"paragraphes", bullets:"bullets", faq:"faq", plan:"plan"
 };
 
 let currentConversation = null;
@@ -1776,6 +1833,7 @@ async function handleContinue(){
     if(selectedAction === "ask" && selectedResult !== "quiz"){
       // Chat: the chosen preset drives the style of every answer
       currentChatPreset = selectedResult;
+      currentDocument.set("status", "ready"); await currentDocument.save();
       const convo = new Parse.Object("Conversation");
       convo.set("document", currentDocument);
       convo.set("owner", Parse.User.current());
@@ -1801,6 +1859,7 @@ async function handleContinue(){
         language: "français"
       });
 
+      currentDocument.set("status", "ready"); await currentDocument.save();
       const result = new Parse.Object("Result");
       result.set("document", currentDocument);
       result.set("owner", Parse.User.current());
@@ -1814,6 +1873,7 @@ async function handleContinue(){
       await result.save();
       currentResultObject = result;
       openResultScreen(renderKind, aiResponse.content, aiResponse.sources || []);
+      refreshPlanCount();
       createNotification("Your " + (isQa ? "questions-réponses" : TYPE_MAP[selectedAction]) + " for \"" + currentDocument.get("fileName") + "\" is ready.");
     }
   }catch(err){
@@ -1824,7 +1884,8 @@ async function handleContinue(){
 
 const RESULT_BADGE = {
   short:"Short", detailed:"Detailed", professional:"Professional", table:"Table", presentation:"Presentation",
-  quiz:"Quiz", flashcards:"Flashcards", studysheet:"Study sheet", report:"Report"
+  quiz:"Quiz", flashcards:"Flashcards", studysheet:"Study sheet", report:"Report",
+  paragraphs:"Paragraphs", bullets:"Bullet points", faq:"FAQ", plan:"Plan"
 };
 
 function showResAlert(msg, danger){
@@ -1837,7 +1898,7 @@ function hideResAlert(){
 }
 
 // Kinds whose content is typically short → compact spacing; the rest get the spacious/sectioned layout
-const COMPACT_KINDS = new Set(["short","table","extract","quiz","flashcards","presentation","keypoints","actionitems"]);
+const COMPACT_KINDS = new Set(["short","table","extract","quiz","flashcards","presentation","bullets","plan","actionitems"]);
 
 function openResultScreen(kind, payload, sources){
   const doc = currentDocument;
@@ -1916,8 +1977,15 @@ function openResultScreen(kind, payload, sources){
   } else if(kind === "flashcards"){
     box.innerHTML = `<div id="flash-box"></div>${citationsHtml(sources)}`;
     setupFlashcards(Array.isArray(payload) ? payload : []);
-  } else if(kind === "keypoints"){
-    box.innerHTML = `<div class="result-content ${spacingClass}">${linkifyCitations(buildListContent(payload), sources)}</div>${citationsHtml(sources)}`;
+  } else if(kind === "paragraphs"){
+    const txt = typeof payload === "string" ? payload : (Array.isArray(payload) ? payload.join("\n\n") : JSON.stringify(payload || ""));
+    box.innerHTML = `<div class="result-content res-spacious res-article">${linkifyCitations(renderMarkdownLite(txt), sources)}</div>`;
+  } else if(kind === "bullets"){
+    box.innerHTML = `<div class="result-content res-compact">${renderBulletsHtml(payload, sources)}</div>`;
+  } else if(kind === "faq"){
+    box.innerHTML = `<div class="result-content res-compact">${renderFaqHtml(payload, sources)}</div>`;
+  } else if(kind === "plan"){
+    box.innerHTML = `<div class="result-content res-compact">${renderPlanHtml(payload, sources)}</div>`;
   } else if(kind === "actionitems"){
     box.innerHTML = `<div class="result-content ${spacingClass}">${linkifyCitations(buildListContent(payload, true), sources)}</div>${citationsHtml(sources)}`;
   } else if(kind === "studysheet"){
@@ -1927,11 +1995,47 @@ function openResultScreen(kind, payload, sources){
   } else {
     box.innerHTML = `<div class="result-content ${spacingClass}">${linkifyCitations(renderMarkdownLite(payload), sources)}</div>${citationsHtml(sources)}`;
   }
-  if(kind !== "chat" && !hasCitationMarkers(payload, sources)) box.insertAdjacentHTML("beforeend", fallbackSourcesHtml(sources));
+  if(kind !== "chat" && kind !== "plan" && !hasCitationMarkers(payload, sources)) box.insertAdjacentHTML("beforeend", fallbackSourcesHtml(sources));
   wireCitationLinks(sources, [doc]);
   actions.innerHTML = resultActionsHtml();
   wireResultActions();
   showScreen("screen-result");
+}
+
+
+// ---- New result formats: bullets / FAQ / plan ----
+function renderBulletsHtml(items, sources){
+  const list = Array.isArray(items) ? items : [];
+  if(!list.length) return "<p>No items were returned.</p>";
+  const txt = (x)=> typeof x === "string" ? x : ((x && x.text) || "");
+  return `<ul class="bul-list">${list.map(it=>{
+    const o = (typeof it === "string") ? {text: it} : (it || {});
+    const sub = Array.isArray(o.sub) && o.sub.length ? `<ul>${o.sub.map(s=>`<li>${linkifyCitations(escapeHtml(String(txt(s))), sources)}</li>`).join("")}</ul>` : "";
+    return `<li>${linkifyCitations(escapeHtml(String(o.text || "")), sources)}${sub}</li>`;
+  }).join("")}</ul>`;
+}
+function renderFaqHtml(items, sources){
+  const list = Array.isArray(items) ? items : [];
+  if(!list.length) return "<p>No questions were returned.</p>";
+  return `<div class="faq-list">${list.map((it,i)=>`<details class="faq-item"${i===0 ? " open" : ""}><summary>${escapeHtml(String(it.question || ""))}</summary><div class="faq-ans">${linkifyCitations(escapeHtml(String(it.answer || "")), sources)}</div></details>`).join("")}</div>`;
+}
+function planRefChip(ref, sources){
+  const n = Number(ref), s = sources && sources[n-1];
+  if(!s) return "";
+  const lbl = s.cell ? s.cell : (s.page ? "p. " + s.page : "[" + n + "]");
+  return `<button type="button" class="cite-ref" data-idx="${n-1}" aria-label="${escapeHtml(sourceLabel(s, true))}">${escapeHtml(lbl)}</button>`;
+}
+function renderPlanHtml(items, sources){
+  const list = Array.isArray(items) ? items : [];
+  if(!list.length) return "<p>No plan was returned.</p>";
+  let html = '<div class="plan-list">';
+  list.forEach((it,i)=>{
+    html += `<div class="plan-row l1"><span class="pt"><span class="plan-n">${i+1}.</span>${escapeHtml(String(it.title || ""))}</span>${planRefChip(it.ref, sources)}</div>`;
+    (Array.isArray(it.children) ? it.children : []).forEach((c,j)=>{
+      html += `<div class="plan-row l2"><span class="pt"><span class="plan-n">${i+1}.${j+1}</span>${escapeHtml(String(c.title || ""))}</span>${planRefChip(c.ref, sources)}</div>`;
+    });
+  });
+  return html + "</div>";
 }
 
 function buildListContent(items, asChecklist){
@@ -1982,7 +2086,12 @@ function resultActionsHtml(){
 }
 function currentDisplayedText(){
   const el = document.getElementById("res-content");
-  return el ? el.innerText.trim() : "";
+  if(!el) return "";
+  const ds = Array.from(el.querySelectorAll("details")), prev = ds.map(d=>d.open);
+  ds.forEach(d=>{ d.open = true; });
+  const t = el.innerText.trim();
+  ds.forEach((d,i)=>{ d.open = prev[i]; });
+  return t;
 }
 function wireResultActions(){
   document.getElementById("btn-copy").onclick = ()=>navigator.clipboard.writeText(currentDisplayedText());
@@ -2338,7 +2447,8 @@ function exportableRows(){
   if(k === "table" && p && p.headers) return {headers:p.headers, rows:p.rows};
   if(k === "extract" && Array.isArray(p)) return {headers:["Information","Valeur"], rows:p.map(r=>[r.label||"", r.value||""])};
   if(k === "qa" && Array.isArray(p)) return {headers:["Question","Réponse"], rows:p.map(r=>[r.question||"", r.answer||""])};
-  if((k === "keypoints" || k === "actionitems") && Array.isArray(p)) return {headers:["Item"], rows:p.map(x=>[String(x)])};
+  if(k === "faq" && Array.isArray(p)) return {headers:["Question","Réponse"], rows:p.map(r=>[r.question||"", r.answer||""])};
+  if(k === "actionitems" && Array.isArray(p)) return {headers:["Item"], rows:p.map(x=>[String(x)])};
   return null;
 }
 function exportableSlides(){
