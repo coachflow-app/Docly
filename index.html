@@ -406,7 +406,17 @@
   .result-content.res-spacious{padding-top:6px;}
   .result-content.res-spacious h4{margin:28px 0 10px;}
   .cite-inline{font-size:0.86em;color:var(--muted);}
-  .cite-ref{color:var(--indigo);font-weight:600;cursor:pointer;text-decoration:underline;}
+  .cite-ref{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 6px;margin:0 2px;border-radius:10px;border:none;background:var(--yellow-tint);color:var(--indigo);font:inherit;font-size:11.5px;font-weight:600;cursor:pointer;vertical-align:baseline;}
+  .cite-ref:hover{background:var(--indigo);color:#fff;}
+  .cite-pop{position:fixed;z-index:60;left:12px;right:12px;bottom:12px;background:var(--surface);border:1px solid var(--indigo);border-radius:16px;padding:14px 16px;box-shadow:0 10px 32px rgba(22,18,58,.28);}
+  .cite-pop[hidden]{display:none;}
+  .cite-pop .cp-t{font-size:11.5px;font-weight:600;color:var(--muted);margin:0 0 4px;text-transform:uppercase;letter-spacing:.04em;}
+  .cite-pop .cp-w{font-size:16px;font-weight:600;color:var(--ink);margin:0 0 6px;}
+  .cite-pop .cp-q{font-size:13px;color:var(--muted);margin:0 0 10px;background:var(--yellow-tint);border-radius:8px;padding:8px 10px;max-height:110px;overflow:auto;}
+  .cite-pop .cp-go{width:100%;height:44px;border:none;border-radius:12px;background:var(--yellow);color:var(--yellow-ink);font-weight:600;font-size:14px;cursor:pointer;}
+  .cite-pop .cp-x{position:absolute;top:8px;right:8px;width:34px;height:34px;border:none;background:none;font-size:20px;color:var(--muted);cursor:pointer;}
+  @media (min-width:1200px){ .cite-pop{left:auto;right:20px;top:130px;bottom:auto;width:290px;} }
+  .quiz-expl,.fc-src{font-size:12.5px;color:var(--muted);margin-top:8px;}
   .inline-sources{margin:14px 0 0;line-height:1.7;}
   .msg .res-table-wrap{margin:8px 0;overflow-x:auto;}
 
@@ -431,17 +441,18 @@
   table.res-table th{background:#ECE8FF;color:var(--indigo);text-align:left;padding:11px 14px;font-weight:600;white-space:nowrap;border-bottom:1px solid var(--line);}
   table.res-table td{padding:11px 14px;border-top:1px solid var(--line);white-space:nowrap;}
 
+  #screen-result{overflow-wrap:anywhere;}
+  #screen-result .quiz-opt,#screen-result .flashcard,#screen-result .fc-face,#screen-result .msg,#screen-result li,#screen-result p,#screen-result h3,#screen-result h4{overflow-wrap:anywhere;min-width:0;max-width:100%;}
+  #screen-result pre,#screen-result code{white-space:pre-wrap;overflow-wrap:anywhere;}
   #screen-result .res-table-wrap{max-height:min(62dvh,560px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;}
   #screen-result table.res-table{min-width:0;table-layout:auto;font-size:clamp(12px,2.7vw,13.5px);}
   #screen-result table.res-table th,#screen-result table.res-table td{white-space:normal;overflow-wrap:anywhere;padding:9px 10px;vertical-align:top;}
   #screen-result table.res-table th{position:sticky;top:0;z-index:1;}
-  .slide-box{
-    border:1px solid var(--line);border-radius:16px;aspect-ratio:16/9;padding:6%;
-    display:flex;flex-direction:column;justify-content:center;gap:12px;background:var(--surface);
-    max-width:640px;margin:0 auto;
-  }
-  .slide-box h3{margin:0;font-size:clamp(16px,3vw,22px);color:var(--indigo);}
-  .slide-box ul{margin:0;padding-left:18px;font-size:13px;color:var(--muted);line-height:1.7;}
+  .slide-box{position:relative;width:100%;max-width:760px;margin:0 auto;aspect-ratio:16/9;min-height:0;overflow:hidden;border-radius:16px;padding:6% 7%;display:flex;flex-direction:column;justify-content:center;gap:.7em;background:linear-gradient(135deg,var(--indigo) 0%,#3A22C4 100%);color:#fff;font-size:16px;box-shadow:0 6px 24px rgba(91,61,245,.25);}
+  .slide-box::after{content:"";position:absolute;right:-7%;bottom:-16%;width:30%;aspect-ratio:1;border-radius:50%;background:var(--yellow);opacity:.9;pointer-events:none;}
+  .slide-box h3{margin:0;font-size:1.5em;line-height:1.2;color:#fff;position:relative;z-index:1;}
+  .slide-box ul{margin:0;padding-left:1.1em;font-size:1em;line-height:1.5;color:rgba(255,255,255,.94);position:relative;z-index:1;}
+  .slide-box .cite-ref{background:rgba(255,255,255,.22);color:#fff;}
   .slide-nav{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:16px;}
   .slide-nav button{background:none;border:1px solid var(--line);border-radius:50%;width:34px;height:34px;cursor:pointer;color:var(--ink);display:flex;align-items:center;justify-content:center;}
   .slide-nav button:disabled{opacity:.4;cursor:not-allowed;}
@@ -513,7 +524,6 @@
   .shared-cta p{margin:0 0 12px;font-size:13px;color:var(--muted);}
 
   @media (max-width:600px){
-    .slide-box{padding:8%;}
     .chat-wrap{height:70vh;max-height:480px;}
   }
 
@@ -1581,7 +1591,7 @@ function sourceLabel(s, withDoc){
   return where;
 }
 function inlineCite(s, idx){
-  return `<span class="cite-inline">(${escapeHtml(sourceLabel(s, true))} — <a class="cite-ref" data-idx="${idx}" role="button" tabindex="0">view in documents</a>)</span>`;
+  return `<button type="button" class="cite-ref" data-idx="${idx}" aria-label="${escapeHtml(sourceLabel(s, true))}">[${idx+1}]</button>`;
 }
 // Replaces literal "[n]" markers left by the AI with the inline citation above
 function linkifyCitations(html, sources){
@@ -1827,9 +1837,7 @@ function wireCitationLinks(sources, docs){
     const targetDoc = (s.docName ? activeDocs.find(d=>d.get("fileName") === s.docName) : activeDocs[0]) || activeDocs[0];
     if(targetDoc) openDocumentViewer(targetDoc, s);
   };
-  document.querySelectorAll("#res-content .cite-ref").forEach(a=>{
-    a.onclick = (e)=>{ e.preventDefault(); openSource(Number(a.dataset.idx)); };
-  });
+  window.openCitedSource = openSource;
 }
 
 function setResBack(mode){
@@ -1878,6 +1886,7 @@ document.addEventListener("click", (e)=>{
 });
 
 // ---- Quiz ----
+function srcChips(n){ return (activeSources || []).slice(0, n || 3).map((s,i)=>inlineCite(s,i)).join(" "); }
 function setupQuiz(questions){
   const box = document.getElementById("quiz-box");
   if(!questions.length){ box.innerHTML = "<p>No quiz questions were returned.</p>"; return; }
@@ -1902,6 +1911,11 @@ function setupQuiz(questions){
       });
       if(picked === item.correctIndex) correct++;
     });
+    box.querySelectorAll(".quiz-expl").forEach(e=>e.remove());
+    box.querySelectorAll(".quiz-q").forEach((q,qi)=>{
+      const it = questions[qi]; const chips = srcChips(3);
+      q.insertAdjacentHTML("beforeend", `<div class="quiz-expl">Explain — correct answer: <b>${escapeHtml(it.options[it.correctIndex] || "")}</b>${chips ? " · Sources " + chips : ""}</div>`);
+    });
     document.getElementById("quiz-score").textContent = "Score: " + correct + " / " + questions.length;
   };
 }
@@ -1923,6 +1937,8 @@ function setupFlashcards(cards){
       this.querySelector(".fc-front").hidden = true;
       this.querySelector(".fc-back").hidden = false;
       this.querySelector(".fc-hint").hidden = true;
+      const chips = srcChips(3);
+      if(chips && !box.querySelector(".fc-src")) box.insertAdjacentHTML("beforeend", `<div class="fc-src">Explain — sources ${chips}</div>`);
       clearTimeout(fcTimer);
       fcTimer = setTimeout(()=>{ n = (n + 1) % cards.length; show(); }, 7000);
     };
@@ -1952,9 +1968,17 @@ function renderSlide(){
   const s = currentSlides[slideIndex];
   box.innerHTML = `<h3>${escapeHtml(s.title)}</h3><ul>${(s.bullets||[]).map(p=>`<li>${linkifyCitations(escapeHtml(p), activeSources)}</li>`).join("")}</ul>`;
   wireCitationLinks(activeSources, activeDocs);
+  fitSlide(box);
 }
+function fitSlide(box){
+  let fs = Math.max(11, Math.min(24, box.clientWidth / 21)), n = 0;
+  box.style.fontSize = fs + "px";
+  while(box.scrollHeight > box.clientHeight + 1 && fs > 9 && n < 40){ fs -= 0.5; box.style.fontSize = fs + "px"; n++; }
+}
+window.addEventListener("resize", ()=>{ const b = document.getElementById("slide-box"); if(b) fitSlide(b); });
 
 // ---- Chat (ask questions) ----
+let lastChatMessages = [];
 function renderChatMessages(messages){
   const wrap = document.getElementById("chat-messages");
   if(!messages.length){
@@ -1969,12 +1993,7 @@ function renderChatMessages(messages){
     if(srcs.length && !hasCitationMarkers(raw, srcs)) html += fallbackSourcesHtml(srcs);
     return `<div class="msg assistant" data-i="${i}">${html}</div>`;
   }).join("");
-  wrap.querySelectorAll(".msg.assistant[data-i]").forEach(el=>{
-    const srcs = messages[Number(el.dataset.i)].get("sources") || [];
-    el.querySelectorAll(".cite-ref").forEach(a=>{
-      a.onclick = ()=>{ const src = srcs[Number(a.dataset.idx)]; if(src && currentDocument) openDocumentViewer(currentDocument, src); };
-    });
-  });
+  lastChatMessages = messages;
   wrap.scrollTop = wrap.scrollHeight;
 }
 async function sendChatMessage(){
@@ -2483,6 +2502,33 @@ async function renderViewerPdfPage(){
   } else {
     showScreen("screen-auth");
   }
+})();
+</script>
+<div class="cite-pop" id="cite-pop" hidden></div>
+<script>
+(function(){
+  let cur = null;
+  const pop = document.getElementById("cite-pop");
+  function where(s){ if(s.cell) return "Cellule " + s.cell; if(s.page) return "Page " + s.page + (s.paragraph ? " · Paragraphe " + s.paragraph : ""); if(s.paragraph) return "Paragraphe " + s.paragraph; return "Source"; }
+  function esc(t){ return String(t).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+  document.addEventListener("click", (e)=>{
+    const chip = e.target.closest(".cite-ref");
+    if(chip){
+      e.preventDefault();
+      const idx = Number(chip.dataset.idx), msg = chip.closest(".msg.assistant[data-i]");
+      let src, doc = null;
+      if(msg && lastChatMessages[Number(msg.dataset.i)]){ src = (lastChatMessages[Number(msg.dataset.i)].get("sources") || [])[idx]; doc = currentDocument; }
+      else { src = activeSources[idx]; doc = (src && src.docName ? activeDocs.find(d=>d.get("fileName") === src.docName) : null) || activeDocs[0]; }
+      if(!src) return;
+      cur = {src, doc};
+      const q = src.text || src.quote || src.snippet || "";
+      pop.innerHTML = `<button class="cp-x" aria-label="Close">×</button><p class="cp-t">Source du document</p><p class="cp-w">${esc(where(src))}</p>${q ? `<p class="cp-q">${esc(String(q).slice(0,260))}</p>` : ""}<button class="cp-go" id="cp-go">Voir dans le document →</button>`;
+      pop.hidden = false; return;
+    }
+    if(e.target.closest(".cp-x")){ pop.hidden = true; return; }
+    if(e.target.closest("#cp-go")){ pop.hidden = true; if(cur && cur.doc) openDocumentViewer(cur.doc, cur.src); return; }
+    if(!pop.hidden && !e.target.closest("#cite-pop") && window.innerWidth < 1200) pop.hidden = true;
+  });
 })();
 </script>
 </body>
