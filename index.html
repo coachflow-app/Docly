@@ -588,20 +588,102 @@
   .compare-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
   .compare-card-name{font-size:13.5px;font-weight:600;color:var(--ink);overflow-wrap:anywhere;}
   .compare-card-excerpt{font-size:12.5px;color:var(--muted);line-height:1.5;margin:0;}
+
+  /* ================= OCEAN THEME — bleu, verre dépoli ================= */
+  :root{
+    --yellow:#0A8CFF; --yellow-ink:#FFFFFF; --yellow-tint:rgba(255,255,255,.20);
+    --yellow-off:rgba(255,255,255,.16); --yellow-off-ink:rgba(255,255,255,.55);
+    --indigo:#FFFFFF; --indigo-soft:#CDE2FF;
+    --ink:#FFFFFF; --muted:#CDE2FF; --faint:#9DBEF2;
+    --paper:transparent; --surface:rgba(255,255,255,.14); --line:rgba(255,255,255,.30);
+    --cta:linear-gradient(90deg,#00C6FF 0%,#0072FF 100%);
+  }
+  html{min-height:100%;background:#0E58EE;}
+  body{background:linear-gradient(160deg,#20A0FF 0%,#0E58EE 50%,#0826A8 100%) fixed;color:#fff;min-height:100vh;}
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 800' preserveAspectRatio='xMidYMid slice'%3E%3Cg fill='white'%3E%3Crect x='250' y='20' width='170' height='170' transform='rotate(45 335 105)' fill-opacity='.09'/%3E%3Crect x='-40' y='300' width='150' height='150' transform='rotate(45 35 375)' fill-opacity='.07'/%3E%3Crect x='230' y='560' width='190' height='190' transform='rotate(45 325 655)' fill-opacity='.10'/%3E%3Crect x='20' y='60' width='90' height='90' transform='rotate(45 65 105)' fill-opacity='.06'/%3E%3C/g%3E%3C/svg%3E") center/cover no-repeat;}
+  .bg-blob{display:none !important;}
+  input::placeholder{color:rgba(255,255,255,.7);opacity:1;}
+  .db-sort-menu,.db-filter-menu,.db-user-menu,.doc-menu,.db-notif-menu,.cite-pop,.modal-box,.rename-box,.viewer-box,#res-content,#pane-login form{
+    --ink:#0B1F6B; --muted:#5A6FA8; --faint:#8CA0D0; --line:#D5E0F7; --surface:#FFFFFF; --paper:#F2F6FF;
+    --indigo:#0A55E0; --yellow-tint:#E4EEFF; --yellow-off:#E4EAF7; --yellow-off-ink:#8CA0D0; color:#0B1F6B;
+  }
+  .db-sort-menu input::placeholder,.db-filter-menu input::placeholder,.modal-box input::placeholder,.rename-box input::placeholder,#pane-login input::placeholder{color:#7F93C4;}
+  .db-sort-menu,.db-filter-menu,.db-user-menu,.doc-menu,.db-notif-menu,.cite-pop,.modal-box,.rename-box{background:#fff;}
+  .btn-primary{background:var(--cta);border-color:transparent;color:#fff;box-shadow:0 6px 18px rgba(0,160,255,.35);}
+  .btn-primary:hover{background:var(--cta);filter:brightness(1.07);}
+  .btn-primary:disabled{background:var(--yellow-off);color:var(--yellow-off-ink);box-shadow:none;}
+  .db-topbar,.db-search,.db-sort,.db-filter-btn,.doc-row,.pill,.dropzone,.file-ready,.compare-card,.btn-outline,.btn-icon,.step-circle,.db-bell,.db-drawer-toggle,.db-sidebar,.res-top{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-color:rgba(255,255,255,.32);}
+  .db-topbar{background:rgba(255,255,255,.12);border-bottom:1px solid rgba(255,255,255,.25);}
+  .db-sidebar{background:rgba(8,38,168,.90);}
+  .nav-item:hover,.db-user-menu button:hover{background:rgba(255,255,255,.14);}
+  .db-user-menu button:hover,.doc-menu button:hover{background:#EEF3FF;}
+  .pill.selected{background:var(--cta);border-color:transparent;color:#fff;}
+  .pill.selected svg{color:#fff;} .pill svg{color:#CDE2FF;}
+  .step-circle.done{background:#fff;border-color:#fff;color:#0A55E0;}
+  .step-line.done,.step-line.on{background:#fff;}
+  .res-top{background:rgba(10,50,180,.55);}
+  .btn-outline:hover,.btn-icon:hover{background:rgba(255,255,255,.24);border-color:#fff;color:#fff;}
+  .error-msg{background:rgba(255,255,255,.94);color:#B3261E;border-radius:12px;}
+  .logo-sm{background-color:#fff;background-origin:content-box;background-clip:padding-box;padding:5px 12px;border-radius:999px;box-sizing:content-box;width:74px;height:26px;box-shadow:0 2px 10px rgba(0,30,120,.25);}
+  .logo-sm.lg{width:96px;height:34px;padding:7px 16px;}
+  .db-topbar .logo-sm{background-position:center;}
+  .wiz-topbar .logo-sm{width:62px;height:22px;padding:4px 10px;}
+  #res-content{background:rgba(255,255,255,.95);border-radius:22px;padding:18px;color:#0B1F6B;}
+  #res-content:has(.slide-box){background:none;padding:0;color:#fff;}
+  .res-back.btn-round-back{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.35);}
+  .btn-round-back{width:54px;height:54px;font-size:10px;}
+  .res-actions-primary .btn-outline,.btn-ghost-nav{color:#fff;}
+  .sel-ic select{border-radius:12px;}
+  /* --- connexion --- */
+  #screen-auth{background:none;}
+  .auth-hero{height:auto;background:none;border-radius:0;overflow:visible;display:block;padding:clamp(14px,3dvh,28px) 22px 0;}
+  .auth-hero::after,.auth-corner{display:none;}
+  .auth-hero-in{text-align:left;}
+  .auth-card{max-width:420px;padding:clamp(8px,2dvh,20px) 22px clamp(10px,2dvh,22px);justify-content:flex-start;gap:clamp(8px,1.8dvh,16px);}
+  .auth-welcome{text-align:left;}
+  .auth-welcome h1{font-size:clamp(26px,5.2dvh,36px);line-height:1.1;color:#fff;}
+  #screen-auth[data-mode="login"] .auth-welcome h1{max-width:8ch;}
+  #screen-auth[data-mode="signup"] .auth-welcome,#screen-auth[data-mode="signup"] .auth-welcome h1{text-align:center;max-width:none;}
+  .auth-welcome p{color:rgba(255,255,255,.85) !important;font-size:13px;}
+  #pane-login form{background:rgba(255,255,255,.90);border-radius:28px;padding:clamp(14px,2.6dvh,24px) 22px;display:flex;flex-direction:column;gap:clamp(6px,1.6dvh,14px);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,30,120,.25);}
+  #screen-auth .field label{color:var(--muted) !important;margin-left:0;font-weight:600;}
+  #screen-auth .field input{background:transparent;border:none;border-bottom:1.5px solid var(--line);border-radius:0;height:40px;padding-left:30px !important;color:var(--ink);}
+  #pane-signup .field input{border-bottom-color:rgba(255,255,255,.7);}
+  #screen-auth .field input:focus{outline:none;background:transparent;border-bottom-color:#0A8CFF;}
+  #pane-signup .field input:focus{border-bottom-color:#fff;}
+  #screen-auth .field-input-wrap .fic{left:2px;color:var(--indigo);}
+  #screen-auth .toggle-pass{color:var(--indigo);}
+  #screen-auth .checkrow,#screen-auth .checkrow label{color:var(--muted);}
+  #screen-auth .checkrow a{color:#0A55E0;font-weight:600;}
+  #screen-auth .auth-switch{color:#fff;text-align:center;border:none;margin-top:6px;}
+  #screen-auth .auth-switch a{color:#fff;font-weight:700;text-decoration:underline;}
+  #screen-auth .btn-block{border-radius:999px;}
+  /* --- import : barre du bas réservée, rien n'est caché --- */
+  #screen-wizard:not([hidden]){display:flex;flex-direction:column;}
+  #screen-wizard .wiz-wrap{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;padding-bottom:0;}
+  #screen-wizard #wiz-inputs{flex:1;min-height:0;display:flex;flex-direction:column;}
+  #screen-wizard .wiz-body{flex:1;min-height:0;overflow:hidden;}
+  #screen-wizard .wiz-actions{position:static;transform:none;width:100%;max-width:none;margin:0;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:10px 0 calc(12px + env(safe-area-inset-bottom,0px));}
+  #screen-wizard.c1 .pill{height:32px;} #screen-wizard.c1 .pill-row{gap:6px;} #screen-wizard.c1 .wiz-section{margin-top:8px;} #screen-wizard.c1 .dropzone{padding:10px 14px;gap:2px;}
+  #screen-wizard.c2 .pill{height:28px;font-size:12px;padding:0 10px;} #screen-wizard.c2 .pill-row{gap:5px;} #screen-wizard.c2 .wiz-section{margin-top:5px;} #screen-wizard.c2 .wiz-section-sub,#screen-wizard.c2 .step-caption{display:none;} #screen-wizard.c2 .dropzone{padding:6px 12px;} #screen-wizard.c2 .dz-formats{display:none;} #screen-wizard.c2 .step-circle{width:24px;height:24px;font-size:11px;}
+  #screen-wizard.c3 .pill{height:25px;font-size:11px;padding:0 8px;} #screen-wizard.c3 .pill svg{display:none;} #screen-wizard.c3 .pill-row{gap:4px;} #screen-wizard.c3 .wiz-section{margin-top:3px;} #screen-wizard.c3 .wiz-section-head h2{font-size:12.5px;} #screen-wizard.c3 .file-ready{padding:6px 10px;}
+  .wiz-topbar{display:flex !important;align-items:center;justify-content:space-between !important;}
+  .wiz-topbar .wiz-back{position:static !important;transform:none !important;color:#fff;}
+  .res-top{background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;}
 </style>
 </head>
 <body>
 
 <!-- ============ AUTH SCREEN ============ -->
-<section id="screen-auth">
+<section id="screen-auth" data-mode="login">
   <div class="auth-corner"></div>
   <div class="auth-hero">
     <div class="auth-hero-in">
-      <div class="logo-card"><span class="logo-full" role="img" aria-label="Docly — Your documents. Finally understood."></span></div>
+      <span class="logo-sm lg" role="img" aria-label="Docly"></span>
     </div>
   </div>
   <div class="auth-card">
-    <div class="auth-welcome"><h1 id="auth-title">Welcome</h1><p id="auth-sub">Log in to your account to continue</p></div>
+    <div class="auth-welcome"><h1 id="auth-title">Hello, Sign in!</h1><p id="auth-sub">Log in to your account to continue</p></div>
     <div id="err-auth" class="error-msg" hidden></div>
 
     <!-- LOGIN -->
@@ -789,6 +871,7 @@
     <p class="step-caption" id="step-caption">Your documents. Finally understood — in just 4 simple steps.</p>
 
     <div id="wiz-inputs">
+      <div class="wiz-body" id="wiz-body">
       <div class="dropzone" id="dropzone">
         <div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v11M7 9l5-5 5 5M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <div class="dz-title">Drop your file, or <u>browse</u></div>
@@ -830,6 +913,7 @@
         </div>
       </div>
 
+      </div>
       <div class="wiz-actions">
         <button class="btn btn-outline btn-round-back" id="btn-wiz-back-2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5l-7 7 7 7M4 12h16"/></svg><span>Back</span></button>
         <button class="btn btn-primary" id="btn-continue" disabled>Générer</button>
@@ -911,9 +995,22 @@ function togglePane(showLogin){
   document.getElementById("pane-login").hidden = !showLogin;
   document.getElementById("pane-signup").hidden = showLogin;
   document.getElementById("err-auth").hidden = true;
-  document.getElementById("auth-title").textContent = showLogin ? "Welcome" : "Create your account";
+  document.getElementById("screen-auth").dataset.mode = showLogin ? "login" : "signup";
+  document.getElementById("auth-title").textContent = showLogin ? "Hello, Sign in!" : "Create Your Account";
   document.getElementById("auth-sub").textContent = showLogin ? "Log in to your account to continue" : "Sign up to get started";
 }
+function fitWizard(){
+  const sc = document.getElementById("screen-wizard"), body = document.getElementById("wiz-body");
+  if(!sc || sc.hidden || !body) return;
+  sc.classList.remove("c1","c2","c3");
+  for(const c of ["c1","c2","c3"]){ if(body.scrollHeight <= body.clientHeight + 1) break; sc.classList.add(c); }
+}
+(function(){
+  const sc = document.getElementById("screen-wizard"); let q = 0;
+  const run = ()=>{ cancelAnimationFrame(q); q = requestAnimationFrame(fitWizard); };
+  new MutationObserver((recs)=>{ if(recs.some(r=>!(r.target === sc && r.attributeName === "class"))) run(); }).observe(sc, {subtree:true, childList:true, attributes:true, attributeFilter:["class","hidden"]});
+  window.addEventListener("resize", run);
+})();
 document.querySelectorAll(".toggle-pass").forEach(btn=>{
   btn.onclick = ()=>{
     const input = document.getElementById(btn.dataset.target);
@@ -1164,7 +1261,7 @@ function timeAgo(date){
 function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
 const IC = {'trash': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>', 'export': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11l4 4 4-4M5 20h14"/></svg>', 'copy': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>', 'share': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.6M8.2 13.2l7.6 4.6"/></svg>', 'download': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>', 'rename': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/><path d="M13 7l3 3"/></svg>', 'note': '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v13H6z"/><path d="M15 3v5h5M9 13h6M9 17h6"/></svg>'};
-IC.export = '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 9.5 9 15"/><path d="M3 9.5h7c5 0 8 2 8 7"/><path d="M12 20h6a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3h-2"/></svg>'; IC.copy = '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="8" width="11" height="13" rx="2.5"/><path d="M5 16V5.5A2.5 2.5 0 0 1 7.5 3H15"/></svg>';
+IC.export = '<svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 6h4.5A2.5 2.5 0 0 1 20 8.500V17.500A2.500 2.500 0 0 1 17.500 20H8.500A2.500 2.500 0 0 1 6 17.500V14"/><path d="M1.500 9.500L8 3.500v3.300c4 0 7 1.800 8.500 5.200-2.600-2-5.200-2.800-8.500-2.800v3.300z" fill="currentColor" stroke-width="1"/></svg>'; IC.copy = '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="8" width="11" height="13" rx="2.5"/><path d="M5 16V5.5A2.5 2.5 0 0 1 7.5 3H15"/></svg>';
 const RET_SVG = `<svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 9l6 5"/><path d="M3 9h14a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3h-7"/></svg>`, BACK_SVG = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5l-7 7 7 7M4 12h16"/></svg>`;
 function closeAllMenus(){ document.querySelectorAll(".doc-menu").forEach(m=>m.remove()); }
 document.addEventListener("click", closeAllMenus);
@@ -2316,10 +2413,24 @@ function triggerDownload(blob, filename){
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
 }
+async function fetchDownload(url, name){
+  try{
+    const r = await fetch(url, {mode:"cors"});
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    triggerDownload(await r.blob(), name);
+  }catch(err){
+    const a = document.createElement("a");
+    a.href = url; a.download = name; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+}
+function fileDownloadName(item, file){
+  return item.get("fileName") || item.get("name") || ((file && file.name && file.name()) || "").replace(/^[a-f0-9]{16,}_/, "") || "download";
+}
 async function downloadItem(tab, item){
   if(tab === "documents"){
     const file = item.get("fileUrl");
-    if(file && file.url()) window.open(file.url(), "_blank");
+    if(file && file.url()) await fetchDownload(file.url(), fileDownloadName(item, file));
     else alert("No downloadable file for this item yet.");
     return;
   }
@@ -2339,7 +2450,7 @@ async function downloadItem(tab, item){
   }
   if(tab === "exports"){
     const file = item.get("fileUrl");
-    if(file && file.url()) window.open(file.url(), "_blank");
+    if(file && file.url()) await fetchDownload(file.url(), fileDownloadName(item, file));
     else alert("No downloadable file for this item yet.");
   }
 }
