@@ -712,6 +712,31 @@
   .plan-row.l1{font-weight:600;margin-top:6px;}
   .plan-row.l2{padding-left:20px;font-weight:400;}
   .plan-n{color:var(--muted);margin-right:8px;}
+  /* --- ajustement 1 : connexion, tout l'ensemble au centre de l'écran --- */
+  #screen-auth{justify-content:center;align-items:center;}
+  #screen-auth .auth-hero{flex:0 0 auto;width:100%;padding:0 22px;}
+  #screen-auth .auth-hero-in,#screen-auth[data-mode="login"] .auth-hero-in{align-items:center;text-align:center;}
+  #screen-auth .auth-slogan-big{text-align:center;}
+  #screen-auth .auth-card{flex:0 0 auto;margin:0 auto;justify-content:center;}
+  #screen-auth .auth-welcome{text-align:center;}
+  /* --- ajustement 2 : dashboard fixe, seule la liste défile --- */
+  html.lock-dash,html.lock-dash body{overflow:hidden;overscroll-behavior:none;height:100%;}
+  #screen-dashboard:not([hidden]){height:100vh;height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
+  #screen-dashboard .db-body{flex:1;min-height:0;overflow:hidden;}
+  #screen-dashboard .db-main{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+  #screen-dashboard .db-main>*{flex:0 0 auto;}
+  #screen-dashboard .db-main>#db-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+  #screen-dashboard .db-main>#db-list:has(.empty-state){overflow:hidden;}
+  /* --- ajustement 3 : import réparti sur tout l'écran --- */
+  #screen-wizard .wiz-body{display:flex;flex-direction:column;justify-content:space-between;gap:10px;}
+  #screen-wizard .dropzone{flex:1 1 auto;width:100%;max-width:none;min-height:96px;max-height:260px;justify-content:center;gap:8px;}
+  #screen-wizard .wiz-section{flex:0 0 auto;margin-top:0;}
+  #screen-wizard #action-pills{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  #screen-wizard #result-pills,#screen-wizard #transform-pills{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+  #screen-wizard .pill-row .pill{width:100%;min-width:0;justify-content:flex-start;padding:0 8px;gap:5px;font-size:clamp(10.5px,3.1vw,13px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #screen-wizard #action-pills .pill{padding:0 12px;gap:8px;font-size:13px;}
+  #screen-wizard .wiz-actions{border-top:1px solid var(--line);}
+  #screen-wizard.c2 .dropzone,#screen-wizard.c3 .dropzone{min-height:0;}
 </style>
 </head>
 <body>
@@ -1033,6 +1058,7 @@ function showScreen(id){
   ["screen-auth","screen-dashboard","screen-wizard","screen-result","screen-shared"].forEach(s=>{
     document.getElementById(s).hidden = (s !== id);
   });
+  document.documentElement.classList.toggle("lock-dash", id === "screen-dashboard");
 }
 
 // ---------------- Auth screen ----------------
