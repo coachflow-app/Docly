@@ -1345,11 +1345,81 @@ const RET_SVG = `<svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill
 function closeAllMenus(){ document.querySelectorAll(".doc-menu").forEach(m=>m.remove()); }
 document.addEventListener("click", closeAllMenus);
 
+// ---------------- Resume (reprendre là où l'utilisateur s'était arrêté) ----------------
+async function loadConversationMessages(convo){
+  const q = new Parse.Query("Message");
+  q.equalTo("conversation", convo);
+  q.ascending("createdAt");
+  q.limit(1000);
+  return await q.find();
+}
+async function openConversationFor(doc, convo){
+  currentDocument = doc;
+  currentConversation = convo;
+  selectedAction = "ask";
+  const pr = convo.get("preset");
+  currentChatPreset = (pr === "detailed" || pr === "short") ? pr : "short";
+  selectedResult = currentChatPreset;
+  const msgs = await loadConversationMessages(convo);
+  openResultScreen("chat", msgs, null);
+  resultBackTarget = "dashboard";
+}
+function kindFromStoredResult(r){
+  const l = r.get("lengths"), st = r.get("style"), f = r.get("format");
+  for(const [k,v] of Object.entries(RESULT_PRESETS)){
+    if(v.lengths === l && v.style === st && v.format === f) return k;
+  }
+  const byFormat = {tableau:"table", bullets:"bullets", faq:"faq", plan:"plan", presentation:"presentation", quiz:"quiz", flashcards:"flashcards", paragraphes:"paragraphs"};
+  return byFormat[f] || "short";
+}
+async function resumeItem(tab, item){
+  try{
+    if(tab === "conversations"){
+      const doc = item.get("document");
+      await doc.fetch();
+      await openConversationFor(doc, item);
+    } else if(tab === "documents"){
+      const q = new Parse.Query("Conversation");
+      q.equalTo("document", item);
+      q.equalTo("owner", Parse.User.current());
+      q.descending("lastMessageAt");
+      let convo = await q.first();
+      if(!convo){
+        convo = new Parse.Object("Conversation");
+        convo.set("document", item);
+        convo.set("owner", Parse.User.current());
+        convo.set("title", item.get("fileName"));
+        convo.set("lastMessageAt", new Date());
+        convo.set("preset", "short");
+        try{ await convo.save(); }catch(e){ convo.unset("preset"); await convo.save(); }
+      }
+      await openConversationFor(item, convo);
+    } else if(tab === "summaries" || tab === "analyses"){
+      const doc = item.get("document");
+      await doc.fetch();
+      currentDocument = doc;
+      currentResultObject = item;
+      const kind = kindFromStoredResult(item);
+      selectedResult = kind;
+      const ty = item.get("type");
+      selectedAction = ty === "analyse" ? "analyze" : ty === "extraction" ? "extract" : ty === "transformation" ? "transform" : ty === "actions à réaliser" ? "actionitems" : "summarize";
+      let payload = item.get("content") || "";
+      try{ payload = JSON.parse(payload); }catch(e){}
+      openResultScreen(kind, payload, item.get("sources") || []);
+      resultBackTarget = "dashboard";
+    }
+  }catch(err){
+    alert("Could not resume this item: " + err.message);
+  }
+}
+
 function openMenu(row, tab, item){
   const menu = document.createElement("div");
   menu.className = "doc-menu";
   const canRename = true;
+  const resumeIc = '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5v15l12-7.5z"/></svg>';
   menu.innerHTML = `
+    ${tab !== "exports" ? `<button data-act="resume">${resumeIc}<span>Resume</span></button>` : ""}
     ${canRename ? `<button data-act="rename">${IC.rename}<span>Rename</span></button>` : ""}
     <button data-act="notes">${IC.note}<span>${item.get("notes") ? "Edit note" : "Add note"}</span></button>
     <button data-act="share">${IC.share}<span>Share</span></button>
@@ -1360,7 +1430,10 @@ function openMenu(row, tab, item){
     e.stopPropagation();
     const act = (e.target.closest("button")||{dataset:{}}).dataset.act;
     if(!act) return;
-    if(act === "rename"){
+    if(act === "resume"){
+      closeAllMenus();
+      await resumeItem(tab, item);
+    } else if(act === "rename"){
       const field = tab === "documents" ? "fileName" : "title";
       openRenameModal(async (val)=>{ item.set(field, val); await item.save(); loadTab(tab); }, displayName(tab, item));
     } else if(act === "notes"){
@@ -1711,9 +1784,10 @@ document.querySelectorAll("#action-pills .pill").forEach(p=>{
       document.getElementById("result-section-title").textContent = "Choose the result";
       document.getElementById("result-section-sub").textContent = "Select the format and style of your output.";
     }
-    // "Cartes mémoire" does not exist for Questions/Réponses
-    const fcPill = document.querySelector('#result-pills .pill[data-value="flashcards"]');
-    if(fcPill) fcPill.hidden = (selectedAction === "ask");
+    // Ask questions: only Short / Detailed (length of the answers)
+    document.querySelectorAll("#result-pills .pill").forEach(x=>{
+      x.hidden = (selectedAction === "ask") && !["short","detailed"].includes(x.dataset.value);
+    });
     updateStepper(); updateContinueState();
   };
 });
@@ -1860,7 +1934,7 @@ async function handleContinue(){
   btn.disabled = true; btn.textContent = "Generating…";
   const preset = RESULT_PRESETS[selectedResult];
   try{
-    if(selectedAction === "ask" && selectedResult !== "quiz"){
+    if(selectedAction === "ask"){
       // Chat: the chosen preset drives the style of every answer
       currentChatPreset = selectedResult;
       currentDocument.set("status", "ready"); await currentDocument.save();
@@ -1869,7 +1943,8 @@ async function handleContinue(){
       convo.set("owner", Parse.User.current());
       convo.set("title", currentDocument.get("fileName"));
       convo.set("lastMessageAt", new Date());
-      await convo.save();
+      convo.set("preset", selectedResult);
+      try{ await convo.save(); }catch(e){ convo.unset("preset"); await convo.save(); }
       currentConversation = convo;
       openResultScreen("chat", [], null);
     } else {
