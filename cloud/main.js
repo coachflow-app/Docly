@@ -155,7 +155,7 @@ function buildCompareInstructions(fileTypes) {
     "Tu es Docly, un assistant qui compare plusieurs documents. " +
     "Tu réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, sans ```. " +
     "Compare les documents fournis et fais ressortir leurs similitudes et leurs différences. " +
-    "Le champ 'content' doit être un objet {\"similarities\": [\"...\"], \"differences\": [\"...\"]}. " +
+    "Le champ 'content' doit être une chaîne de texte détaillée, rédigée en paragraphes (pas de puces, pas de listes, pas de numérotation) : une section '## Points communs' puis une section '## Différences', chacune avec plusieurs paragraphes développés qui reprennent les titres des documents quand ils existent. " +
     "Chaque entrée de 'sources' doit inclure un champ 'docName' indiquant de quel document elle provient. " +
     citationRule + "\n" + INLINE_CITATION_RULE
   );
@@ -228,7 +228,7 @@ Parse.Cloud.define("generateDocumentResult", async (request) => {
     const userPrompt =
       `${langInstruction}\n\n${docsBlock}\n\n` +
       `Réponds STRICTEMENT avec un objet JSON de cette forme :\n` +
-      `{"content": {"similarities": ["..."], "differences": ["..."]}, "sources": [{"docName": "...", "page": 0, "paragraph": 0, "cell": "...", "note": "..."}]}`;
+      `{"content": "## Points communs\\n\\nparagraphes...\\n\\n## Différences\\n\\nparagraphes...", "sources": [{"docName": "...", "page": 0, "paragraph": 0, "cell": "...", "note": "..."}]}`;
     const parsed = await callGroq(apiKey, systemPrompt, userPrompt);
     if (!parsed.content) {
       throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "La réponse de l'IA ne contient pas de champ 'content'.");
