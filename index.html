@@ -1565,6 +1565,301 @@ function closeDrawer(){
   document.getElementById("db-overlay").hidden = true;
 }
 
+// ---------------- Pipeline IA en 3 étapes : découpage par tokens + reprise automatique ----------------
+// A = lecture des morceaux · B = fusion des notes · C = rédaction finale (3 modèles Groq différents côté serveur)
+const PIPE = {
+  CHUNK_TOKENS: 2800,     // taille max d'un morceau envoyé à l'étape A
+  MERGE_IN_TOKENS: 3300,  // taille max des notes envoyées ensemble à l'étape B
+  DIGEST_TOKENS: 2800,    // taille max du contenu envoyé à l'étape C
+  TPM_SAFE: 7000,         // marge sous la limite Groq gratuite (8 000 tokens/min par modèle)
+  OUT_A: 900, OUT_B: 1100, OUT_C: 3000,
+  OVER_A: 450, OVER_B: 450, OVER_C: 1100,
+  MAX_CKPT_DOCS: 8
+};
+let pipePct = 0;
+const pipeWin = { A: [], B: [], C: [] };
+
+// Estimation prudente du nombre de tokens (plus de tokens estimés = morceaux plus petits = marge de sécurité)
+function estimateTokens(s){
+  s = s || "";
+  let t = 0;
+  for(let i=0;i<s.length;i++){
+    const c = s.charCodeAt(i);
+    if(c < 128){
+      if(c === 32) t += 0.22;
+      else if((c>=65&&c<=90)||(c>=97&&c<=122)) t += 0.28;
+      else t += 0.5;            // chiffres, ponctuation, retours à la ligne
+    } else t += 0.6;            // accents et alphabets non latins
+  }
+  return Math.ceil(t * 1.1);
+}
+function hashStr(s){
+  let h1 = 0x811c9dc5, h2 = 5381;
+  for(let i=0;i<s.length;i++){
+    const c = s.charCodeAt(i);
+    h1 ^= c; h1 = Math.imul(h1, 16777619);
+    h2 = ((h2 << 5) + h2 + c) | 0;
+  }
+  return (h1>>>0).toString(36) + (h2>>>0).toString(36) + s.length.toString(36);
+}
+function sumTokens(list){ return list.reduce((n,x)=>n+estimateTokens(x),0); }
+function truncateToTokens(text, max){
+  let out = text;
+  while(out.length > 20 && estimateTokens(out) > max){
+    out = out.slice(0, Math.floor(out.length * 0.9));
+  }
+  return out;
+}
+function splitLongLine(line, maxTok){
+  const limit = Math.max(50, Math.floor(maxTok * 0.8));
+  const out = []; let cur = "";
+  const flush = ()=>{ if(cur){ out.push(cur); cur = ""; } };
+  line.split(" ").forEach(w=>{
+    if(estimateTokens(w) > limit){
+      flush();
+      const step = Math.max(40, Math.floor(limit * 2));
+      for(let i=0;i<w.length;i+=step) out.push(w.slice(i, i+step));
+      return;
+    }
+    const next = cur ? cur + " " + w : w;
+    if(estimateTokens(next) > limit){ flush(); cur = w; } else cur = next;
+  });
+  flush();
+  return out;
+}
+// Découpe selon le nombre de TOKENS ; chaque morceau garde le dernier marqueur de page / titre de feuille vu
+function splitByTokens(text, maxTok){
+  const chunks = []; let cur = []; let curTok = 0; let marker = "";
+  const push = ()=>{ if(cur.length){ chunks.push(cur.join("\n")); } cur = []; curTok = 0; };
+  text.split("\n").forEach(line=>{
+    const isMarker = /^(\[\[page \d+\]\]|## .{1,80})\s*$/.test(line);
+    if(isMarker) marker = line.trim();
+    const pieces = estimateTokens(line) > maxTok ? splitLongLine(line, maxTok) : [line];
+    pieces.forEach(p=>{
+      const t = estimateTokens(p) + 1;
+      if(curTok + t > maxTok){
+        push();
+        if(marker && p.trim() !== marker){ cur.push(marker); curTok += estimateTokens(marker) + 1; }
+      }
+      cur.push(p); curTok += t;
+    });
+  });
+  push();
+  return chunks.filter(c=>c.trim());
+}
+function groupByTokens(list, maxTok){
+  const groups = []; let cur = []; let tok = 0;
+  list.forEach(x=>{
+    const t = estimateTokens(x);
+    if(cur.length && tok + t > maxTok){ groups.push(cur); cur = []; tok = 0; }
+    cur.push(x); tok += t;
+  });
+  if(cur.length) groups.push(cur);
+  return groups;
+}
+function splitInHalf(text){
+  const mid = Math.floor(text.length / 2);
+  let cut = text.indexOf("\n", mid);
+  if(cut < 0 || cut > text.length * 0.9) cut = text.lastIndexOf(" ", mid);
+  if(cut <= 0) cut = mid;
+  const a = text.slice(0, cut), b = text.slice(cut).trim();
+  const markers = a.match(/\[\[page \d+\]\]|^## .{1,80}$/gm);
+  const last = markers ? markers[markers.length-1] : "";
+  return [a, last && !/^(\[\[page \d+\]\]|## )/.test(b) ? last + "\n" + b : b];
+}
+
+// ----- Points de reprise (sauvegardés dans le navigateur) : chaque appel terminé est mémorisé -----
+const ckptMem = {};
+function ckptLoad(docId){
+  if(ckptMem[docId]) return ckptMem[docId];
+  let o = null;
+  try{ o = JSON.parse(localStorage.getItem("docly_ckpt_" + docId) || "null"); }catch(e){}
+  ckptMem[docId] = (o && o.m) ? o : { t: Date.now(), m: {} };
+  return ckptMem[docId];
+}
+function ckptGet(docId, key){ return ckptLoad(docId).m[key]; }
+function ckptSet(docId, key, val){
+  const o = ckptLoad(docId); o.m[key] = val; o.t = Date.now();
+  try{
+    localStorage.setItem("docly_ckpt_" + docId, JSON.stringify(o));
+    let idx = JSON.parse(localStorage.getItem("docly_ckpt_index") || "[]").filter(x=>x!==docId);
+    idx.push(docId);
+    while(idx.length > PIPE.MAX_CKPT_DOCS){
+      const old = idx.shift();
+      localStorage.removeItem("docly_ckpt_" + old); delete ckptMem[old];
+    }
+    localStorage.setItem("docly_ckpt_index", JSON.stringify(idx));
+  }catch(e){ /* stockage plein : la reprise reste possible tant que la page reste ouverte */ }
+}
+
+// ----- Attente et rythme (respect des 8 000 tokens/min de Groq) -----
+function pipeSay(onStatus, msg){ if(onStatus) onStatus(msg); }
+function pipeCountdown(sec, onStatus){
+  return new Promise(resolve=>{
+    let s = Math.max(1, Math.ceil(sec));
+    const tick = ()=>{
+      pipeSay(onStatus, "Waiting for Groq limits… " + s + "s (" + pipePct + "%)");
+      if(s <= 0) return resolve();
+      s--; setTimeout(tick, 1000);
+    };
+    tick();
+  });
+}
+async function pipePace(stage, tokens, onStatus){
+  for(;;){
+    const now = Date.now();
+    pipeWin[stage] = pipeWin[stage].filter(x=>now - x.t < 60000);
+    const used = pipeWin[stage].reduce((n,x)=>n+x.tok,0);
+    if(pipeWin[stage].length === 0 || used + tokens <= PIPE.TPM_SAFE){
+      pipeWin[stage].push({ t: now, tok: tokens });
+      return;
+    }
+    await pipeCountdown((60000 - (now - pipeWin[stage][0].t)) / 1000 + 0.3, onStatus);
+  }
+}
+
+// Appel serveur avec attente automatique des limites et nouvelles tentatives (sans refaire ce qui est déjà fait)
+async function pipeCall(name, params, stage, estTok, onStatus){
+  let transient = 0, waited = 0;
+  for(;;){
+    await pipePace(stage, estTok, onStatus);
+    try{
+      return await Parse.Cloud.run(name, params);
+    }catch(e){
+      const msg = (e && e.message) || String(e);
+      if(/TOO_LARGE/.test(msg)){ const er = new Error("too large"); er.tooLarge = true; throw er; }
+      const rl = msg.match(/RATE_LIMIT:(\d+)/);
+      if(rl){
+        const sec = parseInt(rl[1], 10);
+        if(sec > 180) throw new Error("The free Groq daily limit has been reached. Your progress is saved: press “Générer” again later and Docly will resume where it stopped.");
+        waited += sec;
+        if(waited > 900) throw new Error("Groq is still limiting requests. Your progress is saved: press “Générer” again to resume where it stopped.");
+        await pipeCountdown(sec + 1, onStatus);
+        pipeWin[stage] = [];
+        continue;
+      }
+      if(/Clé Groq|Aucun texte|Il faut au moins|Action manquante|Aucune note|[Ii]nvalid session/.test(msg)) throw e;
+      transient++;
+      if(transient > 4) throw new Error("Connection problem. Your progress is saved: press “Générer” again to resume where it stopped. (" + msg + ")");
+      await pipeCountdown(Math.pow(2, transient), onStatus);
+    }
+  }
+}
+
+// ----- Étape A : un morceau → notes (mémorisé ; coupé en deux si Groq le juge trop gros) -----
+async function pipeAnalyze(docId, chunk, fileName, fileType, onStatus){
+  const key = "A:" + hashStr(chunk);
+  const hit = ckptGet(docId, key);
+  if(hit !== undefined) return hit;
+  try{
+    const r = await pipeCall("analyzeChunk", { text: chunk, fileName: fileName, fileType: fileType }, "A",
+      estimateTokens(chunk) + PIPE.OVER_A + Math.round(PIPE.OUT_A * 0.6), onStatus);
+    ckptSet(docId, key, r.notes);
+    return r.notes;
+  }catch(e){
+    if(e.tooLarge && estimateTokens(chunk) > 300){
+      const h = splitInHalf(chunk);
+      const na = await pipeAnalyze(docId, h[0], fileName, fileType, onStatus);
+      const nb = await pipeAnalyze(docId, h[1], fileName, fileType, onStatus);
+      const joined = na + "\n" + nb;
+      ckptSet(docId, key, joined);
+      return joined;
+    }
+    throw e;
+  }
+}
+// ----- Étape B : plusieurs séries de notes → une seule -----
+async function pipeMerge(docId, group, fileName, onStatus){
+  const key = "B:" + hashStr(group.join("\u0001"));
+  const hit = ckptGet(docId, key);
+  if(hit !== undefined) return hit;
+  try{
+    const r = await pipeCall("mergeNotes", { notes: group, fileName: fileName }, "B",
+      sumTokens(group) + PIPE.OVER_B + Math.round(PIPE.OUT_B * 0.6), onStatus);
+    ckptSet(docId, key, r.notes);
+    return r.notes;
+  }catch(e){
+    if(e.tooLarge && group.length > 1){
+      const mid = Math.ceil(group.length / 2);
+      const na = await pipeMerge(docId, group.slice(0, mid), fileName, onStatus);
+      const nb = await pipeMerge(docId, group.slice(mid), fileName, onStatus);
+      const joined = na + "\n" + nb;
+      ckptSet(docId, key, joined);
+      return joined;
+    }
+    throw e;
+  }
+}
+// ----- Prépare le texte pour l'étape C : tel quel s'il est petit, sinon notes condensées (A puis B) -----
+async function pipePrepare(docId, text, fileName, fileType, budget, onStatus, label){
+  text = (text || "").trim();
+  if(estimateTokens(text) <= budget) return { text: text, condensed: false };
+  const pre = label || "";
+  const say = (pct, msg)=>{ pipePct = pct; pipeSay(onStatus, pre + msg + " " + pct + "%"); };
+  const chunks = splitByTokens(text, PIPE.CHUNK_TOKENS);
+  const notes = [];
+  for(let i=0;i<chunks.length;i++){
+    say(Math.round(60 * i / chunks.length), "Reading document…");
+    notes.push(await pipeAnalyze(docId, chunks[i], fileName, fileType, onStatus));
+  }
+  say(60, "Merging notes…");
+  let list = notes.filter(Boolean), merges = 0;
+  for(let round=0; round<6 && sumTokens(list) > budget; round++){
+    const groups = groupByTokens(list, PIPE.MERGE_IN_TOKENS);
+    if(groups.length === list.length) break;
+    const next = [];
+    for(const g of groups){
+      if(g.length === 1){ next.push(g[0]); continue; }
+      next.push(await pipeMerge(docId, g, fileName, onStatus));
+      merges++; say(Math.min(80, 60 + merges * 4), "Merging notes…");
+    }
+    if(sumTokens(next) >= sumTokens(list)){ list = next; break; }
+    list = next;
+  }
+  let out = list.join("\n\n");
+  if(estimateTokens(out) > budget) out = truncateToTokens(out, budget);
+  return { text: out, condensed: true };
+}
+
+// ----- Point d'entrée : un document (résumé, analyse, extraction, Q/R, transformation…) -----
+async function runDocPipeline(o){
+  let budget = PIPE.DIGEST_TOKENS;
+  for(;;){
+    const p = await pipePrepare(o.docId, o.text, o.fileName, o.fileType, budget, o.onStatus, "");
+    pipePct = 85; pipeSay(o.onStatus, "Writing result… 85%");
+    try{
+      return await pipeCall("generateDocumentResult", {
+        text: p.text, condensed: p.condensed, action: o.action, preset: o.preset, question: o.question,
+        fileName: o.fileName, fileType: o.fileType, language: o.language
+      }, "C", estimateTokens(p.text) + PIPE.OVER_C + Math.round(PIPE.OUT_C * 0.6), o.onStatus);
+    }catch(e){
+      if(e.tooLarge && budget > 600){ budget = Math.floor(budget * 0.75); continue; }
+      throw e;
+    }
+  }
+}
+// ----- Point d'entrée : comparaison de plusieurs documents -----
+async function runComparePipeline(docs, onStatus){
+  let total = PIPE.DIGEST_TOKENS;
+  for(;;){
+    const per = Math.floor(total / docs.length);
+    const prepared = [];
+    for(let i=0;i<docs.length;i++){
+      const d = docs[i];
+      const p = await pipePrepare(d.id, d.get("extractedText") || "", d.get("fileName"), d.get("fileType"), per, onStatus, "Doc " + (i+1) + "/" + docs.length + " · ");
+      prepared.push({ fileName: d.get("fileName"), fileType: d.get("fileType"), text: p.text });
+    }
+    pipePct = 85; pipeSay(onStatus, "Writing comparison… 85%");
+    try{
+      return await pipeCall("generateDocumentResult", { action: "compare", documents: prepared, condensed: true, language: "français" },
+        "C", total + PIPE.OVER_C + Math.round(PIPE.OUT_C * 0.6), onStatus);
+    }catch(e){
+      if(e.tooLarge && total > 800){ total = Math.floor(total * 0.75); continue; }
+      throw e;
+    }
+  }
+}
+
 // ---------------- Wizard ----------------
 let currentDocument = null;
 let selectedAction = null;
@@ -1580,15 +1875,7 @@ async function handleCompare(){
   const btn = document.getElementById("btn-compare");
   btn.disabled = true; btn.textContent = "Comparing…";
   try{
-    const aiResponse = await Parse.Cloud.run("generateDocumentResult", {
-      action: "compare",
-      documents: docs.map(d=>({
-        fileName: d.get("fileName"),
-        fileType: d.get("fileType"),
-        text: (d.get("extractedText")||"").trim()
-      })),
-      language: "français"
-    });
+    const aiResponse = await runComparePipeline(docs, s=>{ btn.textContent = s; });
     const result = new Parse.Object("Result");
     result.set("owner", Parse.User.current());
     result.set("type", "comparaison");
@@ -1988,13 +2275,15 @@ async function handleContinue(){
       const cloudPreset = PRESET_CLOUD_MAP[selectedResult];
       const extracted = (currentDocument.get("extractedText")||"").trim();
 
-      const aiResponse = await Parse.Cloud.run("generateDocumentResult", {
+      const aiResponse = await runDocPipeline({
+        docId: currentDocument.id,
         text: extracted,
         action: cloudAction,
         preset: cloudPreset,
         fileName: currentDocument.get("fileName"),
         fileType: currentDocument.get("fileType"),
-        language: "français"
+        language: "français",
+        onStatus: s=>{ btn.textContent = s; }
       });
 
       currentDocument.set("status", "ready"); await currentDocument.save();
@@ -2374,21 +2663,25 @@ async function sendChatMessage(){
   const extracted = (currentDocument.get("extractedText")||"").trim();
   let replyText = "Sorry, something went wrong while getting an answer.";
   let replySources = [];
+  const prevPlaceholder = input.placeholder;
   try{
-    const aiResponse = await Parse.Cloud.run("generateDocumentResult", {
+    const aiResponse = await runDocPipeline({
+      docId: currentDocument.id,
       text: extracted,
       action: "ask",
       preset: PRESET_CLOUD_MAP[currentChatPreset],
       question: text,
       fileName: currentDocument.get("fileName"),
       fileType: currentDocument.get("fileType"),
-      language: "français"
+      language: "français",
+      onStatus: s=>{ input.placeholder = s; }
     });
     replyText = typeof aiResponse.content === "string" ? aiResponse.content : JSON.stringify(aiResponse.content);
     replySources = aiResponse.sources || [];
   }catch(err){
     replyText = "Sorry, I couldn't get an answer: " + err.message;
   }
+  input.placeholder = prevPlaceholder;
 
   const replyMsg = new Parse.Object("Message");
   replyMsg.set("conversation", currentConversation);
