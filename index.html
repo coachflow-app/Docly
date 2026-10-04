@@ -558,6 +558,12 @@
   .modal-box h3{margin:0 0 12px;font-size:16px;color:var(--indigo);}
   .modal-box textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:inherit;font-size:13.5px;resize:vertical;}
   .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;}
+  .nt-ic{display:inline-flex;vertical-align:-4px;margin-right:8px;}
+  .nt-error .nt-ic{color:#F0605A;} .nt-info .nt-ic{color:#A794FF;} .nt-success .nt-ic{color:#19D3A2;} .nt-pause .nt-ic{color:#F2B84B;}
+  .nt-detail{margin:8px 0 0;font-size:12px;color:var(--muted);word-break:break-all;}
+  #btn-continue.is-busy{flex:none;padding:0 4px;flex-direction:column;gap:1px;line-height:1.15;white-space:nowrap;overflow:hidden;}
+  #btn-continue .gb-l{font-size:11px;font-weight:500;}
+  #btn-continue .gb-p{font-size:13px;font-weight:600;}
   .doc-note-dot{width:6px;height:6px;border-radius:50%;background:var(--yellow);flex-shrink:0;display:inline-block;}
 
   .citation-link{background:none;border:none;font-size:12px;color:var(--indigo);text-decoration:none;font-weight:500;white-space:nowrap;flex-shrink:0;cursor:pointer;font-family:inherit;padding:0;}
@@ -1437,7 +1443,7 @@ async function resumeItem(tab, item){
       resultBackTarget = "dashboard";
     }
   }catch(err){
-    alert("Could not resume this item: " + err.message);
+    showErrorNotice("Could not resume this item: " + err.message);
   }
 }
 
@@ -1473,6 +1479,72 @@ function openMenu(row, tab, item){
     }
   };
 }
+
+// ---------------- Notification windows (same look as Rename / Delete) ----------------
+function noticeIcon(type){
+  const a = 'width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  if(type === "error") return `<svg ${a}><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.2v.1"/></svg>`;
+  if(type === "pause") return `<svg ${a}><circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/></svg>`;
+  if(type === "success") return `<svg ${a}><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>`;
+  return `<svg ${a}><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.8v.1"/></svg>`;
+}
+// opts: {type: error|pause|info|success, title, message, detail, actionLabel, onAction}
+function openNoticeModal(opts){
+  const type = opts.type || "info";
+  document.querySelectorAll(".modal-overlay.nt-overlay").forEach(e=>e.remove());
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay nt-overlay";
+  const hasAction = typeof opts.onAction === "function";
+  overlay.innerHTML = `
+    <div class="rename-box nt-${type}" role="alertdialog" aria-label="${escapeHtml(opts.title)}">
+      <div class="rename-head"><h3><span class="nt-ic">${noticeIcon(type)}</span>${escapeHtml(opts.title)}</h3><button class="rename-x" id="nt-x" aria-label="Close">&times;</button></div>
+      <div class="rename-body"><p style="margin:0;font-size:13.5px;color:var(--ink);line-height:1.5;">${escapeHtml(opts.message)}</p>${opts.detail ? `<p class="nt-detail">${escapeHtml(opts.detail)}</p>` : ""}</div>
+      <div class="rename-foot">
+        ${hasAction ? `<button class="rename-cancel" id="nt-close">Close</button><button class="rename-ok" id="nt-ok">${escapeHtml(opts.actionLabel || "Try again")}</button>` : `<button class="rename-ok" id="nt-ok">OK</button>`}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const onKey = (e)=>{ if(e.key === "Escape") close(); };
+  const close = ()=>{ overlay.remove(); document.removeEventListener("keydown", onKey); };
+  document.addEventListener("keydown", onKey);
+  overlay.onclick = (e)=>{ if(e.target === overlay) close(); };
+  document.getElementById("nt-x").onclick = close;
+  const closeBtn = document.getElementById("nt-close");
+  if(closeBtn) closeBtn.onclick = close;
+  document.getElementById("nt-ok").onclick = ()=>{ close(); if(hasAction) opts.onAction(); };
+}
+function showErrorNotice(message, onRetry){
+  openNoticeModal({ type:"error", title:"Error", message:message, actionLabel:"Try again", onAction:onRetry });
+}
+function showInfoNotice(message){ openNoticeModal({ type:"info", title:"Information", message:message }); }
+// Pipeline errors that say "progress is saved" become a Pause window with Resume; others become Error windows
+function showPipelineNotice(prefix, err, onRetry){
+  const msg = (err && err.message) || String(err);
+  if(/progress is saved/i.test(msg)) openNoticeModal({ type:"pause", title:"Paused", message:msg, actionLabel:"Resume", onAction:onRetry });
+  else showErrorNotice(prefix + msg, onRetry);
+}
+
+// ---------------- "Générer" button : fixed shape, only the look and the short text change ----------------
+function lockGenBtn(btn){
+  if(btn.classList.contains("is-busy")) return;
+  btn.style.width = btn.getBoundingClientRect().width + "px";
+  btn.classList.add("is-busy");
+}
+function unlockGenBtn(btn){
+  btn.classList.remove("is-busy");
+  btn.style.width = "";
+}
+function setGenBtn(btn, label, sub){
+  btn.innerHTML = '<span class="gb-l">' + label + '</span>' + (sub ? '<span class="gb-p">' + sub + '</span>' : '');
+}
+function genStatus(btn, s){
+  let m = s.match(/Waiting for Groq limits… (\d+)s/);
+  if(m) return setGenBtn(btn, "Waiting", m[1] + "s");
+  m = s.match(/(Reading|Merging|Writing)[^%]*?(\d+)%/);
+  if(m) return setGenBtn(btn, m[1], m[2] + "%");
+  setGenBtn(btn, "Working…");
+}
+function retryGenerate(){ if(currentDocument && selectedAction && selectedResult) handleContinue(); }
 
 function openConfirmModal(title, message, confirmLabel, onConfirm){
   const overlay = document.createElement("div");
@@ -1895,7 +1967,7 @@ async function handleCompare(){
       if(ok) showToast("Comparison exported to your phone.");
     }catch(e){}
   }catch(err){
-    alert("Could not create the comparison: " + err.message);
+    showPipelineNotice("Could not create the comparison: ", err, handleCompare);
   }
   btn.disabled = false;
   updateCompareButton();
@@ -1984,6 +2056,7 @@ function resetWizard(){
   document.getElementById("transform-pills").hidden = true;
   document.getElementById("result-section-title").textContent = "Choose the result";
   document.getElementById("result-section-sub").textContent = "Select the format and style of your output.";
+  unlockGenBtn(document.getElementById("btn-continue"));
   document.getElementById("btn-continue").textContent = "Générer";
   document.getElementById("btn-continue").onclick = handleContinue;
   updateStepper(); updateContinueState();
@@ -2251,7 +2324,7 @@ function renderMarkdownLite(text){
 
 async function handleContinue(){
   const btn = document.getElementById("btn-continue");
-  btn.disabled = true; btn.textContent = "Generating…";
+  btn.disabled = true; lockGenBtn(btn); setGenBtn(btn, "Generating…");
   const preset = RESULT_PRESETS[selectedResult];
   try{
     if(selectedAction === "ask"){
@@ -2283,7 +2356,7 @@ async function handleContinue(){
         fileName: currentDocument.get("fileName"),
         fileType: currentDocument.get("fileType"),
         language: "français",
-        onStatus: s=>{ btn.textContent = s; }
+        onStatus: s=>{ genStatus(btn, s); }
       });
 
       currentDocument.set("status", "ready"); await currentDocument.save();
@@ -2304,8 +2377,8 @@ async function handleContinue(){
       createNotification("Your " + (isQa ? "questions-réponses" : TYPE_MAP[selectedAction]) + " for \"" + currentDocument.get("fileName") + "\" is ready.");
     }
   }catch(err){
-    alert("Could not generate the result: " + err.message);
-    btn.disabled = false; btn.textContent = "Générer";
+    btn.disabled = false; unlockGenBtn(btn); btn.textContent = "Générer";
+    showPipelineNotice("Could not generate the result: ", err, retryGenerate);
   }
 }
 
@@ -2937,19 +3010,19 @@ async function exportResult(resultItem, text, format){
   } else if(format === "docx"){
     try{
       blob = await buildDocxBlob(title, text, exportableRows());
-    }catch(err){ alert("DOCX export failed: " + err.message); return; }
+    }catch(err){ showErrorNotice("DOCX export failed: " + err.message); return; }
     filename = baseName + ".docx";
     formatLabel = "DOCX";
   } else if(format === "xlsx"){
     try{
       blob = buildXlsxBlob(exportableRows(), text);
-    }catch(err){ alert("XLSX export failed: " + err.message); return; }
+    }catch(err){ showErrorNotice("XLSX export failed: " + err.message); return; }
     filename = baseName + ".xlsx";
     formatLabel = "XLSX";
   } else if(format === "pptx"){
     try{
       blob = await buildPptxBlob(title, text, exportableSlides());
-    }catch(err){ alert("PPTX export failed: " + err.message); return; }
+    }catch(err){ showErrorNotice("PPTX export failed: " + err.message); return; }
     filename = baseName + ".pptx";
     formatLabel = "PPTX";
   } else {
@@ -3001,7 +3074,7 @@ async function downloadItem(tab, item){
   if(tab === "documents"){
     const file = item.get("fileUrl");
     if(file && file.url()) await fetchDownload(file.url(), fileDownloadName(item, file));
-    else alert("No downloadable file for this item yet.");
+    else showInfoNotice("No downloadable file for this item yet.");
     return;
   }
   if(tab === "summaries" || tab === "analyses"){
@@ -3021,7 +3094,7 @@ async function downloadItem(tab, item){
   if(tab === "exports"){
     const file = item.get("fileUrl");
     if(file && file.url()) await fetchDownload(file.url(), fileDownloadName(item, file));
-    else alert("No downloadable file for this item yet.");
+    else showInfoNotice("No downloadable file for this item yet.");
   }
 }
 
@@ -3032,14 +3105,14 @@ async function nativeShare(title, url){
     catch(err){ if(err.name === "AbortError") return true; /* user cancelled, not an error */ }
   }
   await navigator.clipboard.writeText(url);
-  alert("Link copied to clipboard:\n" + url);
+  openNoticeModal({ type:"success", title:"Link copied", message:"The share link is in your clipboard.", detail:url });
   return false;
 }
 async function shareItem(tab, item){
   try{
     if(tab === "documents"){
       const file = item.get("fileUrl");
-      if(!file || !file.url()){ alert("No file to share yet."); return; }
+      if(!file || !file.url()){ showInfoNotice("No file to share yet."); return; }
       await nativeShare(item.get("fileName"), file.url());
       return;
     }
@@ -3052,7 +3125,7 @@ async function shareItem(tab, item){
     const url = location.origin + location.pathname + "?share=" + type + "&id=" + item.id;
     await nativeShare(item.get("title") || item.get("type") || "Docly", url);
   }catch(err){
-    alert("Could not create the share link: " + err.message);
+    showErrorNotice("Could not create the share link: " + err.message);
   }
 }
 
