@@ -2,7 +2,14 @@
 // Docly — Cloud Code : génération réelle du contenu via l'API Groq
 // La clé API est lue depuis une variable d'environnement Back4app (jamais écrite ici).
 
-const GROQ_MODEL = "openai/gpt-oss-120b";
+// Répartition par étape du pipeline (plan gratuit Groq : 8K tokens/min PAR modèle)
+const MODELS = {
+  A: { primary: "openai/gpt-oss-20b", fallback: "qwen/qwen3.8-27b" },   // lecture des morceaux
+  B: { primary: "qwen/qwen3.8-27b", fallback: "openai/gpt-oss-20b" },   // fusion des notes
+  C: { primary: "openai/gpt-oss-120b", fallback: "qwen/qwen3.8-27b" }   // rédaction finale
+};
+const MAX_OUT = { A: 900, B: 1100, C: 3000 };
+const MAX_SERVER_WAIT = 8; // secondes : au-delà, on laisse le client attendre (limite Back4app = 60 s)
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 const SPREADSHEET_TYPES = new Set(["xlsx", "xls", "csv"]);
@@ -161,60 +168,215 @@ function buildCompareInstructions(fileTypes) {
   );
 }
 
-async function callGroq(apiKey, systemPrompt, userPrompt) {
-  let response;
-  try {
-    response = await fetch(GROQ_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        temperature: 0.3,
-        response_format: { type: "json_object" }
-      })
-    });
-  } catch (err) {
-    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Impossible de contacter Groq : " + err.message);
-  }
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, `Erreur Groq (${response.status}) : ${errText.slice(0, 300)}`);
-  }
-
-  const data = await response.json();
-  const raw = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-  if (!raw) {
-    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Réponse Groq vide ou mal formée.");
-  }
-
-  try {
-    return JSON.parse(raw);
-  } catch (err) {
-    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "La réponse de l'IA n'était pas un JSON valide.");
-  }
+function mkErr(kind, message, retryAfter) {
+  const e = new Error(message || kind);
+  e.kind = kind;
+  if (retryAfter != null) e.retryAfter = retryAfter;
+  return e;
 }
 
-Parse.Cloud.define("generateDocumentResult", async (request) => {
-  const { text, action, preset, fileName, fileType, language, question, documents } = request.params;
+// Lit des durées du type "2m59.56s", "7.66s", "1h2m", "250ms"
+function parseDuration(str) {
+  if (!str) return null;
+  const s = String(str);
+  if (/^\d+(\.\d+)?$/.test(s.trim())) return parseFloat(s);
+  let total = 0, found = false;
+  const re = /(\d+(?:\.\d+)?)\s*(ms|h|m|s)/g;
+  let m;
+  while ((m = re.exec(s))) {
+    found = true;
+    const v = parseFloat(m[1]);
+    total += m[2] === "h" ? v * 3600 : m[2] === "m" ? v * 60 : m[2] === "ms" ? v / 1000 : v;
+  }
+  return found ? total : null;
+}
 
-  if (!action) {
-    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Action manquante (summarize, analyze, ask, extract, action-items, transform, compare).");
+function parseRetryAfter(res, bodyText) {
+  const h = parseDuration(res.headers.get("retry-after"));
+  if (h != null) return h;
+  const m = /try again in ([0-9hms.\s]+)/i.exec(bodyText || "");
+  const b = m ? parseDuration(m[1]) : null;
+  return b != null ? b : null;
+}
+
+function cleanOutput(raw) {
+  return String(raw || "").replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+}
+
+function parseJsonLoose(raw) {
+  let s = cleanOutput(raw).replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  try { return JSON.parse(s); } catch (e) {}
+  const a = s.indexOf("{"), b = s.lastIndexOf("}");
+  if (a >= 0 && b > a) {
+    try { return JSON.parse(s.slice(a, b + 1)); } catch (e) {}
+  }
+  throw mkErr("badoutput", "La réponse de l'IA n'était pas un JSON valide.");
+}
+
+// Un appel Groq pour un modèle donné
+async function groqChat(apiKey, model, messages, opts) {
+  const body = {
+    model: model,
+    messages: messages,
+    temperature: 0.3,
+    max_completion_tokens: opts.maxTokens
+  };
+  if (model.indexOf("openai/gpt-oss") === 0) {
+    body.reasoning_effort = "low"; // limite les tokens de raisonnement (comptés dans les limites)
+    if (opts.json) body.response_format = { type: "json_object" };
   }
 
+  let res, text;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      res = await fetch(GROQ_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + apiKey },
+        body: JSON.stringify(body)
+      });
+    } catch (err) {
+      throw mkErr("network", "Impossible de contacter Groq : " + err.message);
+    }
+    text = await res.text();
+    // Paramètre optionnel refusé par un modèle : on réessaie une fois sans
+    if (res.status === 400 && attempt === 0 &&
+        /reasoning_effort|response_format|max_completion_tokens|unsupported|unknown/i.test(text) &&
+        !/too large|reduce/i.test(text)) {
+      delete body.reasoning_effort;
+      delete body.response_format;
+      body.max_tokens = body.max_completion_tokens;
+      delete body.max_completion_tokens;
+      continue;
+    }
+    break;
+  }
+
+  if (res.status === 429) throw mkErr("rate", "Limite Groq atteinte (" + model + ")", parseRetryAfter(res, text));
+  if (res.status === 413 || (res.status === 400 && /too large|reduce (the length|your message)|context length/i.test(text))) {
+    throw mkErr("toolarge", "Requête trop volumineuse pour " + model);
+  }
+  if (res.status === 404 || res.status >= 500) throw mkErr("unavailable", "Modèle indisponible (" + model + ", " + res.status + ")");
+  if (!res.ok) throw mkErr("other", "Erreur Groq (" + res.status + ") : " + text.slice(0, 300));
+
+  let data;
+  try { data = JSON.parse(text); } catch (e) { throw mkErr("badoutput", "Réponse Groq mal formée."); }
+  const raw = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  const out = cleanOutput(raw);
+  if (!out) throw mkErr("badoutput", "Réponse Groq vide.");
+  return opts.json ? parseJsonLoose(out) : out;
+}
+
+// Appel d'une étape : modèle principal, puis modèle de secours. Les longues attentes sont laissées au client.
+async function callStage(stage, messages, opts) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Clé Groq non configurée côté serveur (variable GROQ_API_KEY manquante).");
   }
+  const options = { json: !!opts.json, maxTokens: opts.maxTokens || MAX_OUT[stage] };
+  const order = [MODELS[stage].primary, MODELS[stage].fallback];
+  let minRetry = null, lastErr = null;
+
+  for (let i = 0; i < order.length; i++) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await groqChat(apiKey, order[i], messages, options);
+      } catch (e) {
+        lastErr = e;
+        if (e.kind === "toolarge") {
+          throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "TOO_LARGE");
+        }
+        if (e.kind === "rate") {
+          if (e.retryAfter != null && e.retryAfter <= MAX_SERVER_WAIT && attempt === 0) {
+            await new Promise((r) => setTimeout(r, e.retryAfter * 1000 + 300));
+            continue;
+          }
+          const ra = e.retryAfter != null ? e.retryAfter : 20;
+          minRetry = minRetry == null ? ra : Math.min(minRetry, ra);
+          break; // modèle suivant
+        }
+        if ((e.kind === "network" || e.kind === "other") && attempt === 0) {
+          await new Promise((r) => setTimeout(r, 1000));
+          continue;
+        }
+        break; // modèle suivant
+      }
+    }
+  }
+  if (minRetry != null) {
+    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "RATE_LIMIT:" + Math.ceil(minRetry));
+  }
+  throw new Parse.Error(Parse.Error.SCRIPT_FAILED, (lastErr && lastErr.message) || "Erreur IA inconnue.");
+}
+
+// ---------------------------------------------------------------------------
+// ÉTAPE A — lecture d'un morceau du document → notes fidèles avec leurs pages
+// ---------------------------------------------------------------------------
+const A_SYSTEM =
+  "Tu es Docly. Tu lis un extrait d'un document et tu en fais des notes fidèles et denses, dans la langue du document. " +
+  "Conserve les faits, chiffres, noms, dates, définitions, décisions, clauses, actions et conclusions. N'invente rien, ne commente pas. " +
+  "Le texte contient des marqueurs [[page N]] ou des titres de feuille '## Nom'. Chaque note est une ligne qui commence par '- ' suivie " +
+  "du marqueur de son emplacement recopié tel quel, par exemple '- [[page 4]] Le chiffre d'affaires a augmenté de 27 %.' " +
+  "(pour un tableur : '- [[Nom de la feuille]] ...'). N'utilise jamais un numéro de page qui n'apparaît pas dans l'extrait. " +
+  "Réponds uniquement avec ces lignes, 600 mots maximum.";
+
+Parse.Cloud.define("analyzeChunk", async (request) => {
+  const { text, fileName } = request.params;
+  if (!text || typeof text !== "string" || !text.trim()) {
+    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Aucun texte extrait à analyser.");
+  }
+  const notes = await callStage(
+    "A",
+    [
+      { role: "system", content: A_SYSTEM },
+      { role: "user", content: `Document : "${fileName || "document"}"\n\nExtrait :\n"""\n${text}\n"""` }
+    ],
+    { json: false, maxTokens: MAX_OUT.A }
+  );
+  return { notes };
+});
+
+// ---------------------------------------------------------------------------
+// ÉTAPE B — fusion de plusieurs séries de notes en une seule, plus courte
+// ---------------------------------------------------------------------------
+const B_SYSTEM =
+  "Tu fusionnes plusieurs séries de notes issues d'un même document en un seul ensemble plus court : supprime les doublons, " +
+  "regroupe ce qui va ensemble, garde tous les chiffres, noms, dates, décisions et actions importants, et conserve devant chaque " +
+  "note son marqueur [[page N]] (ou [[Nom de la feuille]]) tel qu'il est écrit. Ne crée jamais un marqueur nouveau. " +
+  "Format : des lignes '- [[page N]] note'. 450 mots maximum. Réponds uniquement avec ces lignes.";
+
+Parse.Cloud.define("mergeNotes", async (request) => {
+  const { notes, fileName } = request.params;
+  if (!Array.isArray(notes) || notes.length === 0) {
+    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Aucune note à fusionner.");
+  }
+  const merged = await callStage(
+    "B",
+    [
+      { role: "system", content: B_SYSTEM },
+      { role: "user", content: `Document : "${fileName || "document"}"\n\n` + notes.join("\n\n") }
+    ],
+    { json: false, maxTokens: MAX_OUT.B }
+  );
+  return { notes: merged };
+});
+
+// ---------------------------------------------------------------------------
+// ÉTAPE C — rédaction du résultat final (formats, citations : inchangés)
+// ---------------------------------------------------------------------------
+Parse.Cloud.define("generateDocumentResult", async (request) => {
+  const { text, action, preset, fileName, fileType, language, question, documents, condensed } = request.params;
+
+  if (!action) {
+    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Action manquante (summarize, analyze, ask, extract, action-items, transform, compare).");
+  }
+  if (!process.env.GROQ_API_KEY) {
+    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Clé Groq non configurée côté serveur (variable GROQ_API_KEY manquante).");
+  }
 
   const langInstruction = language ? `Réponds en ${language}.` : "Réponds en français.";
+  const condensedNote = condensed
+    ? "\n(Le contenu ci-dessous est un ensemble de notes condensées couvrant tout le document ; les marqueurs [[page N]] sont conservés.)"
+    : "";
 
   // ---- Comparaison de plusieurs documents ----
   if (action === "compare") {
@@ -223,13 +385,17 @@ Parse.Cloud.define("generateDocumentResult", async (request) => {
     }
     const systemPrompt = buildCompareInstructions(documents.map((d) => d.fileType));
     const docsBlock = documents
-      .map((d, i) => `### Document ${i + 1} : "${d.fileName || "document " + (i + 1)}"\n"""\n${(d.text || "").slice(0, 12000)}\n"""`)
+      .map((d, i) => `### Document ${i + 1} : "${d.fileName || "document " + (i + 1)}"\n"""\n${d.text || ""}\n"""`)
       .join("\n\n");
     const userPrompt =
-      `${langInstruction}\n\n${docsBlock}\n\n` +
+      `${langInstruction}${condensedNote}\n\n${docsBlock}\n\n` +
       `Réponds STRICTEMENT avec un objet JSON de cette forme :\n` +
       `{"content": "## Points communs\\n\\nparagraphes...\\n\\n## Différences\\n\\nparagraphes...", "sources": [{"docName": "...", "page": 0, "paragraph": 0, "cell": "...", "note": "..."}]}`;
-    const parsed = await callGroq(apiKey, systemPrompt, userPrompt);
+    const parsed = await callStage(
+      "C",
+      [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
+      { json: true, maxTokens: MAX_OUT.C }
+    );
     if (!parsed.content) {
       throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "La réponse de l'IA ne contient pas de champ 'content'.");
     }
@@ -241,18 +407,21 @@ Parse.Cloud.define("generateDocumentResult", async (request) => {
     throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Aucun texte extrait à analyser.");
   }
 
-  const truncatedText = text.slice(0, 24000);
   const mode = action === "ask" ? (question ? "chat" : (preset === "quiz" ? "qa" : "chat")) : "standard";
   const systemPrompt = buildInstructions(action, preset, fileType, mode);
   const questionPart = question ? `\n\nQuestion de l'utilisateur : "${question}"` : "";
 
   const userPrompt =
-    `Document : "${fileName || "document"}"\n${langInstruction}${questionPart}\n\n` +
-    `Contenu du document :\n"""\n${truncatedText}\n"""\n\n` +
+    `Document : "${fileName || "document"}"\n${langInstruction}${condensedNote}${questionPart}\n\n` +
+    `Contenu du document :\n"""\n${text}\n"""\n\n` +
     `Réponds STRICTEMENT avec un objet JSON de cette forme :\n` +
     `{"content": <voir consignes ci-dessus>, "sources": [{"page": <numéro de page réel>, "paragraph": <numéro approximatif>, "cell": "<uniquement pour un tableur>", "note": "<courte description>"}]}`;
 
-  const parsed = await callGroq(apiKey, systemPrompt, userPrompt);
+  const parsed = await callStage(
+    "C",
+    [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
+    { json: true, maxTokens: MAX_OUT.C }
+  );
   if (!parsed.content) {
     throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "La réponse de l'IA ne contient pas de champ 'content'.");
   }
