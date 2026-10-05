@@ -564,7 +564,6 @@
   #btn-continue.is-busy{flex:none;padding:0 4px;flex-direction:column;gap:1px;line-height:1.15;white-space:nowrap;overflow:hidden;}
   #btn-continue .gb-l{font-size:11px;font-weight:500;}
   #btn-continue .gb-p{font-size:13px;font-weight:600;}
-  .doc-note-dot{width:6px;height:6px;border-radius:50%;background:var(--yellow);flex-shrink:0;display:inline-block;}
 
   .citation-link{background:none;border:none;font-size:12px;color:var(--indigo);text-decoration:none;font-weight:500;white-space:nowrap;flex-shrink:0;cursor:pointer;font-family:inherit;padding:0;}
 
@@ -615,6 +614,10 @@
   .btn-primary{background:var(--cta);border-color:transparent;color:#fff;box-shadow:0 6px 18px rgba(110,80,255,.38);}
   .btn-primary:hover{background:var(--cta);filter:brightness(1.07);}
   .btn-primary:disabled{background:var(--yellow-off);color:var(--yellow-off-ink);box-shadow:none;}
+  .msg.assistant{background:rgba(255,255,255,.08);color:var(--ink);border-color:rgba(255,255,255,.16);}
+  .msg-citation{background:rgba(139,92,255,.22);color:#C9BCFF;}
+  .chat-input-row input{background:#14162C;color:var(--ink);border-color:#373C69;}
+  .chat-input-row input::placeholder{color:#7F86B0;}
   .db-topbar,.db-search,.db-sort,.db-filter-btn,.doc-row,.pill,.dropzone,.file-ready,.compare-card,.btn-outline,.btn-icon,.step-circle,.db-bell,.db-drawer-toggle,.db-sidebar,.res-top{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-color:rgba(255,255,255,.18);}
   .db-topbar{background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.25);}
   .db-sidebar{background:rgba(13,14,32,.94);}
@@ -727,6 +730,7 @@
   #screen-auth .auth-welcome{text-align:center;}
   /* --- ajustement 2 : dashboard fixe, seule la liste défile --- */
   html.lock-dash,html.lock-dash body{overflow:hidden;overscroll-behavior:none;height:100%;}
+  html.lock-wiz,html.lock-wiz body{overflow:hidden;overscroll-behavior:none;height:100%;}
   #screen-dashboard:not([hidden]){height:100vh;height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
   #screen-dashboard .db-body{flex:1;min-height:0;overflow:hidden;}
   #screen-dashboard .db-main{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
@@ -1075,6 +1079,7 @@ function showScreen(id){
     document.getElementById(s).hidden = (s !== id);
   });
   document.documentElement.classList.toggle("lock-dash", id === "screen-dashboard");
+  document.documentElement.classList.toggle("lock-wiz", id === "screen-wizard");
 }
 
 // ---------------- Auth screen ----------------
@@ -1307,7 +1312,7 @@ function renderList(tab, items){
       <input type="checkbox">
       <div class="doc-icon">${badgeText(tab, item)}</div>
       <div class="doc-info">
-        <div class="doc-name">${escapeHtml(name)}${item.get("notes") ? ' <span class="doc-note-dot" title="Has a note"></span>' : ""}</div>
+        <div class="doc-name">${escapeHtml(name)}</div>
         <div class="doc-meta">${escapeHtml(meta)}</div>
       </div>
       <button class="doc-menu-btn">&#8942;</button>
@@ -1455,7 +1460,6 @@ function openMenu(row, tab, item){
   menu.innerHTML = `
     ${tab !== "exports" ? `<button data-act="resume">${resumeIc}<span>Resume</span></button>` : ""}
     ${canRename ? `<button data-act="rename">${IC.rename}<span>Rename</span></button>` : ""}
-    <button data-act="notes">${IC.note}<span>${item.get("notes") ? "Edit note" : "Add note"}</span></button>
     <button data-act="share">${IC.share}<span>Share</span></button>
     <button data-act="delete" class="danger">${IC.trash}<span>Delete</span></button>
   `;
@@ -1470,8 +1474,6 @@ function openMenu(row, tab, item){
     } else if(act === "rename"){
       const field = tab === "documents" ? "fileName" : "title";
       openRenameModal(async (val)=>{ item.set(field, val); await item.save(); loadTab(tab); }, displayName(tab, item));
-    } else if(act === "notes"){
-      openNotesModal(item, tab);
     } else if(act === "delete"){
       openConfirmModal("Delete", "Delete " + (item.get("fileName")||item.get("title")||"this item") + "? This can't be undone.", "Delete", async ()=>{ await item.destroy(); loadTab(tab); refreshPlanCount(); });
     } else if(act === "share"){
@@ -1592,29 +1594,6 @@ function openRenameModal(onConfirm, current){
   input.onkeydown = (e)=>{ if(e.key === "Enter") confirmIt(); if(e.key === "Escape") close(); };
   if(current){ input.value = current; }
   input.focus(); input.select();
-}
-
-function openNotesModal(item, tab){
-  const overlay = document.createElement("div");
-  overlay.className = "modal-overlay";
-  overlay.innerHTML = `
-    <div class="modal-box">
-      <h3>Note</h3>
-      <textarea id="notes-textarea" placeholder="Write a personal note about this item…">${escapeHtml(item.get("notes")||"")}</textarea>
-      <div class="modal-actions">
-        <button class="btn btn-outline btn-sm" id="notes-cancel">Cancel</button>
-        <button class="btn btn-primary btn-sm" id="notes-save">Save</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  overlay.onclick = (e)=>{ if(e.target === overlay) overlay.remove(); };
-  document.getElementById("notes-cancel").onclick = ()=>overlay.remove();
-  document.getElementById("notes-save").onclick = async ()=>{
-    item.set("notes", document.getElementById("notes-textarea").value);
-    await item.save();
-    overlay.remove();
-    loadTab(tab);
-  };
 }
 
 document.getElementById("db-search").oninput = (e)=>{
@@ -2041,7 +2020,11 @@ window.addEventListener("pagehide", ()=>{
   }catch(e){}
 });
 let resultBackTarget = "wizard";
-function backToWizardStep(){ showScreen("screen-wizard"); }
+function backToWizardStep(){
+  showScreen("screen-wizard");
+  const btn = document.getElementById("btn-continue");
+  unlockGenBtn(btn); btn.textContent = "Générer"; updateContinueState();
+}
 
 function resetWizard(){
   currentDocument = null; selectedAction = null; selectedResult = null;
@@ -2340,6 +2323,7 @@ async function handleContinue(){
       try{ await convo.save(); }catch(e){ convo.unset("preset"); await convo.save(); }
       currentConversation = convo;
       openResultScreen("chat", [], null);
+      btn.disabled = false; unlockGenBtn(btn); btn.textContent = "Générer";
     } else {
       // Ask + Quiz → static list of questions/answers ("qa"); every other action renders in the chosen preset.
       const isQa = (selectedAction === "ask");
@@ -2439,6 +2423,7 @@ function openResultScreen(kind, payload, sources){
       <button class="btn-ghost-nav" id="btn-back-dash">${RET_SVG} Back to dashboard</button>`;
     document.getElementById("btn-share").onclick = ()=>shareItem("conversations", currentConversation);
     document.getElementById("btn-back-dash").onclick = backToDashboard;
+    showScreen("screen-result");
     return;
   } else if(kind === "table"){
     const t = payload && payload.headers ? payload : {headers:[], rows:[]};
