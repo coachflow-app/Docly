@@ -915,6 +915,57 @@
         <span id="db-plan-count">0 / 10</span> documents
         <div class="bar"><i id="db-plan-bar"></i></div>
       </div>
+    </nav>
+
+    <main class="db-main">
+      <div class="db-toolbar">
+        <div class="db-search-wrap">
+          <span class="fic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="6"/><path d="M15 15l5 5" stroke-linecap="round"/></svg></span>
+          <input type="text" class="db-search" id="db-search" placeholder="Search documents…">
+        </div>
+        <button class="btn btn-outline" id="btn-compare" hidden>Compare</button>
+        <button class="btn btn-primary" id="btn-new-doc">+ New document</button>
+      </div>
+      <nav class="db-tabs" id="db-tabs">
+    <button class="db-tab active" data-tab="documents">Documents</button>
+    <button class="db-tab" data-tab="summaries">Summaries</button>
+    <button class="db-tab" data-tab="conversations">Conversations</button>
+    <button class="db-tab" data-tab="analyses">Analyses</button>
+    <button class="db-tab" data-tab="exports">Exports</button>
+  </nav>
+      <div class="db-sortfilter-row">
+        <div class="db-sort-wrap">
+          <button class="db-sort" id="db-sort-btn" aria-haspopup="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 5v14M4.5 15.5L8 19l3.5-3.5M16 19V5M12.5 8.5L16 5l3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="db-sort-label">Most recent</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="db-sort-menu" id="db-sort-menu" hidden>
+            <button class="dsm-item active" data-val="recent">Most recent</button>
+            <button class="dsm-item" data-val="oldest">Oldest first</button>
+          </div>
+        </div>
+        <div class="db-filter-wrap">
+          <button class="db-filter-btn" id="db-filter-btn" aria-label="Filter">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h9M17 7h3M4 17h3M11 17h9" stroke-linecap="round"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
+            <span class="db-filter-badge" id="db-filter-badge" hidden>0</span>
+          </button>
+          <div class="db-filter-menu" id="db-filter-menu" hidden>
+            <div class="dfm-label">File type</div>
+            <div class="dfm-list" id="dfm-type">
+              <button class="dfm-item active" data-val="all">All</button>
+              <button class="dfm-item" data-val="pdf">PDF</button>
+              <button class="dfm-item" data-val="docx">DOCX</button>
+              <button class="dfm-item" data-val="xlsx">XLSX</button>
+              <button class="dfm-item" data-val="image">Images</button>
+            </div>
+            <div class="dfm-label">Date</div>
+            <div class="dfm-list" id="dfm-date">
+              <button class="dfm-item active" data-val="all">Any time</button>
+              <button class="dfm-item" data-val="today">Today</button>
+              <button class="dfm-item" data-val="week">This week</button>
+              <button class="dfm-item" data-val="month">This month</button>
+            </div>
+            <button class="dfm-reset" id="dfm-reset" type="button">Reset filters</button>
+          </div>
+        </div>
+      </div>
       <div class="db-section-head">
         <h1 id="db-tab-title">All documents</h1>
         <span class="db-count" id="db-count"></span>
