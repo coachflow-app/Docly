@@ -757,6 +757,39 @@
   /* --- toast --- */
   .docly-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);max-width:calc(100vw - 32px);padding:12px 18px;border-radius:14px;background:#14162C;color:#F0F2FF;border:1px solid #2EE6C5;box-shadow:0 8px 24px rgba(0,0,0,.45);font-size:13.5px;font-weight:500;z-index:9999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;text-align:center;}
   .docly-toast.show{opacity:1;transform:translate(-50%,0);}
+
+  /* --- Plans Docly --- */
+  .db-plan:hover{border-color:rgba(255,255,255,.4);}
+  .pill.locked{opacity:.5;}
+  .docly-plan-toast{text-align:left;width:min(360px,calc(100vw - 32px));font-weight:400;}
+  .docly-plan-toast.show{pointer-events:auto;}
+  .docly-plan-toast .pt-title{font-size:14px;font-weight:600;margin-bottom:6px;}
+  .docly-plan-toast .pt-line{font-size:12.5px;color:#C9C6E8;line-height:1.5;margin-bottom:3px;}
+  .docly-plan-toast .pt-btn{margin-top:8px;border:none;border-radius:10px;padding:9px 14px;background:linear-gradient(90deg,#8B5CFF,#5C48F4);color:#fff;font-size:13px;font-weight:600;cursor:pointer;min-height:40px;}
+  .docly-plan-toast .pt-bar{height:4px;background:rgba(255,255,255,.16);border-radius:4px;overflow:hidden;margin-top:10px;}
+  .docly-plan-toast .pt-bar i{display:block;height:100%;background:#2EE6C5;transform-origin:left;animation-name:ptbar;animation-timing-function:linear;animation-fill-mode:forwards;}
+  @keyframes ptbar{from{transform:scaleX(1);}to{transform:scaleX(0);}}
+  #plans-overlay{position:fixed;inset:0;z-index:9000;background:rgba(7,7,18,.88);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);overflow-y:auto;padding:16px;}
+  #plans-overlay[hidden]{display:none;}
+  .po-sheet{position:relative;max-width:820px;margin:0 auto;padding:44px 0 24px;color:#F0F2FF;}
+  .po-close{position:absolute;top:4px;right:0;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-size:26px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .po-sheet h2{font-size:22px;font-weight:600;margin:0 0 4px;}
+  .po-sub{font-size:13px;color:#A0A6CD;margin:0 0 16px;}
+  .po-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+  @media (min-width:768px){ .po-grid{grid-template-columns:1fr 1fr;} }
+  .po-card{position:relative;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);border-radius:16px;padding:18px 16px;display:flex;flex-direction:column;}
+  .po-card.reco{border:1.5px solid #8B5CFF;background:rgba(139,92,255,.12);}
+  .po-badge{position:absolute;top:-11px;right:14px;background:#2EE6C5;color:#04261D;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:999px;}
+  .po-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+  .po-name{font-size:17px;font-weight:600;}
+  .po-tag{font-size:11.5px;background:rgba(139,92,255,.25);color:#C9BCFF;padding:3px 9px;border-radius:8px;}
+  .po-price{margin:4px 0 12px;}
+  .po-price b{font-size:32px;font-weight:600;color:#fff;}
+  .po-price span{font-size:13px;color:#A0A6CD;}
+  .po-list{list-style:none;margin:0 0 16px;padding:0;flex:1;}
+  .po-list li{display:flex;gap:8px;font-size:13px;line-height:1.45;margin-bottom:8px;}
+  .po-list li::before{content:"\2713";color:#2EE6C5;font-weight:700;flex:none;}
+  .po-choose{border:none;border-radius:12px;padding:12px;background:linear-gradient(90deg,#8B5CFF,#5C48F4);color:#fff;font-size:14px;font-weight:600;cursor:pointer;min-height:46px;box-shadow:0 6px 18px rgba(110,80,255,.38);}
 </style>
 </head>
 <body>
@@ -877,61 +910,10 @@
         <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 4v11M7 11l5 5 5-5M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         Exports
       </button>
-      <div class="db-plan">
-        Free plan · <span id="db-plan-count">0 / 5</span> documents
+      <div class="db-plan" id="db-plan-block" role="button" tabindex="0" style="cursor:pointer;">
+        <strong style="display:block;font-size:13px;color:var(--ink);margin-bottom:4px;">Upgrade</strong>
+        <span id="db-plan-count">0 / 10</span> documents
         <div class="bar"><i id="db-plan-bar"></i></div>
-        <a href="#">Upgrade &rarr;</a>
-      </div>
-    </nav>
-
-    <main class="db-main">
-      <div class="db-toolbar">
-        <div class="db-search-wrap">
-          <span class="fic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="6"/><path d="M15 15l5 5" stroke-linecap="round"/></svg></span>
-          <input type="text" class="db-search" id="db-search" placeholder="Search documents…">
-        </div>
-        <button class="btn btn-outline" id="btn-compare" hidden>Compare</button>
-        <button class="btn btn-primary" id="btn-new-doc">+ New document</button>
-      </div>
-      <nav class="db-tabs" id="db-tabs">
-    <button class="db-tab active" data-tab="documents">Documents</button>
-    <button class="db-tab" data-tab="summaries">Summaries</button>
-    <button class="db-tab" data-tab="conversations">Conversations</button>
-    <button class="db-tab" data-tab="analyses">Analyses</button>
-    <button class="db-tab" data-tab="exports">Exports</button>
-  </nav>
-      <div class="db-sortfilter-row">
-        <div class="db-sort-wrap">
-          <button class="db-sort" id="db-sort-btn" aria-haspopup="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 5v14M4.5 15.5L8 19l3.5-3.5M16 19V5M12.5 8.5L16 5l3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="db-sort-label">Most recent</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <div class="db-sort-menu" id="db-sort-menu" hidden>
-            <button class="dsm-item active" data-val="recent">Most recent</button>
-            <button class="dsm-item" data-val="oldest">Oldest first</button>
-          </div>
-        </div>
-        <div class="db-filter-wrap">
-          <button class="db-filter-btn" id="db-filter-btn" aria-label="Filter">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h9M17 7h3M4 17h3M11 17h9" stroke-linecap="round"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
-            <span class="db-filter-badge" id="db-filter-badge" hidden>0</span>
-          </button>
-          <div class="db-filter-menu" id="db-filter-menu" hidden>
-            <div class="dfm-label">File type</div>
-            <div class="dfm-list" id="dfm-type">
-              <button class="dfm-item active" data-val="all">All</button>
-              <button class="dfm-item" data-val="pdf">PDF</button>
-              <button class="dfm-item" data-val="docx">DOCX</button>
-              <button class="dfm-item" data-val="xlsx">XLSX</button>
-              <button class="dfm-item" data-val="image">Images</button>
-            </div>
-            <div class="dfm-label">Date</div>
-            <div class="dfm-list" id="dfm-date">
-              <button class="dfm-item active" data-val="all">Any time</button>
-              <button class="dfm-item" data-val="today">Today</button>
-              <button class="dfm-item" data-val="week">This week</button>
-              <button class="dfm-item" data-val="month">This month</button>
-            </div>
-            <button class="dfm-reset" id="dfm-reset" type="button">Reset filters</button>
-          </div>
-        </div>
       </div>
       <div class="db-section-head">
         <h1 id="db-tab-title">All documents</h1>
@@ -1181,6 +1163,7 @@ document.getElementById("form-signup").onsubmit = async (e)=>{
     await user.signUp();
     localStorage.setItem("docly_remember", "true");
     enterApp();
+    showFreePlanToast();
   }catch(err){ showAuthError(err.message || "Could not create your account."); }
 };
 
@@ -1216,15 +1199,163 @@ function enterApp(){
   ensureNotificationPermission();
 }
 
+// ================= PLANS DOCLY =================
+const USD_TO_XOF = 600;                       // taux de conversion $ -> FCFA (doit être identique dans main.js)
+const KKIAPAY_PUBLIC_KEY = "COLLE_ICI_TA_CLE_PUBLIQUE_KKIAPAY";
+const KKIAPAY_SANDBOX = true;                 // passe à false quand tu passes en production
+const PLANS = {
+  free:{name:"Free", price:0, docs:10, pages:150, mb:20,
+    formats:["pdf"], actions:["summarize","ask"], exports:["pdf"], compareDocs:0, compareMonth:0},
+  pro:{name:"Pro", price:9.99, docs:200, pages:2500, mb:100,
+    formats:["pdf","csv","epub","xlsx"], actions:["summarize","ask","actionitems"], exports:["pdf","xlsx"], compareDocs:3, compareMonth:5},
+  unlimited:{name:"Unlimited", price:19.99, docs:Infinity, pages:5000, mb:250,
+    formats:["pdf","csv","epub","xlsx","docx","pptx","txt","md","png","jpg","jpeg","webp"],
+    actions:["summarize","analyze","ask","extract","actionitems","transform"], exports:["pdf","xlsx","docx","pptx","txt","md"], compareDocs:5, compareMonth:10}
+};
+const PRICING_COPY = {
+  pro:{tag:"Freelancers and students", items:["200 documents / month","2,500 pages · 100 MB per document","Summarize · Q&A · Action items","Compare 3 documents, 5 times / month","Upload and export: PDF, CSV, EPUB, XLSX"]},
+  unlimited:{tag:"Business and heavy use", items:["Unlimited documents","5,000 pages · 250 MB per document","Summarize · Analyze · Q&A · Extract · Action items · Transform","Compare 5 documents, 10 times / month","Upload and export: PDF, CSV, EPUB, XLSX, DOCX, PPTX, TXT, MD, images"]}
+};
+let userPlan = {plan:"free", used:0, limit:10, compareUsed:0, expiresAt:null};
+function currentPlan(){ return PLANS[userPlan.plan] || PLANS.free; }
+function planAllowsAction(a){ return currentPlan().actions.indexOf(a) !== -1; }
+function planAllowsExport(f){ return currentPlan().exports.indexOf(String(f).toLowerCase()) !== -1; }
+
+function planToast(title, lines, ms){
+  const old = document.getElementById("docly-plan-toast"); if(old) old.remove();
+  const t = document.createElement("div");
+  t.id = "docly-plan-toast"; t.className = "docly-toast docly-plan-toast"; t.setAttribute("role","status");
+  t.innerHTML = '<div class="pt-title">' + escapeHtml(title) + '</div>' +
+    lines.map(l=>'<div class="pt-line">' + escapeHtml(l) + '</div>').join("") +
+    '<button type="button" class="pt-btn" id="pt-up">Upgrade</button>' +
+    '<div class="pt-bar"><i style="animation-duration:' + ms + 'ms"></i></div>';
+  document.body.appendChild(t);
+  t.querySelector("#pt-up").onclick = ()=>{ t.classList.remove("show"); openPricing(); };
+  requestAnimationFrame(()=>t.classList.add("show"));
+  clearTimeout(planToast._t);
+  planToast._t = setTimeout(()=>{ t.classList.remove("show"); setTimeout(()=>t.remove(), 400); }, ms);
+}
+function showFreePlanToast(){
+  planToast("You are on the Free plan, forever",
+    ["10 documents / month", "150 pages · 20 MB per document", "Summarize and Q&A · PDF",
+     "Want more features? Upgrade to a higher plan."], 15000);
+}
+function planBlock(reason){
+  const p = currentPlan();
+  const up = "Upgrade to a higher plan to unlock more.";
+  if(reason === "quota"){
+    if(userPlan.plan === "free") planToast("You have used your 10 free documents this month",
+      ["Wait until next month: your free documents have expired and 10 new ones will arrive.", "Or upgrade to a higher plan."], 9000);
+    else planToast("You have reached your monthly document limit", ["Wait until next month, or upgrade to a higher plan."], 9000);
+  }
+  else if(reason === "format") planToast("This file type is not included in your plan", [up], 7000);
+  else if(reason === "size") planToast("This file is too large for your plan", ["Maximum " + p.mb + " MB per document.", up], 7000);
+  else if(reason === "pages") planToast("This document has too many pages for your plan", ["Maximum " + p.pages + " pages per document.", up], 7000);
+  else if(reason === "action") planToast("This action is not included in your plan", [up], 7000);
+  else if(reason === "export") planToast("This export format is not included in your plan", [up], 7000);
+  else if(reason === "compare") planToast("Comparison is not included in your plan", [up], 7000);
+  else if(reason === "comparedocs") planToast("Your plan compares up to " + p.compareDocs + " documents at once", [up], 7000);
+  else if(reason === "comparemonth") planToast("You have reached your monthly comparison limit", ["Wait until next month, or upgrade to a higher plan."], 7000);
+}
+
 async function refreshPlanCount(){
   try{
-    const q = new Parse.Query("Document");
-    q.equalTo("owner", Parse.User.current());
-    q.equalTo("status", "ready");
-    const count = await q.count();
-    document.getElementById("db-plan-count").textContent = Math.min(count,5) + " / 5";
-    document.getElementById("db-plan-bar").style.width = Math.min(100, (count/5)*100) + "%";
-  }catch(e){}
+    const s = await Parse.Cloud.run("getPlanStatus");
+    userPlan = {plan:s.plan, used:s.used, limit:(s.limit === null ? Infinity : s.limit), compareUsed:s.compareUsed || 0, expiresAt:s.expiresAt || null};
+  }catch(e){
+    try{
+      const start = new Date(); start.setUTCDate(1); start.setUTCHours(0,0,0,0);
+      const q = new Parse.Query("Document");
+      q.equalTo("owner", Parse.User.current());
+      q.equalTo("status", "ready");
+      q.greaterThanOrEqualTo("createdAt", start);
+      userPlan = {plan:"free", used:await q.count(), limit:10, compareUsed:0, expiresAt:null};
+    }catch(e2){}
+  }
+  renderPlanBlock();
+}
+function renderPlanBlock(){
+  const c = document.getElementById("db-plan-count"), b = document.getElementById("db-plan-bar");
+  if(!c || !b) return;
+  const unl = (userPlan.limit === Infinity);
+  c.textContent = userPlan.used + " / " + (unl ? "\u221E" : userPlan.limit);
+  b.style.width = unl ? "100%" : Math.min(100, (userPlan.used / userPlan.limit) * 100) + "%";
+  document.querySelectorAll("#action-pills .pill").forEach(p=>{
+    p.classList.toggle("locked", !planAllowsAction(p.dataset.value));
+  });
+}
+
+async function planPrecheckFile(file){
+  await refreshPlanCount();
+  const p = currentPlan();
+  const ext = (file.name.split(".").pop() || "").toLowerCase();
+  if(p.formats.indexOf(ext) === -1){ planBlock("format"); return false; }
+  if(file.size > p.mb * 1048576){ planBlock("size"); return false; }
+  if(userPlan.limit !== Infinity && userPlan.used >= userPlan.limit){ planBlock("quota"); return false; }
+  return true;
+}
+async function planConsumeCompare(n){
+  const p = currentPlan();
+  if(!p.compareDocs){ planBlock("compare"); return false; }
+  if(n > p.compareDocs){ planBlock("comparedocs"); return false; }
+  try{ await Parse.Cloud.run("consumeCompare", {count:n}); return true; }
+  catch(e){ if(/^PLAN:/.test((e && e.message) || "")){ planBlock("comparemonth"); return false; } return true; }
+}
+
+function openPricing(){
+  try{ closeDrawer(); }catch(e){}
+  const grid = document.getElementById("po-grid");
+  grid.innerHTML = ["pro","unlimited"].map(k=>{
+    const p = PLANS[k], c = PRICING_COPY[k];
+    return '<div class="po-card' + (k === "unlimited" ? ' reco' : '') + '">' +
+      (k === "unlimited" ? '<span class="po-badge">Recommended</span>' : '') +
+      '<div class="po-head"><span class="po-name">' + p.name + '</span><span class="po-tag">' + c.tag + '</span></div>' +
+      '<div class="po-price"><b>$' + p.price.toFixed(2) + '</b><span> / month</span></div>' +
+      '<ul class="po-list">' + c.items.map(i=>'<li>' + escapeHtml(i) + '</li>').join("") + '</ul>' +
+      '<button type="button" class="po-choose" data-plan="' + k + '">Choose now</button></div>';
+  }).join("");
+  grid.querySelectorAll(".po-choose").forEach(b=>{ b.onclick = ()=>startCheckout(b.dataset.plan); });
+  document.getElementById("plans-overlay").hidden = false;
+  document.body.style.overflow = "hidden";
+}
+function closePricing(){
+  const o = document.getElementById("plans-overlay"); if(o) o.hidden = true;
+  document.body.style.overflow = "";
+}
+document.addEventListener("click", e=>{
+  if(e.target.closest("#po-close")) closePricing();
+  if(e.target.closest("#db-plan-block")) openPricing();
+});
+document.addEventListener("keydown", e=>{
+  if((e.key === "Enter" || e.key === " ") && e.target && e.target.id === "db-plan-block"){ e.preventDefault(); openPricing(); }
+});
+
+let pendingPlanKey = null, kkiapayListening = false;
+function startCheckout(key){
+  const p = PLANS[key]; if(!p) return;
+  if(typeof openKkiapayWidget !== "function"){ showToast("The payment window could not load. Check your connection and try again."); return; }
+  if(KKIAPAY_PUBLIC_KEY.indexOf("COLLE_ICI") === 0){ showToast("Kkiapay public key is missing in index.html."); return; }
+  pendingPlanKey = key;
+  if(!kkiapayListening && typeof addSuccessListener === "function"){
+    kkiapayListening = true;
+    addSuccessListener(async (response)=>{
+      try{
+        await Parse.Cloud.run("activatePlan", {plan:pendingPlanKey, transactionId:response.transactionId});
+        await refreshPlanCount();
+        closePricing();
+        showToast(PLANS[pendingPlanKey].name + " plan activated");
+      }catch(err){ showToast((err && err.message) || "We could not confirm your payment. Contact support."); }
+    });
+  }
+  openKkiapayWidget({
+    amount: Math.round(p.price * USD_TO_XOF),
+    api_key: KKIAPAY_PUBLIC_KEY,
+    sandbox: KKIAPAY_SANDBOX,
+    email: Parse.User.current().get("email"),
+    name: "Docly",
+    data: key,
+    theme: "#8B5CFF"
+  });
 }
 
 function setActiveNav(tab){
@@ -1923,6 +2054,7 @@ async function handleCompare(){
   const ids = Array.from(selectedDocIds);
   const docs = ids.map(id=>docObjectsById[id]).filter(Boolean);
   if(docs.length < 2) return;
+  if(!(await planConsumeCompare(docs.length))) return;
   const btn = document.getElementById("btn-compare");
   btn.disabled = true; btn.textContent = "Comparing…";
   try{
@@ -2056,6 +2188,7 @@ dropzone.addEventListener("drop", e=>{
 fileInput.onchange = ()=>{ if(fileInput.files.length) handleFile(fileInput.files[0]); };
 
 async function handleFile(file){
+  if(!(await planPrecheckFile(file))){ try{ fileInput.value = ""; }catch(e){} return; }
   // the dropzone stays visible — dropping a new file replaces the current one
   if(currentDocument){ try{ await currentDocument.destroy(); }catch(e){} }
   const wrap = document.getElementById("file-ready-wrap");
@@ -2121,6 +2254,7 @@ async function handleFile(file){
     onExtractProgress(0);
     const extracted = await extractFileContent(file, fileType, onExtractProgress);
     doc.set("extractedText", extracted.text || "");
+    if(extracted.pageCount && extracted.pageCount > currentPlan().pages){ planBlock("pages"); document.getElementById("file-remove").click(); return; }
     if(extracted.pageCount) doc.set("pageCount", extracted.pageCount);
     await doc.save();
     const noteTxt = extracted.note ? " · " + extracted.note : "";
@@ -2138,6 +2272,7 @@ function formatSize(bytes){
 
 document.querySelectorAll("#action-pills .pill").forEach(p=>{
   p.onclick = ()=>{
+    if(!planAllowsAction(p.dataset.value)){ planBlock("action"); return; }
     const already = p.classList.contains("selected");
     document.querySelectorAll("#action-pills .pill").forEach(x=>x.classList.remove("selected"));
     if(already){
@@ -2976,6 +3111,7 @@ async function buildPptxBlob(title, text, slides){
 }
 async function exportResult(resultItem, text, format){
   format = format || "txt";
+  if(!planAllowsExport(format)){ planBlock("export"); return false; }
   text = text || (resultItem ? (resultItem.get("content")||"") : "");
   const baseName = (resultItem && resultItem.get("type")) ? resultItem.get("type") : "export";
   const title = (currentDocument && currentDocument.get("fileName")) || baseName;
@@ -3270,5 +3406,14 @@ async function renderViewerPdfPage(){
   });
 })();
 </script>
+<div id="plans-overlay" hidden>
+  <div class="po-sheet" role="dialog" aria-modal="true" aria-label="Plans">
+    <button type="button" class="po-close" id="po-close" aria-label="Close">&times;</button>
+    <h2>Get more from Docly</h2>
+    <p class="po-sub">Pick the plan that fits your work.</p>
+    <div class="po-grid" id="po-grid"></div>
+  </div>
+</div>
+<script src="https://cdn.kkiapay.me/k.js"></script>
 </body>
 </html>
