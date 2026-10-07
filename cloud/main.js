@@ -365,6 +365,10 @@ Parse.Cloud.define("mergeNotes", async (request) => {
 // ---------------------------------------------------------------------------
 Parse.Cloud.define("generateDocumentResult", async (request) => {
   const { text, action, preset, fileName, fileType, language, question, documents, condensed } = request.params;
+  if (request.user && action && action !== "compare") {
+    const planUser = await freshUser(request.user);
+    if (!PLAN_RULES[effectivePlanKey(planUser)].actions.includes(action)) throw planError("ACTION");
+  }
 
   if (!action) {
     throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Action manquante (summarize, analyze, ask, extract, action-items, transform, compare).");
@@ -430,4 +434,142 @@ Parse.Cloud.define("generateDocumentResult", async (request) => {
     content: parsed.content,
     sources: Array.isArray(parsed.sources) ? parsed.sources : []
   };
+});
+
+// ===========================================================================
+// PLANS DOCLY — quotas, expiration, paiement Kkiapay (tout est vérifié côté serveur)
+// ===========================================================================
+const PLAN_RULES = {
+  free: { docs: 10, pages: 150, mb: 20, priceUsd: 0, compareDocs: 0, compareMonth: 0,
+    formats: ["pdf"], actions: ["summarize", "ask"] },
+  pro: { docs: 200, pages: 2500, mb: 100, priceUsd: 9.99, compareDocs: 3, compareMonth: 5,
+    formats: ["pdf", "csv", "epub", "xlsx"], actions: ["summarize", "ask", "action-items"] },
+  unlimited: { docs: null, pages: 5000, mb: 250, priceUsd: 19.99, compareDocs: 5, compareMonth: 10,
+    formats: ["pdf", "csv", "epub", "xlsx", "docx", "pptx", "txt", "md", "png", "jpg", "jpeg", "webp"],
+    actions: ["summarize", "analyze", "ask", "extract", "action-items", "transform"] }
+};
+const USD_TO_XOF = 600; // doit être identique à index.html
+
+function monthKey() { const d = new Date(); return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0"); }
+async function freshUser(user) { return new Parse.Query(Parse.User).get(user.id, { useMasterKey: true }); }
+function effectivePlanKey(user) {
+  const p = user.get("plan") || "free";
+  const exp = user.get("planExpiresAt");
+  if (p !== "free" && (!exp || exp < new Date())) return "free"; // plan expiré : retour au gratuit
+  return PLAN_RULES[p] ? p : "free";
+}
+async function usageCount(user, kind, month) {
+  const q = new Parse.Query("UsageLog");
+  q.equalTo("owner", user); q.equalTo("kind", kind); q.equalTo("month", month);
+  return q.count({ useMasterKey: true });
+}
+async function addUsage(user, kind, docId) {
+  const log = new Parse.Object("UsageLog");
+  log.set("owner", user); log.set("kind", kind); log.set("month", monthKey());
+  if (docId) log.set("docId", docId);
+  const acl = new Parse.ACL(); acl.setPublicReadAccess(false); acl.setPublicWriteAccess(false);
+  log.setACL(acl);
+  await log.save(null, { useMasterKey: true });
+}
+function planError(code) { return new Parse.Error(Parse.Error.SCRIPT_FAILED, "PLAN:" + code); }
+
+Parse.Cloud.define("getPlanStatus", async (request) => {
+  if (!request.user) throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN, "Not logged in");
+  const user = await freshUser(request.user);
+  const key = effectivePlanKey(user);
+  const month = monthKey();
+  return {
+    plan: key,
+    used: await usageCount(user, "doc", month),
+    limit: PLAN_RULES[key].docs,
+    compareUsed: await usageCount(user, "compare", month),
+    expiresAt: key === "free" ? null : user.get("planExpiresAt")
+  };
+});
+
+Parse.Cloud.beforeSave("Document", async (request) => {
+  if (request.master || !request.user) return;
+  const doc = request.object;
+  const user = await freshUser(request.user);
+  const rules = PLAN_RULES[effectivePlanKey(user)];
+  if (doc.isNew()) {
+    const ext = String(doc.get("fileType") || "").toLowerCase();
+    if (!rules.formats.includes(ext)) throw planError("FORMAT");
+    if ((doc.get("fileSize") || 0) > rules.mb * 1048576) throw planError("SIZE");
+    if (rules.docs !== null && (await usageCount(user, "doc", monthKey())) >= rules.docs) throw planError("QUOTA");
+  }
+  const pages = doc.get("pageCount");
+  if (pages && pages > rules.pages) throw planError("PAGES");
+});
+
+Parse.Cloud.afterSave("Document", async (request) => {
+  const doc = request.object;
+  const was = request.original ? request.original.get("status") : null;
+  if (doc.get("status") !== "ready" || was === "ready") return;
+  const owner = doc.get("owner");
+  if (!owner) return;
+  const dq = new Parse.Query("UsageLog");
+  dq.equalTo("kind", "doc"); dq.equalTo("docId", doc.id);
+  if (await dq.first({ useMasterKey: true })) return;
+  await addUsage(owner, "doc", doc.id);
+});
+
+Parse.Cloud.define("consumeCompare", async (request) => {
+  if (!request.user) throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN, "Not logged in");
+  const user = await freshUser(request.user);
+  const rules = PLAN_RULES[effectivePlanKey(user)];
+  const count = Number(request.params.count) || 0;
+  if (!rules.compareDocs) throw planError("COMPARE");
+  if (count > rules.compareDocs) throw planError("COMPAREDOCS");
+  if ((await usageCount(user, "compare", monthKey())) >= rules.compareMonth) throw planError("COMPAREMONTH");
+  await addUsage(user, "compare");
+  return { ok: true };
+});
+
+Parse.Cloud.beforeSave(Parse.User, (request) => {
+  if (request.master) return;
+  ["plan", "planExpiresAt"].forEach((f) => {
+    if (request.object.dirty(f)) throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, "Not allowed");
+  });
+});
+
+Parse.Cloud.define("activatePlan", async (request) => {
+  if (!request.user) throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN, "Not logged in");
+  const { plan, transactionId } = request.params;
+  const rules = PLAN_RULES[plan];
+  if (!rules || plan === "free" || !transactionId) throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Invalid plan request.");
+  const pub = process.env.KKIAPAY_PUBLIC_KEY, priv = process.env.KKIAPAY_PRIVATE_KEY, sec = process.env.KKIAPAY_SECRET;
+  if (!pub || !priv || !sec) throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Kkiapay keys are not configured on the server.");
+
+  const dup = new Parse.Query("PlanPayment");
+  dup.equalTo("transactionId", String(transactionId));
+  if (await dup.first({ useMasterKey: true })) throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "This payment was already used.");
+
+  const base = process.env.KKIAPAY_SANDBOX === "false" ? "https://api.kkiapay.me" : "https://api-sandbox.kkiapay.me";
+  const res = await fetch(base + "/api/v1/transactions/status", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-api-key": pub, "x-private-key": priv, "x-secret-key": sec },
+    body: JSON.stringify({ transactionId })
+  });
+  const tx = await res.json().catch(() => ({}));
+  const expected = Math.round(rules.priceUsd * USD_TO_XOF);
+  if (!res.ok || tx.status !== "SUCCESS" || Number(tx.amount) < expected * 0.95) {
+    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "We could not verify your payment.");
+  }
+
+  const user = await freshUser(request.user);
+  const now = new Date();
+  const current = user.get("planExpiresAt");
+  const from = (user.get("plan") === plan && current && current > now) ? current : now;
+  const expires = new Date(from.getTime() + 30 * 24 * 3600 * 1000);
+  user.set("plan", plan);
+  user.set("planExpiresAt", expires);
+  await user.save(null, { useMasterKey: true });
+
+  const pay = new Parse.Object("PlanPayment");
+  pay.set("transactionId", String(transactionId)); pay.set("owner", user); pay.set("plan", plan); pay.set("amountXof", Number(tx.amount));
+  const acl = new Parse.ACL(); acl.setPublicReadAccess(false); acl.setPublicWriteAccess(false);
+  pay.setACL(acl);
+  await pay.save(null, { useMasterKey: true });
+  return { plan, expiresAt: expires };
 });
