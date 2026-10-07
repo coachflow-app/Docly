@@ -440,7 +440,7 @@ Parse.Cloud.define("generateDocumentResult", async (request) => {
 // PLANS DOCLY — quotas, expiration, paiement Kkiapay (tout est vérifié côté serveur)
 // ===========================================================================
 const PLAN_RULES = {
-  free: { docs: 10, pages: 150, mb: 20, priceUsd: 0, compareDocs: 0, compareMonth: 0,
+  free: { docs: 3, pages: 150, mb: 20, priceUsd: 0, compareDocs: 0, compareMonth: 0,
     formats: ["pdf"], actions: ["summarize", "ask"] },
   pro: { docs: 200, pages: 2500, mb: 100, priceUsd: 9.99, compareDocs: 3, compareMonth: 5,
     formats: ["pdf", "csv", "epub", "xlsx"], actions: ["summarize", "ask", "action-items"] },
@@ -450,7 +450,7 @@ const PLAN_RULES = {
 };
 const USD_TO_XOF = 600; // doit être identique à index.html
 
-function monthKey() { const d = new Date(); return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0"); }
+const DAY_MS = 24 * 3600 * 1000;
 async function freshUser(user) { return new Parse.Query(Parse.User).get(user.id, { useMasterKey: true }); }
 function effectivePlanKey(user) {
   const p = user.get("plan") || "free";
@@ -458,14 +458,25 @@ function effectivePlanKey(user) {
   if (p !== "free" && (!exp || exp < new Date())) return "free"; // plan expiré : retour au gratuit
   return PLAN_RULES[p] ? p : "free";
 }
-async function usageCount(user, kind, month) {
+// Cycles de 30 jours : Gratuit depuis l'inscription, plans payants depuis le paiement
+function cycleWindow(user, key) {
+  const exp = user.get("planExpiresAt");
+  const anchor = key === "free"
+    ? user.createdAt.getTime()
+    : (user.get("planStartedAt") || new Date(exp.getTime() - 30 * DAY_MS)).getTime();
+  const n = Math.max(0, Math.floor((Date.now() - anchor) / (30 * DAY_MS)));
+  const start = anchor + n * 30 * DAY_MS;
+  return { start: new Date(start), end: new Date(start + 30 * DAY_MS) };
+}
+async function usageCount(user, kind) {
+  const win = cycleWindow(user, effectivePlanKey(user));
   const q = new Parse.Query("UsageLog");
-  q.equalTo("owner", user); q.equalTo("kind", kind); q.equalTo("month", month);
+  q.equalTo("owner", user); q.equalTo("kind", kind); q.greaterThanOrEqualTo("createdAt", win.start);
   return q.count({ useMasterKey: true });
 }
 async function addUsage(user, kind, docId) {
   const log = new Parse.Object("UsageLog");
-  log.set("owner", user); log.set("kind", kind); log.set("month", monthKey());
+  log.set("owner", user); log.set("kind", kind);
   if (docId) log.set("docId", docId);
   const acl = new Parse.ACL(); acl.setPublicReadAccess(false); acl.setPublicWriteAccess(false);
   log.setACL(acl);
@@ -477,12 +488,12 @@ Parse.Cloud.define("getPlanStatus", async (request) => {
   if (!request.user) throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN, "Not logged in");
   const user = await freshUser(request.user);
   const key = effectivePlanKey(user);
-  const month = monthKey();
   return {
     plan: key,
-    used: await usageCount(user, "doc", month),
+    used: await usageCount(user, "doc"),
     limit: PLAN_RULES[key].docs,
-    compareUsed: await usageCount(user, "compare", month),
+    compareUsed: await usageCount(user, "compare"),
+    resetsAt: cycleWindow(user, key).end,
     expiresAt: key === "free" ? null : user.get("planExpiresAt")
   };
 });
@@ -496,7 +507,7 @@ Parse.Cloud.beforeSave("Document", async (request) => {
     const ext = String(doc.get("fileType") || "").toLowerCase();
     if (!rules.formats.includes(ext)) throw planError("FORMAT");
     if ((doc.get("fileSize") || 0) > rules.mb * 1048576) throw planError("SIZE");
-    if (rules.docs !== null && (await usageCount(user, "doc", monthKey())) >= rules.docs) throw planError("QUOTA");
+    if (rules.docs !== null && (await usageCount(user, "doc")) >= rules.docs) throw planError("QUOTA");
   }
   const pages = doc.get("pageCount");
   if (pages && pages > rules.pages) throw planError("PAGES");
@@ -521,16 +532,17 @@ Parse.Cloud.define("consumeCompare", async (request) => {
   const count = Number(request.params.count) || 0;
   if (!rules.compareDocs) throw planError("COMPARE");
   if (count > rules.compareDocs) throw planError("COMPAREDOCS");
-  if ((await usageCount(user, "compare", monthKey())) >= rules.compareMonth) throw planError("COMPAREMONTH");
+  if ((await usageCount(user, "compare")) >= rules.compareMonth) throw planError("COMPAREMONTH");
   await addUsage(user, "compare");
   return { ok: true };
 });
 
 Parse.Cloud.beforeSave(Parse.User, (request) => {
   if (request.master) return;
-  ["plan", "planExpiresAt"].forEach((f) => {
-    if (request.object.dirty(f)) throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, "Not allowed");
-  });
+  const protectedKeys = ["plan", "planExpiresAt", "planStartedAt"];
+  const o = request.object;
+  const touched = protectedKeys.some((k) => (o.isNew() ? o.get(k) !== undefined : o.dirty(k)));
+  if (touched) throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, "Not allowed");
 });
 
 Parse.Cloud.define("activatePlan", async (request) => {
@@ -562,6 +574,8 @@ Parse.Cloud.define("activatePlan", async (request) => {
   const current = user.get("planExpiresAt");
   const from = (user.get("plan") === plan && current && current > now) ? current : now;
   const expires = new Date(from.getTime() + 30 * 24 * 3600 * 1000);
+  const sameActive = user.get("plan") === plan && current && current > now;
+  user.set("planStartedAt", sameActive ? (user.get("planStartedAt") || now) : now);
   user.set("plan", plan);
   user.set("planExpiresAt", expires);
   await user.save(null, { useMasterKey: true });
