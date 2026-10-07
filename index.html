@@ -769,27 +769,29 @@
   .docly-plan-toast .pt-bar{height:4px;background:rgba(255,255,255,.16);border-radius:4px;overflow:hidden;margin-top:10px;}
   .docly-plan-toast .pt-bar i{display:block;height:100%;background:#2EE6C5;transform-origin:left;animation-name:ptbar;animation-timing-function:linear;animation-fill-mode:forwards;}
   @keyframes ptbar{from{transform:scaleX(1);}to{transform:scaleX(0);}}
-  #plans-overlay{position:fixed;inset:0;z-index:9000;background:rgba(7,7,18,.88);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);overflow-y:auto;padding:16px;}
+  #plans-overlay{position:fixed;inset:0;z-index:9000;background:rgba(7,7,18,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;justify-content:center;align-items:center;height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none;touch-action:none;padding:max(10px,env(safe-area-inset-top)) 12px max(10px,env(safe-area-inset-bottom));box-sizing:border-box;}
   #plans-overlay[hidden]{display:none;}
-  .po-sheet{position:relative;max-width:820px;margin:0 auto;padding:44px 0 24px;color:#F0F2FF;}
-  .po-close{position:absolute;top:4px;right:0;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-size:26px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-  .po-sheet h2{font-size:22px;font-weight:600;margin:0 0 4px;}
-  .po-sub{font-size:13px;color:#A0A6CD;margin:0 0 16px;}
-  .po-grid{display:grid;grid-template-columns:1fr;gap:14px;}
-  @media (min-width:768px){ .po-grid{grid-template-columns:1fr 1fr;} }
-  .po-card{position:relative;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);border-radius:16px;padding:18px 16px;display:flex;flex-direction:column;}
+  .po-sheet{width:100%;max-width:880px;max-height:100%;display:flex;flex-direction:column;gap:clamp(8px,1.6dvh,16px);color:#F0F2FF;}
+  .po-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex:none;}
+  .po-top h2{font-size:clamp(16px,2.8dvh,24px);font-weight:600;margin:0;line-height:1.2;}
+  .po-sub{font-size:clamp(11px,1.7dvh,13px);color:#A0A6CD;margin:2px 0 0;}
+  @media (max-height:600px){ .po-sub{display:none;} }
+  .po-close{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-size:24px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
+  .po-grid{display:grid;grid-template-columns:1fr;gap:clamp(12px,2dvh,16px);min-height:0;}
+  @media (min-width:720px),(orientation:landscape){ .po-grid{grid-template-columns:1fr 1fr;align-items:stretch;} }
+  .po-card{position:relative;min-height:0;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);border-radius:16px;padding:clamp(8px,1.8dvh,18px) clamp(10px,3vw,16px);display:flex;flex-direction:column;}
   .po-card.reco{border:1.5px solid #8B5CFF;background:rgba(139,92,255,.12);}
-  .po-badge{position:absolute;top:-11px;right:14px;background:#2EE6C5;color:#04261D;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:999px;}
-  .po-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
-  .po-name{font-size:17px;font-weight:600;}
-  .po-tag{font-size:11.5px;background:rgba(139,92,255,.25);color:#C9BCFF;padding:3px 9px;border-radius:8px;}
-  .po-price{margin:4px 0 12px;}
-  .po-price b{font-size:32px;font-weight:600;color:#fff;}
-  .po-price span{font-size:13px;color:#A0A6CD;}
-  .po-list{list-style:none;margin:0 0 16px;padding:0;flex:1;}
-  .po-list li{display:flex;gap:8px;font-size:13px;line-height:1.45;margin-bottom:8px;}
+  .po-badge{position:absolute;top:-9px;right:14px;background:#2EE6C5;color:#04261D;font-size:clamp(10px,1.6dvh,11.5px);font-weight:600;padding:2px 10px;border-radius:999px;}
+  .po-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:2px;flex-wrap:wrap;}
+  .po-name{font-size:clamp(14px,2.3dvh,18px);font-weight:600;}
+  .po-tag{font-size:clamp(10px,1.6dvh,12px);background:rgba(139,92,255,.25);color:#C9BCFF;padding:2px 9px;border-radius:8px;}
+  .po-price{margin:2px 0 clamp(4px,1dvh,12px);}
+  .po-price b{font-size:clamp(22px,4.2dvh,34px);font-weight:600;color:#fff;}
+  .po-price span{font-size:clamp(11px,1.7dvh,13px);color:#A0A6CD;}
+  .po-list{list-style:none;margin:0 0 clamp(6px,1.2dvh,14px);padding:0;flex:1;}
+  .po-list li{display:flex;gap:8px;font-size:clamp(10.5px,1.75dvh,13.5px);line-height:1.3;margin-bottom:clamp(2px,.7dvh,8px);}
   .po-list li::before{content:"\2713";color:#2EE6C5;font-weight:700;flex:none;}
-  .po-choose{border:none;border-radius:12px;padding:12px;background:linear-gradient(90deg,#8B5CFF,#5C48F4);color:#fff;font-size:14px;font-weight:600;cursor:pointer;min-height:46px;box-shadow:0 6px 18px rgba(110,80,255,.38);}
+  .po-choose{border:none;border-radius:12px;padding:0 12px;background:linear-gradient(90deg,#8B5CFF,#5C48F4);color:#fff;font-size:clamp(13px,1.9dvh,15px);font-weight:600;cursor:pointer;min-height:clamp(36px,5.8dvh,48px);touch-action:manipulation;}
 </style>
 </head>
 <body>
@@ -912,7 +914,7 @@
       </button>
       <div class="db-plan" id="db-plan-block" role="button" tabindex="0" style="cursor:pointer;">
         <strong style="display:block;font-size:13px;color:var(--ink);margin-bottom:4px;">Upgrade</strong>
-        <span id="db-plan-count">0 / 10</span> documents
+        <span id="db-plan-count">0 / 3</span> documents
         <div class="bar"><i id="db-plan-bar"></i></div>
       </div>
     </nav>
@@ -1255,19 +1257,19 @@ const USD_TO_XOF = 600;                       // taux de conversion $ -> FCFA (d
 const KKIAPAY_PUBLIC_KEY = "COLLE_ICI_TA_CLE_PUBLIQUE_KKIAPAY";
 const KKIAPAY_SANDBOX = true;                 // passe à false quand tu passes en production
 const PLANS = {
-  free:{name:"Free", price:0, docs:10, pages:150, mb:20,
+  free:{name:"Free", price:0, docs:3, pages:150, mb:20,
     formats:["pdf"], actions:["summarize","ask"], exports:["pdf"], compareDocs:0, compareMonth:0},
   pro:{name:"Pro", price:9.99, docs:200, pages:2500, mb:100,
-    formats:["pdf","csv","epub","xlsx"], actions:["summarize","ask","actionitems"], exports:["pdf","xlsx"], compareDocs:3, compareMonth:5},
+    formats:["pdf","csv","epub","xlsx"], actions:["summarize","ask","actionitems"], exports:["pdf","csv","epub","xlsx"], compareDocs:3, compareMonth:5},
   unlimited:{name:"Unlimited", price:19.99, docs:Infinity, pages:5000, mb:250,
     formats:["pdf","csv","epub","xlsx","docx","pptx","txt","md","png","jpg","jpeg","webp"],
-    actions:["summarize","analyze","ask","extract","actionitems","transform"], exports:["pdf","xlsx","docx","pptx","txt","md"], compareDocs:5, compareMonth:10}
+    actions:["summarize","analyze","ask","extract","actionitems","transform"], exports:["pdf","csv","epub","xlsx","docx","pptx","txt","md"], compareDocs:5, compareMonth:10}
 };
 const PRICING_COPY = {
   pro:{tag:"Freelancers and students", items:["200 documents / month","2,500 pages · 100 MB per document","Summarize · Q&A · Action items","Compare 3 documents, 5 times / month","Upload and export: PDF, CSV, EPUB, XLSX"]},
   unlimited:{tag:"Business and heavy use", items:["Unlimited documents","5,000 pages · 250 MB per document","Summarize · Analyze · Q&A · Extract · Action items · Transform","Compare 5 documents, 10 times / month","Upload and export: PDF, CSV, EPUB, XLSX, DOCX, PPTX, TXT, MD, images"]}
 };
-let userPlan = {plan:"free", used:0, limit:10, compareUsed:0, expiresAt:null};
+let userPlan = {plan:"free", used:0, limit:3, compareUsed:0, expiresAt:null};
 function currentPlan(){ return PLANS[userPlan.plan] || PLANS.free; }
 function planAllowsAction(a){ return currentPlan().actions.indexOf(a) !== -1; }
 function planAllowsExport(f){ return currentPlan().exports.indexOf(String(f).toLowerCase()) !== -1; }
@@ -1288,14 +1290,14 @@ function planToast(title, lines, ms){
 }
 function showFreePlanToast(){
   planToast("You are on the Free plan, forever",
-    ["10 documents / month", "150 pages · 20 MB per document", "Summarize and Q&A · PDF",
+    ["3 documents / month", "150 pages · 20 MB per document", "Summarize and Q&A · PDF",
      "Want more features? Upgrade to a higher plan."], 15000);
 }
 function planBlock(reason){
   const p = currentPlan();
   const up = "Upgrade to a higher plan to unlock more.";
   if(reason === "quota"){
-    if(userPlan.plan === "free") planToast("You have used your 10 free documents this month",
+    if(userPlan.plan === "free") planToast("You have used your 3 free documents this month",
       ["Wait until next month: your free documents have expired and 10 new ones will arrive.", "Or upgrade to a higher plan."], 9000);
     else planToast("You have reached your monthly document limit", ["Wait until next month, or upgrade to a higher plan."], 9000);
   }
@@ -1315,12 +1317,12 @@ async function refreshPlanCount(){
     userPlan = {plan:s.plan, used:s.used, limit:(s.limit === null ? Infinity : s.limit), compareUsed:s.compareUsed || 0, expiresAt:s.expiresAt || null};
   }catch(e){
     try{
-      const start = new Date(); start.setUTCDate(1); start.setUTCHours(0,0,0,0);
+      const start = new Date(Date.now() - 30*24*3600*1000);
       const q = new Parse.Query("Document");
       q.equalTo("owner", Parse.User.current());
       q.equalTo("status", "ready");
       q.greaterThanOrEqualTo("createdAt", start);
-      userPlan = {plan:"free", used:await q.count(), limit:10, compareUsed:0, expiresAt:null};
+      userPlan = {plan:"free", used:await q.count(), limit:3, compareUsed:0, expiresAt:null};
     }catch(e2){}
   }
   renderPlanBlock();
@@ -1351,6 +1353,44 @@ async function planConsumeCompare(n){
   if(n > p.compareDocs){ planBlock("comparedocs"); return false; }
   try{ await Parse.Cloud.run("consumeCompare", {count:n}); return true; }
   catch(e){ if(/^PLAN:/.test((e && e.message) || "")){ planBlock("comparemonth"); return false; } return true; }
+}
+
+function buildCsvBlob(text, rows){
+  const data = rows ? [rows.headers].concat(rows.rows) : text.split(/\r?\n/).filter(l=>l.trim()).map(l=>[l]);
+  return new Blob(["\uFEFF" + Papa.unparse(data)], {type:"text/csv;charset=utf-8"});
+}
+async function buildEpubBlob(title, text){
+  const esc = s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const zip = new JSZip();
+  zip.file("mimetype", "application/epub+zip", {compression:"STORE"});
+  zip.file("META-INF/container.xml", '<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>');
+  const body = text.split(/\r?\n/).filter(l=>l.trim()).map(l=>"<p>" + esc(l) + "</p>").join("\n");
+  const head = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><meta charset="utf-8"/><title>' + esc(title) + '</title></head><body>';
+  zip.file("OEBPS/chapter.xhtml", head + '<h1>' + esc(title) + '</h1>\n' + body + '</body></html>');
+  zip.file("OEBPS/nav.xhtml", head + '<nav epub:type="toc"><ol><li><a href="chapter.xhtml">' + esc(title) + '</a></li></ol></nav></body></html>');
+  const stamp = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+  zip.file("OEBPS/content.opf", '<?xml version="1.0" encoding="UTF-8"?>\n<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">docly-' + Date.now() + '</dc:identifier><dc:title>' + esc(title) + '</dc:title><dc:language>en</dc:language><meta property="dcterms:modified">' + stamp + '</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="ch1" href="chapter.xhtml" media-type="application/xhtml+xml"/></manifest><spine><itemref idref="ch1"/></spine></package>');
+  return await zip.generateAsync({type:"blob", mimeType:"application/epub+zip"});
+}
+async function extractEpub(file){
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const parser = new DOMParser();
+  const container = parser.parseFromString(await zip.file("META-INF/container.xml").async("string"), "application/xml");
+  const opfPath = container.querySelector("rootfile").getAttribute("full-path");
+  const dir = opfPath.indexOf("/") === -1 ? "" : opfPath.slice(0, opfPath.lastIndexOf("/") + 1);
+  const opf = parser.parseFromString(await zip.file(opfPath).async("string"), "application/xml");
+  const manifest = {};
+  opf.querySelectorAll("manifest > item").forEach(it=>{ manifest[it.getAttribute("id")] = it.getAttribute("href"); });
+  let text = "";
+  for(const ref of Array.from(opf.querySelectorAll("spine > itemref"))){
+    const href = manifest[ref.getAttribute("idref")];
+    const entry = href ? zip.file(decodeURIComponent(dir + href)) : null;
+    if(!entry) continue;
+    const doc = parser.parseFromString(await entry.async("string"), "text/html");
+    text += (doc.body ? doc.body.textContent : "").replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim() + "\n\n";
+  }
+  text = text.trim();
+  return {text, pageCount: Math.max(1, Math.ceil(text.length / 3000))};
 }
 
 function openPricing(){
@@ -2749,6 +2789,8 @@ function resultActionsHtml(){
         <option value="docx">as DOCX</option>
         <option value="xlsx">as XLSX</option>
         <option value="pptx">as PPTX</option>
+        <option value="csv">as CSV</option>
+        <option value="epub">as EPUB</option>
       </select></span>
       <button class="btn btn-outline btn-sm btn-ic" id="btn-share">${IC.share}Share</button>
     </div>
@@ -2949,6 +2991,7 @@ async function extractFileContent(file, fileType, onProgress){
     if(fileType === "docx") return await withSimulatedProgress(onProgress, ()=>extractDocx(file));
     if(fileType === "xlsx" || fileType === "xls") return await withSimulatedProgress(onProgress, ()=>extractXlsx(file));
     if(fileType === "csv") return await withSimulatedProgress(onProgress, ()=>extractCsv(file));
+    if(fileType === "epub") return await withSimulatedProgress(onProgress, ()=>extractEpub(file));
     if(fileType === "txt" || fileType === "md") return await withSimulatedProgress(onProgress, ()=>extractPlain(file));
     if(["png","jpg","jpeg","webp"].includes(fileType)) return await extractImageOcr(file, onProgress);
     if(onProgress) onProgress(100);
@@ -3161,6 +3204,7 @@ async function buildPptxBlob(title, text, slides){
   return await pres.write({outputType:"blob"});
 }
 async function exportResult(resultItem, text, format){
+  if(["pdf","md","docx","xlsx","pptx","txt","csv","epub"].indexOf(format) === -1){ showToast("This export format is not supported."); return false; }
   format = format || "txt";
   if(!planAllowsExport(format)){ planBlock("export"); return false; }
   text = text || (resultItem ? (resultItem.get("content")||"") : "");
@@ -3197,6 +3241,14 @@ async function exportResult(resultItem, text, format){
     }catch(err){ showErrorNotice("PPTX export failed: " + err.message); return; }
     filename = baseName + ".pptx";
     formatLabel = "PPTX";
+  } else if(format === "csv"){
+    blob = buildCsvBlob(text, exportableRows());
+    filename = baseName + ".csv";
+    formatLabel = "CSV";
+  } else if(format === "epub"){
+    try{ blob = await buildEpubBlob(title, text); }catch(err){ showErrorNotice("EPUB export failed: " + err.message); return; }
+    filename = baseName + ".epub";
+    formatLabel = "EPUB";
   } else {
     blob = new Blob([text], {type:"text/plain"});
     filename = baseName + ".txt";
@@ -3459,12 +3511,14 @@ async function renderViewerPdfPage(){
 </script>
 <div id="plans-overlay" hidden>
   <div class="po-sheet" role="dialog" aria-modal="true" aria-label="Plans">
-    <button type="button" class="po-close" id="po-close" aria-label="Close">&times;</button>
-    <h2>Get more from Docly</h2>
-    <p class="po-sub">Pick the plan that fits your work.</p>
+    <div class="po-top">
+      <div><h2>Get more from Docly</h2><p class="po-sub">Pick the plan that fits your work.</p></div>
+      <button type="button" class="po-close" id="po-close" aria-label="Close">&times;</button>
+    </div>
     <div class="po-grid" id="po-grid"></div>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.kkiapay.me/k.js"></script>
 </body>
 </html>
