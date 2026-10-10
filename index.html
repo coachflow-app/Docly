@@ -792,6 +792,9 @@
   .po-list li{display:flex;gap:8px;font-size:clamp(10.5px,1.75dvh,13.5px);line-height:1.3;margin-bottom:clamp(2px,.7dvh,8px);}
   .po-list li::before{content:"\2713";color:#2EE6C5;font-weight:700;flex:none;}
   .po-choose{border:none;border-radius:12px;padding:0 12px;background:linear-gradient(90deg,#8B5CFF,#5C48F4);color:#fff;font-size:clamp(13px,1.9dvh,15px);font-weight:600;cursor:pointer;min-height:clamp(36px,5.8dvh,48px);touch-action:manipulation;}
+  /* --- Flèche du profil plus claire --- */
+  .db-user-btn{color:#F0F2FF;}
+  .db-user-btn svg{width:18px;height:18px;stroke-width:2.4;color:#F0F2FF;}
 </style>
 </head>
 <body>
@@ -955,7 +958,11 @@
               <button class="dfm-item" data-val="pdf">PDF</button>
               <button class="dfm-item" data-val="docx">DOCX</button>
               <button class="dfm-item" data-val="xlsx">XLSX</button>
-              <button class="dfm-item" data-val="image">Images</button>
+              <button class="dfm-item" data-val="pptx">PPTX</button>
+              <button class="dfm-item" data-val="txt">TXT</button>
+              <button class="dfm-item" data-val="epub">EPUB</button>
+              <button class="dfm-item" data-val="csv">CSV</button>
+              <button class="dfm-item" data-val="md">MD</button>
             </div>
             <div class="dfm-label">Date</div>
             <div class="dfm-list" id="dfm-date">
@@ -1259,15 +1266,15 @@ const KKIAPAY_SANDBOX = true;                 // passe à false quand tu passes 
 const PLANS = {
   free:{name:"Free", price:0, docs:3, pages:150, mb:20,
     formats:["pdf"], actions:["summarize","ask"], exports:["pdf"], compareDocs:0, compareMonth:0},
-  pro:{name:"Pro", price:9.99, docs:200, pages:2500, mb:100,
+  pro:{name:"Pro", price:9.99, docs:100, pages:1000, mb:100,
     formats:["pdf","csv","epub","xlsx"], actions:["summarize","ask","actionitems"], exports:["pdf","csv","epub","xlsx"], compareDocs:3, compareMonth:5},
-  unlimited:{name:"Unlimited", price:19.99, docs:Infinity, pages:5000, mb:250,
+  unlimited:{name:"Max", price:19.99, docs:300, pages:2500, pagesMonth:2500, mb:250,
     formats:["pdf","csv","epub","xlsx","docx","pptx","txt","md","png","jpg","jpeg","webp"],
     actions:["summarize","analyze","ask","extract","actionitems","transform"], exports:["pdf","csv","epub","xlsx","docx","pptx","txt","md"], compareDocs:5, compareMonth:10}
 };
 const PRICING_COPY = {
-  pro:{tag:"Freelancers and students", items:["200 documents / month","2,500 pages · 100 MB per document","Summarize · Q&A · Action items","Compare 3 documents, 5 times / month","Upload and export: PDF, CSV, EPUB, XLSX"]},
-  unlimited:{tag:"Business and heavy use", items:["Unlimited documents","5,000 pages · 250 MB per document","Summarize · Analyze · Q&A · Extract · Action items · Transform","Compare 5 documents, 10 times / month","Upload and export: PDF, CSV, EPUB, XLSX, DOCX, PPTX, TXT, MD, images"]}
+  pro:{tag:"Freelancers and students", items:["100 documents / month","1,000 pages · 100 MB per document","Summarize · Q&A · Action items","Compare 3 documents, 5 times / month","Upload and export: PDF, CSV, EPUB, XLSX"]},
+  unlimited:{tag:"Business and heavy use", items:["300 documents / month","2,500 pages analyzed / month · 250 MB per document","Summarize · Analyze · Q&A · Extract · Action items · Transform","Compare 5 documents, 10 times / month","Upload and export: PDF, CSV, EPUB, XLSX, DOCX, PPTX, TXT, MD, images"]}
 };
 let userPlan = {plan:"free", used:0, limit:3, compareUsed:0, expiresAt:null};
 function currentPlan(){ return PLANS[userPlan.plan] || PLANS.free; }
@@ -1304,6 +1311,7 @@ function planBlock(reason){
   else if(reason === "format") planToast("This file type is not included in your plan", [up], 7000);
   else if(reason === "size") planToast("This file is too large for your plan", ["Maximum " + p.mb + " MB per document.", up], 7000);
   else if(reason === "pages") planToast("This document has too many pages for your plan", ["Maximum " + p.pages + " pages per document.", up], 7000);
+  else if(reason === "pagesmonth") planToast("You have reached your monthly page limit", ["Wait until your next cycle, or upgrade to a higher plan."], 7000);
   else if(reason === "action") planToast("This action is not included in your plan", [up], 7000);
   else if(reason === "export") planToast("This export format is not included in your plan", [up], 7000);
   else if(reason === "compare") planToast("Comparison is not included in your plan", [up], 7000);
@@ -1314,7 +1322,7 @@ function planBlock(reason){
 async function refreshPlanCount(){
   try{
     const s = await Parse.Cloud.run("getPlanStatus");
-    userPlan = {plan:s.plan, used:s.used, limit:(s.limit === null ? Infinity : s.limit), compareUsed:s.compareUsed || 0, expiresAt:s.expiresAt || null};
+    userPlan = {plan:s.plan, used:s.used, limit:(s.limit === null ? Infinity : s.limit), compareUsed:s.compareUsed || 0, pagesUsed:s.pagesUsed || 0, expiresAt:s.expiresAt || null};
   }catch(e){
     try{
       const start = new Date(Date.now() - 30*24*3600*1000);
@@ -1832,6 +1840,9 @@ function openDrawer(){
   document.getElementById("db-overlay").hidden = false;
 }
 document.getElementById("db-drawer-toggle").onclick = openDrawer;
+document.getElementById("db-drawer-toggle").onclick = function(){
+  if(document.getElementById("db-sidebar").classList.contains("open")) closeDrawer(); else openDrawer();
+};
 document.getElementById("db-overlay").onclick = closeDrawer;
 function closeDrawer(){
   document.getElementById("db-sidebar").classList.remove("open");
@@ -2345,7 +2356,7 @@ async function handleFile(file){
     onExtractProgress(0);
     const extracted = await extractFileContent(file, fileType, onExtractProgress);
     doc.set("extractedText", extracted.text || "");
-    if(extracted.pageCount && extracted.pageCount > currentPlan().pages){ planBlock("pages"); document.getElementById("file-remove").click(); return; }
+    if(extracted.pageCount && (extracted.pageCount > currentPlan().pages || (userPlan.pagesUsed || 0) + extracted.pageCount > (currentPlan().pagesMonth || Infinity))){ planBlock(extracted.pageCount > currentPlan().pages ? "pages" : "pagesmonth"); document.getElementById("file-remove").click(); return; }
     if(extracted.pageCount) doc.set("pageCount", extracted.pageCount);
     await doc.save();
     const noteTxt = extracted.note ? " · " + extracted.note : "";
