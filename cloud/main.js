@@ -214,6 +214,9 @@ function parseJsonLoose(raw) {
 }
 
 // Un appel Groq pour un modèle donné
+// Prompt caching Groq : le début de la requête (consigne fixe + document) doit rester identique d'un appel à l'autre.
+const CACHE_SYSTEM = "Tu es Docly, un assistant d'analyse documentaire. Le document est fourni en premier, puis une section « CONSIGNES » précise la tâche à accomplir : suis-la scrupuleusement.";
+
 async function groqChat(apiKey, model, messages, opts) {
   const body = {
     model: model,
@@ -379,7 +382,7 @@ Parse.Cloud.define("generateDocumentResult", async (request) => {
 
   const langInstruction = language ? `Réponds en ${language}.` : "Réponds en français.";
   const condensedNote = condensed
-    ? "\n(Le contenu ci-dessous est un ensemble de notes condensées couvrant tout le document ; les marqueurs [[page N]] sont conservés.)"
+    ? "\n(Le contenu du document est un ensemble de notes condensées couvrant tout le document ; les marqueurs [[page N]] sont conservés.)"
     : "";
 
   // ---- Comparaison de plusieurs documents ----
@@ -392,12 +395,12 @@ Parse.Cloud.define("generateDocumentResult", async (request) => {
       .map((d, i) => `### Document ${i + 1} : "${d.fileName || "document " + (i + 1)}"\n"""\n${d.text || ""}\n"""`)
       .join("\n\n");
     const userPrompt =
-      `${langInstruction}${condensedNote}\n\n${docsBlock}\n\n` +
+      `${docsBlock}\n\n=== CONSIGNES ===\n${systemPrompt}\n\n${langInstruction}${condensedNote}\n\n` +
       `Réponds STRICTEMENT avec un objet JSON de cette forme :\n` +
       `{"content": "## Points communs\\n\\nparagraphes...\\n\\n## Différences\\n\\nparagraphes...", "sources": [{"docName": "...", "page": 0, "paragraph": 0, "cell": "...", "note": "..."}]}`;
     const parsed = await callStage(
       "C",
-      [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
+      [{ role: "system", content: CACHE_SYSTEM }, { role: "user", content: userPrompt }],
       { json: true, maxTokens: MAX_OUT.C }
     );
     if (!parsed.content) {
@@ -416,14 +419,15 @@ Parse.Cloud.define("generateDocumentResult", async (request) => {
   const questionPart = question ? `\n\nQuestion de l'utilisateur : "${question}"` : "";
 
   const userPrompt =
-    `Document : "${fileName || "document"}"\n${langInstruction}${condensedNote}${questionPart}\n\n` +
+    `Document : "${fileName || "document"}"\n\n` +
     `Contenu du document :\n"""\n${text}\n"""\n\n` +
+    `=== CONSIGNES ===\n${systemPrompt}\n\n${langInstruction}${condensedNote}${questionPart}\n\n` +
     `Réponds STRICTEMENT avec un objet JSON de cette forme :\n` +
     `{"content": <voir consignes ci-dessus>, "sources": [{"page": <numéro de page réel>, "paragraph": <numéro approximatif>, "cell": "<uniquement pour un tableur>", "note": "<courte description>"}]}`;
 
   const parsed = await callStage(
     "C",
-    [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
+    [{ role: "system", content: CACHE_SYSTEM }, { role: "user", content: userPrompt }],
     { json: true, maxTokens: MAX_OUT.C }
   );
   if (!parsed.content) {
@@ -442,9 +446,9 @@ Parse.Cloud.define("generateDocumentResult", async (request) => {
 const PLAN_RULES = {
   free: { docs: 3, pages: 150, mb: 20, priceUsd: 0, compareDocs: 0, compareMonth: 0,
     formats: ["pdf"], actions: ["summarize", "ask"] },
-  pro: { docs: 200, pages: 2500, mb: 100, priceUsd: 9.99, compareDocs: 3, compareMonth: 5,
+  pro: { docs: 100, pages: 1000, mb: 100, priceUsd: 9.99, compareDocs: 3, compareMonth: 5,
     formats: ["pdf", "csv", "epub", "xlsx"], actions: ["summarize", "ask", "action-items"] },
-  unlimited: { docs: null, pages: 5000, mb: 250, priceUsd: 19.99, compareDocs: 5, compareMonth: 10,
+  unlimited: { docs: 300, pages: 2500, pagesMonth: 2500, mb: 250, priceUsd: 19.99, compareDocs: 5, compareMonth: 10,
     formats: ["pdf", "csv", "epub", "xlsx", "docx", "pptx", "txt", "md", "png", "jpg", "jpeg", "webp"],
     actions: ["summarize", "analyze", "ask", "extract", "action-items", "transform"] }
 };
@@ -474,10 +478,18 @@ async function usageCount(user, kind) {
   q.equalTo("owner", user); q.equalTo("kind", kind); q.greaterThanOrEqualTo("createdAt", win.start);
   return q.count({ useMasterKey: true });
 }
-async function addUsage(user, kind, docId) {
+async function pagesUsage(user) {
+  const win = cycleWindow(user, effectivePlanKey(user));
+  const q = new Parse.Query("UsageLog");
+  q.equalTo("owner", user); q.equalTo("kind", "doc"); q.greaterThanOrEqualTo("createdAt", win.start); q.limit(1000);
+  const rows = await q.find({ useMasterKey: true });
+  return rows.reduce((s, r) => s + (r.get("pages") || 0), 0);
+}
+async function addUsage(user, kind, docId, pages) {
   const log = new Parse.Object("UsageLog");
   log.set("owner", user); log.set("kind", kind);
   if (docId) log.set("docId", docId);
+  if (pages) log.set("pages", pages);
   const acl = new Parse.ACL(); acl.setPublicReadAccess(false); acl.setPublicWriteAccess(false);
   log.setACL(acl);
   await log.save(null, { useMasterKey: true });
@@ -493,6 +505,7 @@ Parse.Cloud.define("getPlanStatus", async (request) => {
     used: await usageCount(user, "doc"),
     limit: PLAN_RULES[key].docs,
     compareUsed: await usageCount(user, "compare"),
+    pagesUsed: await pagesUsage(user),
     resetsAt: cycleWindow(user, key).end,
     expiresAt: key === "free" ? null : user.get("planExpiresAt")
   };
@@ -511,6 +524,7 @@ Parse.Cloud.beforeSave("Document", async (request) => {
   }
   const pages = doc.get("pageCount");
   if (pages && pages > rules.pages) throw planError("PAGES");
+  if (pages && rules.pagesMonth && doc.dirty("pageCount") && (await pagesUsage(user)) + pages > rules.pagesMonth) throw planError("PAGESMONTH");
 });
 
 Parse.Cloud.afterSave("Document", async (request) => {
@@ -522,7 +536,7 @@ Parse.Cloud.afterSave("Document", async (request) => {
   const dq = new Parse.Query("UsageLog");
   dq.equalTo("kind", "doc"); dq.equalTo("docId", doc.id);
   if (await dq.first({ useMasterKey: true })) return;
-  await addUsage(owner, "doc", doc.id);
+  await addUsage(owner, "doc", doc.id, doc.get("pageCount") || 0);
 });
 
 Parse.Cloud.define("consumeCompare", async (request) => {
