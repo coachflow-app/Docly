@@ -1261,8 +1261,6 @@ function enterApp(){
 
 // ================= PLANS DOCLY =================
 const USD_TO_XOF = 600;                       // taux de conversion $ -> FCFA (doit être identique dans main.js)
-const KKIAPAY_PUBLIC_KEY = "COLLE_ICI_TA_CLE_PUBLIQUE_KKIAPAY";
-const KKIAPAY_SANDBOX = true;                 // passe à false quand tu passes en production
 const PLANS = {
   free:{name:"Free", price:0, docs:3, pages:150, mb:20,
     formats:["pdf"], actions:["summarize","ask"], exports:["pdf"], compareDocs:0, compareMonth:0},
@@ -1429,11 +1427,12 @@ document.addEventListener("keydown", e=>{
   if((e.key === "Enter" || e.key === " ") && e.target && e.target.id === "db-plan-block"){ e.preventDefault(); openPricing(); }
 });
 
-let pendingPlanKey = null, kkiapayListening = false;
-function startCheckout(key){
+let pendingPlanKey = null, kkiapayListening = false, kkiapayCfg = null;
+async function startCheckout(key){
   const p = PLANS[key]; if(!p) return;
   if(typeof openKkiapayWidget !== "function"){ showToast("The payment window could not load. Check your connection and try again."); return; }
-  if(KKIAPAY_PUBLIC_KEY.indexOf("COLLE_ICI") === 0){ showToast("Kkiapay public key is missing in index.html."); return; }
+  try{ if(!kkiapayCfg) kkiapayCfg = await Parse.Cloud.run("getKkiapayConfig"); }
+  catch(err){ showToast((err && err.message) || "Payments are not available right now."); return; }
   pendingPlanKey = key;
   if(!kkiapayListening && typeof addSuccessListener === "function"){
     kkiapayListening = true;
@@ -1445,12 +1444,14 @@ function startCheckout(key){
         showToast(PLANS[pendingPlanKey].name + " plan activated");
       }catch(err){ showToast((err && err.message) || "We could not confirm your payment. Contact support."); }
     });
+    if(typeof addFailedListener === "function") addFailedListener(()=>{ showToast("The payment was not completed."); });
   }
+  const u = Parse.User.current();
   openKkiapayWidget({
     amount: Math.round(p.price * USD_TO_XOF),
-    api_key: KKIAPAY_PUBLIC_KEY,
-    sandbox: KKIAPAY_SANDBOX,
-    email: Parse.User.current().get("email"),
+    key: kkiapayCfg.key,
+    sandbox: kkiapayCfg.sandbox,
+    email: u.get("email") || u.get("username"),
     name: "Docly",
     data: key,
     theme: "#8B5CFF"
