@@ -559,27 +559,56 @@ Parse.Cloud.beforeSave(Parse.User, (request) => {
   if (touched) throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, "Not allowed");
 });
 
+// ---- Kkiapay : clés lues depuis les variables d'environnement Back4app (jamais dans le code) ----
+function kkiapaySandbox() { return process.env.KKIAPAY_SANDBOX !== "false"; } // sandbox par défaut
+
+Parse.Cloud.define("getKkiapayConfig", async (request) => {
+  if (!request.user) throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN, "Not logged in");
+  const key = process.env.KKIAPAY_PUBLIC_KEY;
+  if (!key) throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Payments are not configured yet.");
+  return { key, sandbox: kkiapaySandbox() };
+});
+
+async function verifyKkiapay(transactionId) {
+  const pub = process.env.KKIAPAY_PUBLIC_KEY, priv = process.env.KKIAPAY_PRIVATE_KEY, sec = process.env.KKIAPAY_SECRET;
+  if (!pub || !priv || !sec) throw new Error("Kkiapay keys are not configured on the server.");
+  try {
+    const lib = require("@kkiapay-org/nodejs-sdk");
+    const factory = typeof lib === "function" ? lib : (lib.default || lib.kkiapay);
+    const k = factory({ privatekey: priv, publickey: pub, secretkey: sec, sandbox: kkiapaySandbox() });
+    return await k.verify(transactionId);
+  } catch (sdkError) {
+    console.error("Kkiapay SDK unavailable, using REST fallback:", sdkError && sdkError.message);
+    const base = kkiapaySandbox() ? "https://api-sandbox.kkiapay.me" : "https://api.kkiapay.me";
+    const res = await fetch(base + "/api/v1/transactions/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": pub, "x-private-key": priv, "x-secret-key": sec },
+      body: JSON.stringify({ transactionId })
+    });
+    return await res.json();
+  }
+}
+
 Parse.Cloud.define("activatePlan", async (request) => {
   if (!request.user) throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN, "Not logged in");
   const { plan, transactionId } = request.params;
   const rules = PLAN_RULES[plan];
   if (!rules || plan === "free" || !transactionId) throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Invalid plan request.");
-  const pub = process.env.KKIAPAY_PUBLIC_KEY, priv = process.env.KKIAPAY_PRIVATE_KEY, sec = process.env.KKIAPAY_SECRET;
-  if (!pub || !priv || !sec) throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Kkiapay keys are not configured on the server.");
-
   const dup = new Parse.Query("PlanPayment");
   dup.equalTo("transactionId", String(transactionId));
   if (await dup.first({ useMasterKey: true })) throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "This payment was already used.");
 
-  const base = process.env.KKIAPAY_SANDBOX === "false" ? "https://api.kkiapay.me" : "https://api-sandbox.kkiapay.me";
-  const res = await fetch(base + "/api/v1/transactions/status", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-api-key": pub, "x-private-key": priv, "x-secret-key": sec },
-    body: JSON.stringify({ transactionId })
-  });
-  const tx = await res.json().catch(() => ({}));
+  let tx;
+  try {
+    tx = await verifyKkiapay(String(transactionId));
+  } catch (e) {
+    console.error("Kkiapay verify error:", e && e.message);
+    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "We could not verify your payment.");
+  }
+  console.log("Kkiapay verify result:", JSON.stringify(tx));
   const expected = Math.round(rules.priceUsd * USD_TO_XOF);
-  if (!res.ok || tx.status !== "SUCCESS" || Number(tx.amount) < expected * 0.95) {
+  const paid = Number(tx && tx.amount);
+  if (!tx || tx.status !== "SUCCESS" || (Number.isFinite(paid) && paid < expected * 0.95)) {
     throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "We could not verify your payment.");
   }
 
