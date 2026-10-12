@@ -2649,7 +2649,7 @@ function openResultScreen(kind, payload, sources){
       <div class="chat-wrap">
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-input-row">
-          <input type="text" id="chat-input" placeholder="Ask a question about this document…">
+          <textarea id="chat-input" rows="1" placeholder="Ask a question about this document…"></textarea>
           <button id="chat-send" aria-label="Send"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
       </div>`;
@@ -3532,5 +3532,202 @@ async function renderViewerPdfPage(){
 </div>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.kkiapay.me/k.js"></script>
+<style id="chat-adjust">
+  /* ===== Chat Questions/Réponses : ajustements (code ajouté, couleurs inchangées) ===== */
+  #screen-result.chat-mode .res-wrap{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:12px;align-items:center;max-width:960px;padding-top:12px;}
+  @media (min-width:768px) and (max-width:1023px){ #screen-result.chat-mode .res-wrap{max-width:800px;} }
+  #screen-result.chat-mode .res-top{display:contents;}
+  #screen-result.chat-mode .res-top .spacer{display:none;}
+  #screen-result.chat-mode .res-back{grid-column:1;grid-row:1;}
+  #screen-result.chat-mode .res-badge{grid-column:3;grid-row:1;justify-self:end;font-size:11.5px;}
+  #screen-result.chat-mode .res-head{grid-column:2;grid-row:1;margin:0;min-width:0;gap:10px;align-items:center;}
+  #screen-result.chat-mode .res-head .rhi{width:38px;height:38px;}
+  #screen-result.chat-mode .res-filename{font-size:clamp(20px,5.5vw,24px);}
+  #screen-result.chat-mode .res-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+  #screen-result.chat-mode .res-alert,#screen-result.chat-mode #res-content,#screen-result.chat-mode .result-actions{grid-column:1 / -1;}
+  #screen-result.chat-mode #res-content{margin-top:22px;}
+  #screen-result.chat-mode .chat-wrap{border:none;border-radius:0;height:calc(var(--vvh,100dvh) - 270px);min-height:300px;max-height:none;}
+  #screen-result.chat-mode .chat-messages{padding:4px 0 12px;gap:14px;scroll-behavior:smooth;}
+  #screen-result.chat-mode .msg{max-width:88%;padding:12px 16px;border-radius:16px;font-size:15px;line-height:1.55;}
+  #screen-result.chat-mode .chat-input-row{border-top:none;padding:8px 0 0;align-items:flex-end;}
+  .chat-input-row textarea{flex:1;min-height:48px;max-height:min(140px,30dvh);box-sizing:border-box;border:1px solid var(--line);border-radius:24px;padding:13px 16px;font-size:16px;line-height:1.35;font-family:inherit;resize:none;overflow-y:auto;background:#14162C;color:var(--ink);border-color:#373C69;}
+  .chat-input-row textarea::placeholder{color:#7F86B0;}
+  #chat-send:disabled{opacity:.45;cursor:not-allowed;}
+  .chat-hint{display:none;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin:8px 0 0 4px;}
+  .chat-hint.show{display:flex;}
+  .chat-empty{margin:auto;width:100%;max-width:560px;text-align:center;padding:8px 0;}
+  .chat-empty .ce-ic{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.12);color:#2EE6C5;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
+  .chat-empty h3{font-size:18px;font-weight:600;margin:0 0 14px;color:var(--ink);}
+  .chat-sugs{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .chat-sug{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.06);color:var(--ink);font-size:14px;cursor:pointer;font-family:inherit;max-width:100%;text-align:left;}
+  .msg-actions{align-self:flex-start;display:flex;flex-wrap:wrap;gap:2px;margin:-6px 0 0 -6px;}
+  .msg-actions button{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 10px;background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;border-radius:10px;}
+  .msg-actions button.on{color:#2EE6C5;}
+  .msg-actions button:disabled{opacity:.45;cursor:not-allowed;}
+  .chat-typing{display:inline-flex;gap:5px;align-items:center;}
+  .chat-typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:ctyp 1.1s infinite ease-in-out;}
+  .chat-typing i:nth-child(2){animation-delay:.18s;}.chat-typing i:nth-child(3){animation-delay:.36s;}
+  @keyframes ctyp{0%,80%,100%{opacity:.3;transform:translateY(0);}40%{opacity:1;transform:translateY(-3px);}}
+</style>
+<script id="chat-adjust-js">
+(function(){
+  var DEFAULT_PH = "Ask a question about this document\u2026";
+  var busy = false, cdTimer = null, cdLeft = 0;
+  var SUGS = {
+    table: ["What are the key figures in this file?", "Which values stand out or look unusual?", "Can you summarize the data in a table?"],
+    image: ["What text appears in this image?", "Summarize what you see.", "List the key information found."],
+    text:  ["What is this document about?", "What are the key points?", "What actions or next steps are mentioned?"]
+  };
+  function esc(s){ return (typeof escapeHtml === "function") ? escapeHtml(s) : String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function $(id){ return document.getElementById(id); }
+  function toast(m){ try{ showToast(m); }catch(e){} }
+  function kindOf(){
+    var t = ""; try{ t = String(currentDocument.get("fileType") || "").toLowerCase(); }catch(e){}
+    if(["xlsx","xls","csv"].indexOf(t) !== -1) return "table";
+    if(["png","jpg","jpeg","webp"].indexOf(t) !== -1) return "image";
+    return "text";
+  }
+  function grow(){
+    var ta = $("chat-input"); if(!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, Math.min(140, window.innerHeight * 0.3)) + "px";
+  }
+  function sendState(){
+    var ta = $("chat-input"), b = $("chat-send"); if(!ta || !b) return;
+    b.disabled = busy || !ta.value.trim();
+  }
+  function scrollEnd(){ var w = $("chat-messages"); if(w) w.scrollTop = w.scrollHeight; }
+  function setVvh(){ var vv = window.visualViewport; document.documentElement.style.setProperty("--vvh", (vv ? vv.height : window.innerHeight) + "px"); }
+  setVvh();
+  window.addEventListener("resize", setVvh);
+  if(window.visualViewport) window.visualViewport.addEventListener("resize", function(){
+    setVvh(); var ta = $("chat-input");
+    if(ta && document.activeElement === ta){ try{ ta.scrollIntoView({block:"nearest"}); }catch(e){} }
+  });
+
+  // Enter = envoyer, Maj+Entrée = nouvelle ligne
+  document.addEventListener("keydown", function(e){
+    if(!e.target || e.target.id !== "chat-input" || e.key !== "Enter" || e.isComposing) return;
+    if(e.shiftKey){ e.stopPropagation(); return; }
+    e.preventDefault();
+  }, true);
+
+  // Message d'attente de Groq -> « Next attempt in X s »
+  function hint(){
+    var h = document.querySelector(".chat-hint");
+    if(!h){
+      var row = document.querySelector(".chat-input-row"); if(!row) return null;
+      h = document.createElement("div"); h.className = "chat-hint";
+      h.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg><span></span>';
+      row.insertAdjacentElement("afterend", h);
+    }
+    return h;
+  }
+  function stopCountdown(){
+    clearInterval(cdTimer); cdTimer = null;
+    var h = document.querySelector(".chat-hint"); if(h) h.classList.remove("show");
+  }
+  function startCountdown(s){
+    var h = hint(); if(!h) return;
+    cdLeft = s; clearInterval(cdTimer);
+    var label = h.querySelector("span");
+    function paint(){ label.textContent = "Next attempt in " + cdLeft + " s"; }
+    paint(); h.classList.add("show");
+    cdTimer = setInterval(function(){ cdLeft--; if(cdLeft <= 0){ stopCountdown(); } else { paint(); } }, 1000);
+  }
+  function watch(ta){
+    new MutationObserver(function(){
+      var m = (ta.getAttribute("placeholder") || "").match(/Waiting for Groq limits\u2026 (\d+)s/);
+      if(m){ ta.setAttribute("placeholder", DEFAULT_PH); startCountdown(parseInt(m[1], 10)); }
+    }).observe(ta, {attributes:true, attributeFilter:["placeholder"]});
+  }
+
+  function renderEmpty(wrap){
+    var list = SUGS[kindOf()];
+    wrap.innerHTML = '<div class="chat-empty"><div class="ce-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/></svg></div><h3>Ask a question about your document</h3><div class="chat-sugs">' +
+      list.map(function(q){ return '<button type="button" class="chat-sug">' + esc(q) + '</button>'; }).join("") + '</div></div>';
+    wrap.querySelectorAll(".chat-sug").forEach(function(b){
+      b.onclick = function(){ var ta = $("chat-input"); if(!ta) return; ta.value = b.textContent; grow(); sendState(); sendChatMessage(); };
+    });
+  }
+
+  function addActions(el, messages){
+    var i = parseInt(el.getAttribute("data-i"), 10), m = messages[i]; if(!m) return;
+    var fb = 0; try{ fb = m.get("feedback") || 0; }catch(e){}
+    var row = document.createElement("div"); row.className = "msg-actions";
+    row.innerHTML =
+      '<button type="button" data-a="copy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg>Copy</button>' +
+      '<button type="button" data-a="retry"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg>Retry</button>' +
+      '<button type="button" data-a="up" aria-label="Good answer"' + (fb === 1 ? ' class="on"' : '') + '><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 11v9H4v-9zM7 11l4-8c1.5 0 2.5 1 2.2 2.6L12.8 9H19a2 2 0 012 2.4l-1.3 6.4A3 3 0 0116.8 20H7"/></svg></button>' +
+      '<button type="button" data-a="down" aria-label="Bad answer"' + (fb === -1 ? ' class="on"' : '') + '><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" style="transform:rotate(180deg)"><path d="M7 11v9H4v-9zM7 11l4-8c1.5 0 2.5 1 2.2 2.6L12.8 9H19a2 2 0 012 2.4l-1.3 6.4A3 3 0 0116.8 20H7"/></svg></button>';
+    el.insertAdjacentElement("afterend", row);
+    row.querySelectorAll("button").forEach(function(b){
+      b.onclick = async function(){
+        var a = b.getAttribute("data-a");
+        if(a === "copy"){
+          try{ await navigator.clipboard.writeText(m.get("content") || el.innerText); toast("Copied to clipboard"); }catch(e){ toast("Could not copy"); }
+        } else if(a === "retry"){
+          if(busy) return;
+          var prev = messages[i - 1], ta = $("chat-input");
+          if(prev && prev.get("role") === "user" && ta){ ta.value = prev.get("content"); grow(); sendState(); sendChatMessage(); }
+        } else {
+          var v = (a === "up") ? 1 : -1, next = (m.get("feedback") === v) ? 0 : v;
+          try{ m.set("feedback", next); await m.save(); }catch(e){ toast("Could not save your feedback"); return; }
+          row.querySelector('[data-a="up"]').classList.toggle("on", next === 1);
+          row.querySelector('[data-a="down"]').classList.toggle("on", next === -1);
+        }
+      };
+    });
+  }
+
+  function enhance(messages){
+    var wrap = $("chat-messages"); if(!wrap) return;
+    var scr = $("screen-result"); if(scr) scr.classList.add("chat-mode");
+    var ta = $("chat-input");
+    if(ta && !ta.dataset.ready){
+      ta.dataset.ready = "1";
+      ta.addEventListener("input", function(){ grow(); sendState(); });
+      watch(ta);
+    }
+    if(!messages.length) renderEmpty(wrap);
+    else wrap.querySelectorAll(".msg.assistant[data-i]").forEach(function(el){ addActions(el, messages); });
+    grow(); sendState(); scrollEnd();
+  }
+
+  // Le mode « chat » ne reste actif que tant que le chat est affiché
+  var rc = $("res-content");
+  if(rc) new MutationObserver(function(){
+    var scr = $("screen-result");
+    if(scr && !rc.querySelector(".chat-wrap")){ scr.classList.remove("chat-mode"); stopCountdown(); }
+  }).observe(rc, {childList:true});
+
+  var origRender = renderChatMessages;
+  renderChatMessages = function(messages){ origRender(messages); enhance(messages); };
+
+  var origSend = sendChatMessage;
+  sendChatMessage = async function(){
+    if(busy) return;
+    var ta = $("chat-input"); if(!ta) return;
+    var text = ta.value.trim(); if(!text) return;
+    busy = true;
+    var wrap = $("chat-messages");
+    if(wrap){
+      var empty = wrap.querySelector(".chat-empty"); if(empty) wrap.innerHTML = "";
+      var u = document.createElement("div"); u.className = "msg user temp"; u.textContent = text; wrap.appendChild(u);
+      var t = document.createElement("div"); t.className = "msg assistant temp"; t.setAttribute("aria-label", "Docly is writing");
+      t.innerHTML = '<span class="chat-typing"><i></i><i></i><i></i></span>'; wrap.appendChild(t);
+      scrollEnd();
+    }
+    var p = origSend();
+    grow(); sendState();
+    try{ await p; }
+    finally{
+      busy = false; stopCountdown();
+      document.querySelectorAll("#chat-messages .temp").forEach(function(n){ n.remove(); });
+      grow(); sendState();
+    }
+  };
+})();
+</script>
 </body>
 </html>
