@@ -1062,15 +1062,14 @@
   <div class="res-wrap">
     <div class="res-top">
       <button class="res-back" id="res-back"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 9l6 5"/><path d="M3 9h14a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3h-7"/></svg> Back to dashboard</button>
-      <span class="spacer" style="flex:1"></span>
-      <span class="res-badge" id="res-badge"></span>
-    </div>
-    <div class="res-head">
-      <div class="rhi" id="res-file-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></div>
-      <div style="min-width:0;">
-        <p class="res-filename" id="res-filename"></p>
-        <p class="res-meta" id="res-meta"></p>
+      <div class="res-head">
+        <div class="rhi" id="res-file-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></div>
+        <div style="min-width:0;">
+          <p class="res-filename" id="res-filename"></p>
+          <p class="res-meta" id="res-meta"></p>
+        </div>
       </div>
+      <span class="res-badge" id="res-badge"></span>
     </div>
     <div class="res-alert" id="res-alert"></div>
     <div id="res-content"></div>
@@ -2136,7 +2135,7 @@ async function runComparePipeline(docs, onStatus){
     }
     pipePct = 85; pipeSay(onStatus, "Writing comparison… 85%");
     try{
-      return await pipeCall("generateDocumentResult", { action: "compare", documents: prepared, condensed: true, language: "français" },
+      return await pipeCall("generateDocumentResult", { action: "compare", documents: prepared, condensed: true, language: "English" },
         "C", total + PIPE.OVER_C + Math.round(PIPE.OUT_C * 0.6), onStatus);
     }catch(e){
       if(e.tooLarge && total > 800){ total = Math.floor(total * 0.75); continue; }
@@ -2196,6 +2195,7 @@ function openComparisonScreen(docs, content, sources){
   document.getElementById("res-filename").textContent = "Comparing " + docs.length + " documents";
   document.getElementById("res-meta").textContent = docs.map(d=>d.get("fileName")).join(" · ");
   document.getElementById("res-badge").textContent = "Comparison";
+  { const fi = document.getElementById("res-file-icon"); if(fi) fi.removeAttribute("data-fmt"); }
   hideResAlert();
   const box = document.getElementById("res-content");
   const cards = docs.map((d,i)=>{
@@ -2510,8 +2510,10 @@ function fallbackSourcesHtml(sources){
 function renderMarkdownLite(text){
   if(!text) return "";
   const lines = String(text).split(/\r?\n/);
-  let html = "", inList = false, tableRows = null;
-  const closeList = ()=>{ if(inList){ html += "</ul>"; inList = false; } };
+  let html = "", listTag = "", tableRows = null, code = null;
+  const inl = (t)=> escapeHtml(t).replace(/\*\*([^*\n]+?)\*\*/g, "<b>$1</b>");
+  const closeList = ()=>{ if(listTag){ html += "</" + listTag + ">"; listTag = ""; } };
+  const openList = (t)=>{ if(listTag !== t){ closeList(); html += "<" + t + ">"; listTag = t; } };
   const flushTable = ()=>{
     if(!tableRows) return;
     const [head, ...body] = tableRows;
@@ -2520,6 +2522,12 @@ function renderMarkdownLite(text){
   };
   lines.forEach(raw=>{
     const line = raw.trim();
+    if(line.startsWith("```")){
+      if(code === null){ closeList(); flushTable(); code = []; }
+      else { html += "<pre><code>" + escapeHtml(code.join("\n")) + "</code></pre>"; code = null; }
+      return;
+    }
+    if(code !== null){ code.push(raw); return; }
     if(line.startsWith("|")){
       closeList();
       if(/^\|[\s\-:|]+\|?$/.test(line)) return; // separator row
@@ -2529,16 +2537,16 @@ function renderMarkdownLite(text){
     }
     flushTable();
     if(!line){ closeList(); return; }
-    if(line.startsWith("## ")){ closeList(); html += `<h4>${escapeHtml(line.slice(3))}</h4>`; return; }
-    if(line.startsWith("# ")){ closeList(); html += `<h3>${escapeHtml(line.slice(2))}</h3>`; return; }
-    if(line.startsWith("- ") || line.startsWith("* ")){
-      if(!inList){ html += "<ul>"; inList = true; }
-      html += `<li>${escapeHtml(line.slice(2))}</li>`;
-      return;
-    }
+    let m;
+    if((m = line.match(/^#{3,6}\s+(.*)$/))){ closeList(); html += `<h4>${inl(m[1])}</h4>`; return; }
+    if(line.startsWith("## ")){ closeList(); html += `<h4>${inl(line.slice(3))}</h4>`; return; }
+    if(line.startsWith("# ")){ closeList(); html += `<h3>${inl(line.slice(2))}</h3>`; return; }
+    if((m = line.match(/^\d+[.)]\s+(.*)$/))){ openList("ol"); html += `<li>${inl(m[1])}</li>`; return; }
+    if(line.startsWith("- ") || line.startsWith("* ")){ openList("ul"); html += `<li>${inl(line.slice(2))}</li>`; return; }
     closeList();
-    html += `<p>${escapeHtml(line)}</p>`;
+    html += `<p>${inl(line)}</p>`;
   });
+  if(code !== null) html += "<pre><code>" + escapeHtml(code.join("\n")) + "</code></pre>";
   closeList(); flushTable();
   return html;
 }
@@ -2577,7 +2585,7 @@ async function handleContinue(){
         preset: cloudPreset,
         fileName: currentDocument.get("fileName"),
         fileType: currentDocument.get("fileType"),
-        language: "français",
+        language: "English",
         onStatus: s=>{ genStatus(btn, s); }
       });
 
@@ -2596,7 +2604,7 @@ async function handleContinue(){
       currentResultObject = result;
       openResultScreen(renderKind, aiResponse.content, aiResponse.sources || []);
       refreshPlanCount();
-      createNotification("Your " + (isQa ? "questions-réponses" : TYPE_MAP[selectedAction]) + " for \"" + currentDocument.get("fileName") + "\" is ready.");
+      createNotification("Your " + (isQa ? "questions and answers" : ({summarize:"summary", analyze:"analysis", extract:"extraction", transform:"transformation", actionitems:"action items"}[selectedAction] || TYPE_MAP[selectedAction])) + " for \"" + currentDocument.get("fileName") + "\" is ready.");
     }
   }catch(err){
     btn.disabled = false; unlockGenBtn(btn); btn.textContent = "Générer";
@@ -2632,10 +2640,12 @@ function openResultScreen(kind, payload, sources){
   document.getElementById("res-filename").textContent = doc.get("fileName");
   const sizeTxt = doc.get("fileSize") ? formatSize(doc.get("fileSize")) : "";
   const pagesTxt = doc.get("pageCount") ? doc.get("pageCount") + " pages" : "";
-  document.getElementById("res-meta").textContent = ["Document analysé", pagesTxt, "Généré en français"].filter(Boolean).join(" · ");
+  document.getElementById("res-meta").textContent = "";
+  { const fi = document.getElementById("res-file-icon"); const ft = String(doc.get("fileType") || String(doc.get("fileName") || "").split(".").pop() || "").replace(/^\./, "").toUpperCase().slice(0, 4); if(fi){ if(ft) fi.setAttribute("data-fmt", ft); else fi.removeAttribute("data-fmt"); } }
+  const BADGE_ACT = {summarize:"Summarize", analyze:"Analyze", extract:"Extract", transform:"Transform", actionitems:"Action items"};
   document.getElementById("res-badge").textContent = (selectedAction === "ask")
     ? (kind === "qa" ? "Ask questions · " + RESULT_BADGE[selectedResult] : "Ask questions")
-    : (TYPE_MAP[selectedAction] + " · " + RESULT_BADGE[selectedResult]);
+    : ((BADGE_ACT[selectedAction] || TYPE_MAP[selectedAction]) + " · " + RESULT_BADGE[selectedResult]);
   hideResAlert();
 
   const box = document.getElementById("res-content");
@@ -2649,7 +2659,7 @@ function openResultScreen(kind, payload, sources){
       <div class="chat-wrap">
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-input-row">
-          <textarea id="chat-input" rows="1" placeholder="Ask a question about this document…"></textarea>
+          <textarea id="chat-input" rows="1" placeholder="Ask a question…"></textarea>
           <button id="chat-send" aria-label="Send"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
       </div>`;
@@ -2788,6 +2798,7 @@ function setResBack(mode){
   const b = document.getElementById("res-back");
   b.classList.toggle("btn-round-back", mode === "back");
   b.innerHTML = mode === "back" ? BACK_SVG + "<span>Back</span>" : RET_SVG + " Back to dashboard";
+  b.setAttribute("aria-label", mode === "back" ? "Back" : "Back to dashboard");
 }
 function resultActionsHtml(){
   return `
@@ -2920,11 +2931,16 @@ function renderSlide(){
   box.innerHTML = `<h3>${escapeHtml(s.title)}</h3><ul>${(s.bullets||[]).map(p=>`<li>${linkifyCitations(escapeHtml(p), activeSources)}</li>`).join("")}</ul>`;
   wireCitationLinks(activeSources, activeDocs);
   fitSlide(box);
+  requestAnimationFrame(()=>{ const b = document.getElementById("slide-box"); if(b) fitSlide(b); });
+  setTimeout(()=>{ const b = document.getElementById("slide-box"); if(b) fitSlide(b); }, 250);
 }
 function fitSlide(box){
-  let fs = Math.max(11, Math.min(24, box.clientWidth / 21)), n = 0;
+  let fs = Math.max(14, Math.min(24, box.clientWidth / 21)), n = 0;
   box.style.fontSize = fs + "px";
-  while(box.scrollHeight > box.clientHeight + 1 && fs > 9 && n < 40){ fs -= 0.5; box.style.fontSize = fs + "px"; n++; }
+  const cs = getComputedStyle(box);
+  const room = () => box.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const used = () => { const h = box.querySelector("h3"), u = box.querySelector("ul"); return (h ? h.offsetHeight : 0) + (u ? u.offsetHeight : 0) + 12; };
+  while(used() > room() && fs > 11 && n < 40){ fs -= 0.5; box.style.fontSize = fs + "px"; n++; }
 }
 window.addEventListener("resize", ()=>{ const b = document.getElementById("slide-box"); if(b) fitSlide(b); });
 
@@ -2971,7 +2987,7 @@ async function sendChatMessage(){
       question: text,
       fileName: currentDocument.get("fileName"),
       fileType: currentDocument.get("fileType"),
-      language: "français",
+      language: "English",
       onStatus: s=>{ input.placeholder = s; }
     });
     replyText = typeof aiResponse.content === "string" ? aiResponse.content : JSON.stringify(aiResponse.content);
@@ -3176,8 +3192,8 @@ function exportableRows(){
   const k = currentResultKind, p = currentResultPayload;
   if(k === "table" && p && p.headers) return {headers:p.headers, rows:p.rows};
   if(k === "extract" && Array.isArray(p)) return {headers:["Information","Valeur"], rows:p.map(r=>[r.label||"", r.value||""])};
-  if(k === "qa" && Array.isArray(p)) return {headers:["Question","Réponse"], rows:p.map(r=>[r.question||"", r.answer||""])};
-  if(k === "faq" && Array.isArray(p)) return {headers:["Question","Réponse"], rows:p.map(r=>[r.question||"", r.answer||""])};
+  if(k === "qa" && Array.isArray(p)) return {headers:["Question","Answer"], rows:p.map(r=>[r.question||"", r.answer||""])};
+  if(k === "faq" && Array.isArray(p)) return {headers:["Question","Answer"], rows:p.map(r=>[r.question||"", r.answer||""])};
   if(k === "actionitems" && Array.isArray(p)) return {headers:["Item"], rows:p.map(x=>[String(x)])};
   return null;
 }
@@ -3534,18 +3550,9 @@ async function renderViewerPdfPage(){
 <script src="https://cdn.kkiapay.me/k.js"></script>
 <style id="chat-adjust">
   /* ===== Chat Questions/Réponses : ajustements (code ajouté, couleurs inchangées) ===== */
-  #screen-result.chat-mode .res-wrap{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:12px;align-items:center;max-width:960px;padding-top:12px;}
+  #screen-result.chat-mode .res-wrap{max-width:960px;padding-top:12px;}
   @media (min-width:768px) and (max-width:1023px){ #screen-result.chat-mode .res-wrap{max-width:800px;} }
-  #screen-result.chat-mode .res-top{display:contents;}
-  #screen-result.chat-mode .res-top .spacer{display:none;}
-  #screen-result.chat-mode .res-back{grid-column:1;grid-row:1;}
-  #screen-result.chat-mode .res-badge{grid-column:3;grid-row:1;justify-self:end;font-size:11.5px;}
-  #screen-result.chat-mode .res-head{grid-column:2;grid-row:1;margin:0;min-width:0;gap:10px;align-items:center;}
-  #screen-result.chat-mode .res-head .rhi{width:38px;height:38px;}
-  #screen-result.chat-mode .res-filename{font-size:clamp(20px,5.5vw,24px);}
-  #screen-result.chat-mode .res-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
-  #screen-result.chat-mode .res-alert,#screen-result.chat-mode #res-content,#screen-result.chat-mode .result-actions{grid-column:1 / -1;}
-  #screen-result.chat-mode #res-content{margin-top:22px;}
+  #screen-result.chat-mode #res-content{margin-top:6px;}
   #screen-result.chat-mode .chat-wrap{border:none;border-radius:0;height:calc(var(--vvh,100dvh) - 270px);min-height:300px;max-height:none;}
   #screen-result.chat-mode .chat-messages{padding:4px 0 12px;gap:14px;scroll-behavior:smooth;}
   #screen-result.chat-mode .msg{max-width:88%;padding:12px 16px;border-radius:16px;font-size:15px;line-height:1.55;}
@@ -3569,9 +3576,62 @@ async function renderViewerPdfPage(){
   .chat-typing i:nth-child(2){animation-delay:.18s;}.chat-typing i:nth-child(3){animation-delay:.36s;}
   @keyframes ctyp{0%,80%,100%{opacity:.3;transform:translateY(0);}40%{opacity:1;transform:translateY(-3px);}}
 </style>
+<style id="results-look">
+  /* En-tête unique : retour | fichier | badge */
+  #screen-result .res-top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;margin-bottom:14px;padding:10px 0;}
+  #screen-result .res-back.btn-round-back{width:44px;height:44px;flex:0 0 44px;gap:0;}
+  #screen-result .res-back.btn-round-back span{display:none;}
+  #screen-result .res-back:not(.btn-round-back){flex:0 0 100%;order:-1;justify-content:flex-start;min-height:44px;}
+  #screen-result .res-head{flex:1 1 180px;min-width:0;display:flex;align-items:center;gap:10px;margin:0;}
+  #screen-result .res-head .rhi{width:46px;height:46px;border-radius:12px;flex-direction:column;gap:2px;font-size:10px;font-weight:700;line-height:1;}
+  #screen-result .res-head .rhi::after{content:attr(data-fmt);}
+  #screen-result .res-head .rhi svg{width:18px;height:18px;}
+  #screen-result .res-filename{font-size:clamp(16px,4.6vw,20px);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  #screen-result .res-meta:empty{display:none;}
+  #screen-result .res-badge{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 0 auto;margin-left:auto;}
+  @media (min-width:768px){ #screen-result .res-filename{font-size:22px;} #screen-result .res-badge{font-size:12.5px;} }
+
+  /* Grand cadre unique, mêmes marges partout */
+  #screen-result #res-content{padding:18px;border-radius:22px;}
+  @media (min-width:768px){ #screen-result #res-content{padding:24px;} }
+  @media (min-width:1024px){ #screen-result #res-content{padding:28px;} }
+  #screen-result #res-content:has(.slide-box){padding:0;}
+  .result-content.res-compact,.result-content.res-spacious{font-size:16px;padding-top:0;}
+  .result-content.res-compact h3,.result-content.res-spacious h3{font-size:19px;margin:0 0 10px;}
+  .result-content.res-compact h4,.result-content.res-spacious h4{margin:20px 0 8px;}
+  .result-content > :first-child{margin-top:0;}
+
+  /* Texte : listes numérotées, code, gras */
+  .result-content ol{margin:0 0 18px 22px;padding:0;}
+  .result-content pre{margin:0 0 18px;padding:12px 14px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.1);font-size:13px;line-height:1.5;overflow-x:auto;}
+  .result-content b,.msg b{font-weight:600;}
+  .msg p{margin:0 0 8px;}
+  .msg p:last-child{margin-bottom:0;}
+  .msg ul,.msg ol{margin:6px 0 6px 20px;padding:0;}
+  .msg pre{margin:6px 0;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,.28);font-size:13px;}
+
+  /* Tableaux : mots entiers, un seul cadre */
+  #screen-result .res-table-wrap{border:none;overflow-x:auto;overflow-y:auto;}
+  #screen-result table.res-table{width:100%;min-width:0;}
+  #screen-result table.res-table th,#screen-result table.res-table td{white-space:normal;overflow-wrap:break-word;word-break:normal;hyphens:manual;min-width:120px;}
+
+  /* Quiz, flashcards, diapositives : texte plus grand, zones tactiles */
+  #screen-result .quiz-q-text{font-size:15px;}
+  #screen-result .quiz-opt{font-size:15px;min-height:48px;padding:10px 12px;border-radius:10px;}
+  #screen-result .quiz-score{font-size:15px;}
+  #screen-result .flashcard{min-height:160px;font-size:16px;padding:28px 20px 40px;}
+  #screen-result .flashcard .fc-hint{left:0;right:0;bottom:12px;text-align:center;font-size:12px;}
+  .slide-nav button{width:44px;height:44px;}
+  @media (max-width:600px){ .slide-box{aspect-ratio:auto;min-height:62vw;} }
+
+  /* Boutons d'action */
+  #screen-result .result-actions{margin-top:16px;gap:10px;}
+  #screen-result .res-actions-primary .btn-sm{height:44px;}
+  #screen-result .btn-ghost-nav{min-height:44px;}
+</style>
 <script id="chat-adjust-js">
 (function(){
-  var DEFAULT_PH = "Ask a question about this document\u2026";
+  var DEFAULT_PH = "Ask a question\u2026";
   var busy = false, cdTimer = null, cdLeft = 0;
   var SUGS = {
     table: ["What are the key figures in this file?", "Which values stand out or look unusual?", "Can you summarize the data in a table?"],
@@ -3657,9 +3717,7 @@ async function renderViewerPdfPage(){
     var row = document.createElement("div"); row.className = "msg-actions";
     row.innerHTML =
       '<button type="button" data-a="copy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg>Copy</button>' +
-      '<button type="button" data-a="retry"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg>Retry</button>' +
-      '<button type="button" data-a="up" aria-label="Good answer"' + (fb === 1 ? ' class="on"' : '') + '><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 11v9H4v-9zM7 11l4-8c1.5 0 2.5 1 2.2 2.6L12.8 9H19a2 2 0 012 2.4l-1.3 6.4A3 3 0 0116.8 20H7"/></svg></button>' +
-      '<button type="button" data-a="down" aria-label="Bad answer"' + (fb === -1 ? ' class="on"' : '') + '><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" style="transform:rotate(180deg)"><path d="M7 11v9H4v-9zM7 11l4-8c1.5 0 2.5 1 2.2 2.6L12.8 9H19a2 2 0 012 2.4l-1.3 6.4A3 3 0 0116.8 20H7"/></svg></button>';
+      '<button type="button" data-a="retry"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg>Retry</button>';
     el.insertAdjacentElement("afterend", row);
     row.querySelectorAll("button").forEach(function(b){
       b.onclick = async function(){
@@ -3670,11 +3728,6 @@ async function renderViewerPdfPage(){
           if(busy) return;
           var prev = messages[i - 1], ta = $("chat-input");
           if(prev && prev.get("role") === "user" && ta){ ta.value = prev.get("content"); grow(); sendState(); sendChatMessage(); }
-        } else {
-          var v = (a === "up") ? 1 : -1, next = (m.get("feedback") === v) ? 0 : v;
-          try{ m.set("feedback", next); await m.save(); }catch(e){ toast("Could not save your feedback"); return; }
-          row.querySelector('[data-a="up"]').classList.toggle("on", next === 1);
-          row.querySelector('[data-a="down"]').classList.toggle("on", next === -1);
         }
       };
     });
