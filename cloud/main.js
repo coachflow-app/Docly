@@ -380,7 +380,7 @@ Parse.Cloud.define("generateDocumentResult", async (request) => {
     throw new Parse.Error(Parse.Error.SCRIPT_FAILED, "Clé Groq non configurée côté serveur (variable GROQ_API_KEY manquante).");
   }
 
-  const langInstruction = language ? `Réponds en ${language}.` : "Réponds en français.";
+  const langInstruction = "Reply in English.";
   const condensedNote = condensed
     ? "\n(Le contenu du document est un ensemble de notes condensées couvrant tout le document ; les marqueurs [[page N]] sont conservés.)"
     : "";
