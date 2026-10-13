@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="google" content="notranslate" />
 <title>Docly — Your documents. Finally understood.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/parse/dist/parse.min.js"></script>
+<script src="https://unpkg.com/parse@6.1.1/dist/parse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -804,7 +805,7 @@
   <div class="auth-corner"></div>
   <div class="auth-hero">
     <div class="auth-hero-in">
-      <span class="wordmark lg">Docly<i></i></span>
+      <span class="wordmark lg"><img class="logo-img lg" src="logo-login.png" alt="Docly" width="170" height="170"></span>
       <p class="auth-slogan-big"><b>Your documents.</b><em>Finally understood.</em></p>
       <p class="auth-slogan-small">Your documents. Finally understood.</p>
     </div>
@@ -875,7 +876,7 @@
     <button class="db-drawer-toggle" id="db-drawer-toggle" aria-label="Open menu">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></svg>
     </button>
-    <span class="wordmark">Docly<i></i></span>
+    <span class="wordmark"><img class="logo-img" src="logo-bar.png" alt="Docly" width="40" height="40"></span>
     <div class="db-topbar-icons">
       <div class="db-user">
         <button class="db-user-btn" id="db-user-btn">
@@ -990,7 +991,7 @@
   <div class="bg-blob blob-indigo"></div>
   <div class="wiz-topbar">
     <button class="wiz-back" id="wiz-back"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 9l6 5"/><path d="M3 9h14a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3h-7"/></svg>Back to dashboard</button>
-    <span class="wordmark">Docly<i></i></span>
+    <span class="wordmark"><img class="logo-img" src="logo-bar.png" alt="Docly" width="40" height="40"></span>
   </div>
   <div class="wiz-wrap">
     <div class="stepper">
@@ -1058,7 +1059,7 @@
 
 <!-- ============ RESULT SCREEN ============ -->
 <section id="screen-result" hidden>
-  <div class="app-topbar"><span class="wordmark">Docly<i></i></span></div>
+  <div class="app-topbar"><span class="wordmark"><img class="logo-img" src="logo-bar.png" alt="Docly" width="40" height="40"></span></div>
   <div class="res-wrap">
     <div class="res-top">
       <button class="res-back" id="res-back"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 9l6 5"/><path d="M3 9h14a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3h-7"/></svg> Back to dashboard</button>
@@ -1091,7 +1092,7 @@
 
 <!-- ============ PUBLIC SHARED VIEW ============ -->
 <section id="screen-shared" hidden>
-  <div class="shared-topbar"><span class="wordmark">Docly<i></i></span></div>
+  <div class="shared-topbar"><span class="wordmark"><img class="logo-img" src="logo-bar.png" alt="Docly" width="40" height="40"></span></div>
   <div class="shared-wrap">
     <span class="shared-badge" id="shared-badge">Shared</span>
     <p class="res-filename" id="shared-title"></p>
@@ -2804,17 +2805,7 @@ function resultActionsHtml(){
   return `
     <div class="res-actions-primary">
       <button class="btn btn-outline btn-sm btn-ic" id="btn-copy" style="border-radius:999px;">${IC.copy}Copy</button>
-      <span class="sel-ic">${IC.export}<select class="btn btn-primary btn-sm" id="btn-export" style="padding:0 8px;">
-        <option value="">Export</option>
-        <option value="txt">as TXT</option>
-        <option value="md">as Markdown</option>
-        <option value="pdf">as PDF</option>
-        <option value="docx">as DOCX</option>
-        <option value="xlsx">as XLSX</option>
-        <option value="pptx">as PPTX</option>
-        <option value="csv">as CSV</option>
-        <option value="epub">as EPUB</option>
-      </select></span>
+      <button class="btn btn-primary btn-sm btn-ic" id="btn-export">${IC.export}Export</button>
       <button class="btn btn-outline btn-sm btn-ic" id="btn-share">${IC.share}Share</button>
     </div>
     <button class="btn-ghost-nav" id="btn-back-dash">${RET_SVG} Back to dashboard</button>
@@ -2829,16 +2820,39 @@ function currentDisplayedText(){
   ds.forEach((d,i)=>{ d.open = prev[i]; });
   return t;
 }
+// ---------------- Export window (choose a format, then Export / Cancel) ----------------
+function openExportDialog(){
+  document.querySelectorAll(".modal-overlay.exp-overlay").forEach(e=>e.remove());
+  const FORMATS = [["txt","as TXT"],["md","as Markdown"],["pdf","as PDF"],["docx","as DOCX"],["xlsx","as XLSX"],["pptx","as PPTX"],["csv","as CSV"],["epub","as EPUB"]];
+  const fileIc = '<svg class="exp-fi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg>';
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay exp-overlay";
+  overlay.innerHTML = `
+    <div class="rename-box exp-box" role="dialog" aria-modal="true" aria-label="Select export format">
+      <div class="rename-head"><h3><span class="nt-ic">${noticeIcon("info")}</span>Select export format</h3><button class="rename-x" id="exp-x" aria-label="Close">&times;</button></div>
+      <div class="exp-body" role="radiogroup" aria-label="Export format">${FORMATS.map((f,i)=>`<label class="exp-row"><input type="radio" name="exp-fmt" value="${f[0]}"${i === 0 ? " checked" : ""}>${fileIc}<span>${f[1]}</span></label>`).join("")}</div>
+      <div class="rename-foot"><button class="rename-cancel" id="exp-cancel">Cancel</button><button class="rename-ok" id="exp-ok">Export</button></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const onKey = (e)=>{ if(e.key === "Escape") close(); };
+  const close = ()=>{ overlay.remove(); document.removeEventListener("keydown", onKey); };
+  document.addEventListener("keydown", onKey);
+  overlay.onclick = (e)=>{ if(e.target === overlay) close(); };
+  document.getElementById("exp-x").onclick = close;
+  document.getElementById("exp-cancel").onclick = close;
+  document.getElementById("exp-ok").onclick = ()=>{
+    const picked = overlay.querySelector('input[name="exp-fmt"]:checked');
+    const format = picked ? picked.value : "txt";
+    close();
+    exportResult(currentResultObject, currentDisplayedText(), format);
+  };
+  const first = overlay.querySelector('input[name="exp-fmt"]:checked'); if(first) first.focus();
+}
 function wireResultActions(){
   document.getElementById("btn-copy").onclick = ()=>navigator.clipboard.writeText(currentDisplayedText());
   document.getElementById("btn-share").onclick = ()=>shareItem("summaries", currentResultObject);
   document.getElementById("btn-back-dash").onclick = backToDashboard;
-  document.getElementById("btn-export").onchange = (e)=>{
-    const format = e.target.value;
-    if(!format) return;
-    exportResult(currentResultObject, currentDisplayedText(), format);
-    e.target.value = "";
-  };
+  document.getElementById("btn-export").onclick = openExportDialog;
 }
 document.addEventListener("click", (e)=>{
   if(e.target.closest("#res-back")){
@@ -3019,6 +3033,8 @@ async function extractFileContent(file, fileType, onProgress){
     if(fileType === "docx") return await withSimulatedProgress(onProgress, ()=>extractDocx(file));
     if(fileType === "xlsx" || fileType === "xls") return await withSimulatedProgress(onProgress, ()=>extractXlsx(file));
     if(fileType === "csv") return await withSimulatedProgress(onProgress, ()=>extractCsv(file));
+    if(fileType === "pptx") return await withSimulatedProgress(onProgress, ()=>extractPptx(file));
+    if(fileType === "ppt") return await withSimulatedProgress(onProgress, ()=>extractPpt(file));
     if(fileType === "epub") return await withSimulatedProgress(onProgress, ()=>extractEpub(file));
     if(fileType === "txt" || fileType === "md") return await withSimulatedProgress(onProgress, ()=>extractPlain(file));
     if(["png","jpg","jpeg","webp"].includes(fileType)) return await extractImageOcr(file, onProgress);
@@ -3084,6 +3100,81 @@ async function extractXlsx(file){
   let text = "";
   wb.SheetNames.forEach(name=>{ text += "## " + name + "\n" + XLSX.utils.sheet_to_csv(wb.Sheets[name]) + "\n\n"; });
   return {text, pageCount: wb.SheetNames.length};
+}
+function xmlDecode(s){ return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&#(\d+);/g,(m,n)=>String.fromCharCode(+n)).replace(/&#x([0-9a-f]+);/gi,(m,n)=>String.fromCharCode(parseInt(n,16))).replace(/&amp;/g,"&"); }
+async function extractPptx(file){
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const num = (n)=>parseInt((n.match(/(\d+)\.xml$/)||[0,0])[1], 10);
+  let names = Object.keys(zip.files).filter(n=>/^ppt\/slides\/slide\d+\.xml$/.test(n)).sort((a,b)=>num(a)-num(b));
+  // Real slide order comes from presentation.xml
+  try{
+    const pres = await zip.files["ppt/presentation.xml"].async("string");
+    const rels = await zip.files["ppt/_rels/presentation.xml.rels"].async("string");
+    const map = {};
+    (rels.match(/<Relationship\b[^>]*>/g) || []).forEach(tag=>{
+      const id = (tag.match(/\bId="([^"]+)"/) || [])[1], target = (tag.match(/\bTarget="([^"]+)"/) || [])[1];
+      if(id && target) map[id] = "ppt/" + target.replace(/^\/?(ppt\/)?/, "");
+    });
+    const ordered = (pres.match(/<p:sldId\b[^>]*>/g) || []).map(tag=>map[(tag.match(/\br:id="([^"]+)"/) || [])[1]]).filter(n=>n && zip.files[n]);
+    if(ordered.length) names = ordered;
+  }catch(e){ /* keep numeric order */ }
+  if(!names.length) return {text:"", pageCount:null, note:"No slides were found in this presentation."};
+  let text = "";
+  for(let i=0;i<names.length;i++){
+    const xml = await zip.files[names[i]].async("string");
+    const lines = [];
+    xml.split("</a:p>").forEach(chunk=>{
+      const parts = []; const re = /<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>|<a:br\s*\/>/g; let m;
+      while((m = re.exec(chunk))){ parts.push(m[1] === undefined ? "\n" : xmlDecode(m[1])); }
+      const line = parts.join("").trim();
+      if(line) lines.push(line);
+    });
+    text += `[[page ${i+1}]]\n` + lines.join("\n") + "\n\n";
+  }
+  return {text, pageCount:names.length};
+}
+async function extractPpt(file){
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const cfb = XLSX.CFB.read(buf, {type:"array"});
+  const entry = XLSX.CFB.find(cfb, "/PowerPoint Document");
+  if(!entry || !entry.content) return {text:"", pageCount:null, note:"This PPT file could not be read."};
+  const d = entry.content instanceof Uint8Array ? entry.content : new Uint8Array(entry.content);
+  const dv = new DataView(d.buffer, d.byteOffset, d.byteLength);
+  const latin = new TextDecoder("windows-1252"), utf16 = new TextDecoder("utf-16le");
+  const listA = [], listB = [];
+  const clean = (s)=>s.replace(/\u0000/g,"").replace(/\r\n|\r|\u000b/g,"\n").trim();
+  const walk = (start, end, ctx)=>{
+    let p = start;
+    while(p + 8 <= end){
+      const verInst = dv.getUint16(p, true), type = dv.getUint16(p + 2, true), len = dv.getUint32(p + 4, true);
+      const ver = verInst & 0xF, inst = verInst >> 4, body = p + 8, next = body + len;
+      if(next > end) break;
+      if(ver === 0xF){
+        if(type === 0x03F8 || type === 0x03F0 || type === 0x0FC9) { p = next; continue; }        // masters, notes, handouts
+        if(type === 0x0FF0){ if(inst === 0) walk(body, next, {mode:"A"}); p = next; continue; }  // SlideListWithText (slides only)
+        if(type === 0x03EE){ listB.push([]); walk(body, next, {mode:"B", idx:listB.length - 1}); p = next; continue; } // Slide
+        walk(body, next, ctx);
+      } else if(type === 0x03F3 && ctx.mode === "A"){ listA.push([]);
+      } else if((type === 0x0FA0 || type === 0x0FA8) && ctx.mode){
+        const s = clean((type === 0x0FA0 ? utf16 : latin).decode(d.subarray(body, next)));
+        if(s){
+          if(ctx.mode === "A" && listA.length) listA[listA.length - 1].push(s);
+          else if(ctx.mode === "B") listB[ctx.idx].push(s);
+        }
+      }
+      p = next;
+    }
+  };
+  walk(0, d.length, {});
+  const n = Math.max(listA.length, listB.length);
+  if(!n) return {text:"", pageCount:null, note:"No readable text was found in this PPT file."};
+  let text = "";
+  for(let i=0;i<n;i++){
+    const arr = (listA[i] || []).slice();
+    (listB[i] || []).forEach(s=>{ if(arr.indexOf(s) === -1) arr.push(s); });
+    text += `[[page ${i+1}]]\n` + arr.join("\n") + "\n\n";
+  }
+  return {text, pageCount:n, note:"PPT is an older format: only the slide text was read."};
 }
 async function extractCsv(file){
   const text = await file.text();
@@ -3628,6 +3719,20 @@ async function renderViewerPdfPage(){
   #screen-result .result-actions{margin-top:16px;gap:10px;}
   #screen-result .res-actions-primary .btn-sm{height:44px;}
   #screen-result .btn-ghost-nav{min-height:44px;}
+</style>
+<style id="export-logo-look">
+  /* Fenêtre d'export */
+  .exp-box{max-height:calc(100dvh - 40px);display:flex;flex-direction:column;}
+  .exp-body{overflow-y:auto;border-bottom:1px solid var(--line);}
+  .exp-row{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 20px;cursor:pointer;font-size:15px;color:var(--ink);}
+  .exp-row + .exp-row{border-top:1px solid var(--line);}
+  .exp-row input{width:20px;height:20px;margin:0;flex-shrink:0;accent-color:var(--yellow);cursor:pointer;}
+  .exp-fi{flex-shrink:0;color:var(--muted);}
+  .exp-box .rename-foot button{min-height:44px;}
+  /* Logo */
+  .wordmark{align-items:center;line-height:0;}
+  .logo-img{display:block;width:40px;height:40px;object-fit:contain;}
+  .logo-img.lg{width:clamp(120px,32vw,170px);height:auto;aspect-ratio:1;}
 </style>
 <script id="chat-adjust-js">
 (function(){
