@@ -3889,6 +3889,65 @@ async function renderViewerPdfPage(){
 </script>
 <!-- Elfsight AI Chatbot | DOCLY assistant -->
 <script src="https://elfsightcdn.com/platform.js" async></script>
+<div class="docly-assistant" id="docly-assistant">
 <div class="elfsight-app-32e034a1-756e-4bdc-98d3-403765d2e672" data-elfsight-app-lazy></div>
+</div>
+<style id="assistant-look">
+  /* Bulle de l'assistant : fixe en bas à droite, ne prend pas de place dans la page */
+  .docly-assistant{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));z-index:40;width:min(360px,calc(100vw - 32px));pointer-events:none;}
+  .docly-assistant > *{pointer-events:auto;}
+  /* Remontée au-dessus de la barre de boutons (création de document) et de la saisie du chat */
+  html.dl-asst-lift .docly-assistant{bottom:calc(112px + env(safe-area-inset-bottom,0px));}
+  html.dl-asst-lift [class^='FloatingButton__FloatingButtonContainer-sc']{transform:translateY(-92px) !important;}
+  /* Masquée quand le clavier ou une fenêtre de Docly est ouvert */
+  html.dl-asst-hide .docly-assistant,
+  html.dl-asst-hide [class^='FloatingButton__FloatingButtonContainer-sc']{display:none !important;}
+  /* Espace libre de 80 px en bas des pages qui défilent */
+  #db-list{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px));}
+  #db-list:has(.empty-state){padding-bottom:0;}
+  #screen-result:not(.chat-mode){padding-bottom:calc(80px + env(safe-area-inset-bottom,0px));}
+  #screen-shared{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px));}
+  #screen-wizard .wiz-body{overflow-y:auto;overscroll-behavior:contain;padding-bottom:80px;}
+  #screen-result.chat-mode #chat-messages{padding-bottom:80px;}
+  #screen-result.chat-mode #chat-messages:has(.chat-sug){padding-bottom:150px;}
+  /* Assistant ouvert : plein écran sur mobile et tablette */
+  @media (max-width:1023px){
+    .es-interactive-floating-overlay{z-index:9999999999 !important;}
+    .es-interactive-floating-window{width:100% !important;height:100% !important;transform:none !important;}
+    .es-header-button-size{display:none !important;}
+  }
+</style>
+<script>
+(function(){
+  var root = document.documentElement, typing = false;
+  function visible(el){ return !!el && !el.hidden && el.getClientRects().length > 0; }
+  function dialogOpen(){
+    var list = document.querySelectorAll(".modal-overlay, #plans-overlay, #viewer-overlay, #cite-pop, .db-overlay.show");
+    for(var i = 0; i < list.length; i++){ if(visible(list[i])) return true; }
+    return false;
+  }
+  function lift(){
+    var wiz = document.getElementById("screen-wizard"), res = document.getElementById("screen-result");
+    return visible(wiz) || (visible(res) && res.classList.contains("chat-mode"));
+  }
+  function update(){
+    root.classList.toggle("dl-asst-hide", typing || dialogOpen());
+    root.classList.toggle("dl-asst-lift", lift());
+  }
+  function isTextField(el){
+    if(!el || !el.tagName) return false;
+    if(el.closest && el.closest("#docly-assistant, [class*='elfsight'], [class*='es-']")) return false;
+    var t = el.tagName;
+    if(t === "TEXTAREA") return true;
+    if(t === "INPUT") return !/^(checkbox|radio|button|submit|file|range|color)$/i.test(el.type || "text");
+    return !!el.isContentEditable;
+  }
+  document.addEventListener("focusin", function(e){ typing = window.innerWidth < 1024 && isTextField(e.target); update(); });
+  document.addEventListener("focusout", function(){ setTimeout(function(){ typing = window.innerWidth < 1024 && isTextField(document.activeElement); update(); }, 120); });
+  new MutationObserver(update).observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:["hidden","class"]});
+  window.addEventListener("resize", update);
+  update();
+})();
+</script>
 </body>
 </html>
