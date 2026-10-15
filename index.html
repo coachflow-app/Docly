@@ -1267,7 +1267,7 @@ const PLANS = {
   pro:{name:"Pro", price:9.99, docs:100, pages:1000, mb:100,
     formats:["pdf","csv","epub","xlsx"], actions:["summarize","ask","actionitems"], exports:["pdf","csv","epub","xlsx"], compareDocs:3, compareMonth:5},
   unlimited:{name:"Max", price:19.99, docs:300, pages:2500, pagesMonth:2500, mb:250,
-    formats:["pdf","csv","epub","xlsx","docx","pptx","txt","md","png","jpg","jpeg","webp"],
+    formats:["pdf","csv","epub","xlsx","docx","pptx","ppt","txt","md","png","jpg","jpeg","webp"],
     actions:["summarize","analyze","ask","extract","actionitems","transform"], exports:["pdf","csv","epub","xlsx","docx","pptx","txt","md"], compareDocs:5, compareMonth:10}
 };
 const PRICING_COPY = {
@@ -1303,7 +1303,7 @@ function planBlock(reason){
   const up = "Upgrade to a higher plan to unlock more.";
   if(reason === "quota"){
     if(userPlan.plan === "free") planToast("You have used your 3 free documents this month",
-      ["Wait until next month: your free documents have expired and 10 new ones will arrive.", "Or upgrade to a higher plan."], 9000);
+      ["Wait until next month: your free documents have expired and 3 new ones will arrive.", "Or upgrade to a higher plan."], 9000);
     else planToast("You have reached your monthly document limit", ["Wait until next month, or upgrade to a higher plan."], 9000);
   }
   else if(reason === "format") planToast("This file type is not included in your plan", [up], 7000);
@@ -3887,5 +3887,8 @@ async function renderViewerPdfPage(){
   };
 })();
 </script>
+<!-- Elfsight AI Chatbot | DOCLY assistant -->
+<script src="https://elfsightcdn.com/platform.js" async></script>
+<div class="elfsight-app-32e034a1-756e-4bdc-98d3-403765d2e672" data-elfsight-app-lazy></div>
 </body>
 </html>
