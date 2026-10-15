@@ -449,7 +449,7 @@ const PLAN_RULES = {
   pro: { docs: 100, pages: 1000, mb: 100, priceUsd: 9.99, compareDocs: 3, compareMonth: 5,
     formats: ["pdf", "csv", "epub", "xlsx"], actions: ["summarize", "ask", "action-items"] },
   unlimited: { docs: 300, pages: 2500, pagesMonth: 2500, mb: 250, priceUsd: 19.99, compareDocs: 5, compareMonth: 10,
-    formats: ["pdf", "csv", "epub", "xlsx", "docx", "pptx", "txt", "md", "png", "jpg", "jpeg", "webp"],
+    formats: ["pdf", "csv", "epub", "xlsx", "docx", "pptx", "ppt", "txt", "md", "png", "jpg", "jpeg", "webp"],
     actions: ["summarize", "analyze", "ask", "extract", "action-items", "transform"] }
 };
 const USD_TO_XOF = 600; // doit être identique à index.html
