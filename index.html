@@ -1662,6 +1662,7 @@ async function resumeItem(tab, item){
         convo.set("lastMessageAt", new Date());
         convo.set("preset", "short");
         try{ await convo.save(); }catch(e){ convo.unset("preset"); await convo.save(); }
+        await ensureSuggestions(convo, item);
       }
       await openConversationFor(item, convo);
     } else if(tab === "summaries" || tab === "analyses"){
@@ -2552,6 +2553,23 @@ function renderMarkdownLite(text){
   return html;
 }
 
+// ---------------- Suggestions de questions (générées par l'IA à partir du document) ----------------
+window.__sugMap = window.__sugMap || {};
+async function ensureSuggestions(convo, doc){
+  try{
+    let existing = []; try{ existing = convo.get("suggestions") || []; }catch(e){}
+    if(Array.isArray(existing) && existing.length){ window.__sugMap[convo.id] = existing; return existing; }
+    const run = Parse.Cloud.run("suggestQuestions", { documentId: doc.id });
+    const res = await Promise.race([run, new Promise((_, rej)=>setTimeout(()=>rej(new Error("timeout")), 15000))]);
+    const qs = ((res && res.questions) || []).filter(q => typeof q === "string" && q.trim()).slice(0, 3);
+    if(qs.length){
+      window.__sugMap[convo.id] = qs;
+      convo.set("suggestions", qs);
+      try{ await convo.save(); }catch(e){ try{ convo.revert("suggestions"); }catch(e2){ convo.unset("suggestions"); } }
+    }
+    return qs;
+  }catch(e){ return []; }
+}
 async function handleContinue(){
   const btn = document.getElementById("btn-continue");
   btn.disabled = true; lockGenBtn(btn); setGenBtn(btn, "Generating…");
@@ -2568,6 +2586,7 @@ async function handleContinue(){
       convo.set("lastMessageAt", new Date());
       convo.set("preset", selectedResult);
       try{ await convo.save(); }catch(e){ convo.unset("preset"); await convo.save(); }
+      await ensureSuggestions(convo, currentDocument);
       currentConversation = convo;
       openResultScreen("chat", [], null);
       btn.disabled = false; unlockGenBtn(btn); btn.textContent = "Générer";
@@ -2660,7 +2679,7 @@ function openResultScreen(kind, payload, sources){
       <div class="chat-wrap">
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-input-row">
-          <textarea id="chat-input" rows="1" placeholder="Ask a question…"></textarea>
+          <textarea id="chat-input" rows="1" placeholder="Ask a question about this document…"></textarea>
           <button id="chat-send" aria-label="Send"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
       </div>`;
@@ -3734,24 +3753,62 @@ async function renderViewerPdfPage(){
   .logo-img{display:block;width:40px;height:40px;object-fit:contain;}
   .logo-img.lg{width:clamp(120px,32vw,170px);height:auto;aspect-ratio:1;}
 </style>
+<style id="chat-look">
+  /* ===== Chat Ask questions : apparence d'après la capture de référence (couleurs de Docly conservées) ===== */
+  #screen-result.chat-mode .chat-context{display:none;}
+  #screen-result.chat-mode .res-wrap{max-width:800px;}
+  @media (min-width:1025px){ #screen-result.chat-mode .res-wrap{max-width:860px;} }
+  #screen-result.chat-mode .res-badge{background:rgba(139,92,255,.22);border:1px solid rgba(139,92,255,.45);color:#fff;}
+  @media (min-width:641px){ #screen-result.chat-mode .res-badge{background:#8B5CFF;border-color:#8B5CFF;} }
+  @media (max-width:640px){ #screen-result.chat-mode #res-content{padding:14px;} }
+  /* En-tête du chat sur mobile : badge sur la même ligne que le nom du fichier */
+  @media (max-width:640px){
+    #screen-result.chat-mode .res-head{flex:1 1 0;}
+    #screen-result.chat-mode .res-badge{margin-left:0;}
+  }
+  /* Petits écrans en hauteur : état d'accueil plus compact pour que les 3 suggestions restent visibles */
+  @media (max-height:700px){
+    #screen-result.chat-mode .chat-wrap{height:calc(var(--vvh,100dvh) - 235px);}
+    .chat-empty{padding:0 0 6px;}
+    .chat-empty .ce-ic{width:44px;height:44px;margin-bottom:8px;}
+    .chat-empty .ce-ic svg{width:24px;height:24px;}
+    .chat-empty h3{font-size:17px;margin-bottom:10px;}
+    .chat-empty .ce-sub{display:none;}
+    .chat-sug{min-height:44px;}
+    .chat-sugs{gap:8px;}
+  }
+  .chat-empty{margin:auto;width:100%;max-width:720px;text-align:center;padding:4px 0 12px;}
+  .chat-empty .ce-ic{width:72px;height:72px;border-radius:50%;background:rgba(139,92,255,.16);color:#A794FF;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;}
+  .chat-empty h3{font-size:20px;line-height:1.25;margin:0 0 8px;font-weight:600;color:var(--ink);}
+  .chat-empty .ce-sub{font-size:14px;line-height:1.5;color:var(--muted);margin:0 auto 18px;max-width:440px;}
+  .chat-sugs{display:flex;flex-direction:column;gap:10px;width:100%;align-items:stretch;}
+  .chat-sug{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 14px;border-radius:14px;border:1px solid rgba(139,92,255,.35);background:rgba(139,92,255,.10);color:var(--ink);text-align:left;font-size:14px;line-height:1.35;}
+  .chat-sug .cs-ic{color:#A794FF;flex:0 0 auto;display:flex;}
+  .chat-sug .cs-tx{flex:1;min-width:0;overflow-wrap:anywhere;}
+  .chat-sug .cs-ar{color:var(--muted);flex:0 0 auto;display:flex;margin-left:auto;}
+  @media (min-width:641px){
+    .chat-sugs{flex-direction:row;gap:12px;}
+    .chat-sug{display:grid;grid-template-columns:1fr auto;grid-template-areas:"ic ar" "tx tx";row-gap:10px;align-items:start;min-height:104px;padding:14px;flex:1 1 0;width:auto;}
+    .chat-sug .cs-ic{grid-area:ic;} .chat-sug .cs-ar{grid-area:ar;margin-left:0;} .chat-sug .cs-tx{grid-area:tx;}
+  }
+  .chat-hint{display:none;align-items:center;gap:6px;align-self:flex-start;margin:0 0 8px;padding:6px 12px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.05);font-size:12px;color:var(--muted);max-width:100%;white-space:nowrap;}
+  .chat-hint.show{display:inline-flex;}
+  #screen-result.chat-mode .chat-input-row{gap:10px;padding:10px 0 0;border-top:1px solid rgba(255,255,255,.10);margin-top:4px;align-items:center;}
+  .chat-input-row textarea{min-height:56px;padding:15px 18px;border-radius:28px;}
+  .chat-input-row textarea::placeholder{font-size:14px;}
+  #screen-result.chat-mode #chat-send{width:52px;height:52px;flex:0 0 52px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;}
+  @media (max-width:640px){
+    .chat-input-row textarea{min-height:58px;padding:10px 16px;border-radius:26px;}
+    #screen-result.chat-mode #chat-send{width:48px;height:48px;flex-basis:48px;}
+  }
+</style>
 <script id="chat-adjust-js">
 (function(){
-  var DEFAULT_PH = "Ask a question\u2026";
+  var DEFAULT_PH = "Ask a question about this document\u2026";
   var busy = false, cdTimer = null, cdLeft = 0;
-  var SUGS = {
-    table: ["What are the key figures in this file?", "Which values stand out or look unusual?", "Can you summarize the data in a table?"],
-    image: ["What text appears in this image?", "Summarize what you see.", "List the key information found."],
-    text:  ["What is this document about?", "What are the key points?", "What actions or next steps are mentioned?"]
-  };
   function esc(s){ return (typeof escapeHtml === "function") ? escapeHtml(s) : String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
   function $(id){ return document.getElementById(id); }
   function toast(m){ try{ showToast(m); }catch(e){} }
-  function kindOf(){
-    var t = ""; try{ t = String(currentDocument.get("fileType") || "").toLowerCase(); }catch(e){}
-    if(["xlsx","xls","csv"].indexOf(t) !== -1) return "table";
-    if(["png","jpg","jpeg","webp"].indexOf(t) !== -1) return "image";
-    return "text";
-  }
   function grow(){
     var ta = $("chat-input"); if(!ta) return;
     ta.style.height = "auto";
@@ -3784,7 +3841,7 @@ async function renderViewerPdfPage(){
       var row = document.querySelector(".chat-input-row"); if(!row) return null;
       h = document.createElement("div"); h.className = "chat-hint";
       h.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg><span></span>';
-      row.insertAdjacentElement("afterend", h);
+      row.insertAdjacentElement("beforebegin", h);
     }
     return h;
   }
@@ -3807,12 +3864,26 @@ async function renderViewerPdfPage(){
     }).observe(ta, {attributes:true, attributeFilter:["placeholder"]});
   }
 
+  var IC_SUG = [
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-7"/></svg>',
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg>',
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg>'
+  ];
+  var IC_ARROW = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  var IC_HERO = '<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M13 3l5 5v2"/><path d="M13 3v5h5"/><path d="M8.5 12h4M8.5 15h2.5"/><path d="M14 15.5a2.5 2.5 0 0 1 2.5-2.5h2a2.5 2.5 0 0 1 2.5 2.5v1.5a2.5 2.5 0 0 1-2.5 2.5H17l-2 1.8v-1.9A2.5 2.5 0 0 1 14 17z"/><path d="M4 3.5l.5 1.2 1.2.5-1.2.5L4 7l-.5-1.3-1.2-.5 1.2-.5z"/></svg>';
+  function suggestionsFor(){
+    var arr = [], c = null;
+    try{ c = currentConversation; }catch(e){}
+    try{ arr = (c && c.get("suggestions")) || []; }catch(e){}
+    if((!Array.isArray(arr) || !arr.length) && c && window.__sugMap) arr = window.__sugMap[c.id] || [];
+    return Array.isArray(arr) ? arr.filter(function(q){ return typeof q === "string" && q.trim(); }).slice(0, 3) : [];
+  }
   function renderEmpty(wrap){
-    var list = SUGS[kindOf()];
-    wrap.innerHTML = '<div class="chat-empty"><div class="ce-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/></svg></div><h3>Ask a question about your document</h3><div class="chat-sugs">' +
-      list.map(function(q){ return '<button type="button" class="chat-sug">' + esc(q) + '</button>'; }).join("") + '</div></div>';
+    var list = suggestionsFor();
+    wrap.innerHTML = '<div class="chat-empty"><div class="ce-ic">' + IC_HERO + '</div><h3>Ask questions about this document</h3><p class="ce-sub">I\'m here to help you understand, analyze and extract the key information from your file.</p>' +
+      (list.length ? '<div class="chat-sugs">' + list.map(function(q, i){ return '<button type="button" class="chat-sug" data-q="' + esc(q) + '"><span class="cs-ic">' + IC_SUG[i % 3] + '</span><span class="cs-tx">' + esc(q) + '</span><span class="cs-ar">' + IC_ARROW + '</span></button>'; }).join("") + '</div>' : '') + '</div>';
     wrap.querySelectorAll(".chat-sug").forEach(function(b){
-      b.onclick = function(){ var ta = $("chat-input"); if(!ta) return; ta.value = b.textContent; grow(); sendState(); sendChatMessage(); };
+      b.onclick = function(){ var ta = $("chat-input"); if(!ta) return; ta.value = b.getAttribute("data-q") || b.textContent; grow(); sendState(); sendChatMessage(); };
     });
   }
 
