@@ -3961,5 +3961,26 @@ async function renderViewerPdfPage(){
 <!-- Elfsight AI Chatbot | DOCLY assistant -->
 <script src="https://elfsightcdn.com/platform.js" async></script>
 <div id="docly-assistant-widget" class="elfsight-app-32e034a1-756e-4bdc-98d3-403765d2e672" data-elfsight-app-lazy style="position:fixed; bottom:20px; right:20px; z-index:99999;"></div>
+<style id="assistant-visibility">
+  /* L'assistant n'est affiché que sur la connexion et le tableau de bord */
+  html:not(.dl-asst-on) #docly-assistant-widget,
+  html:not(.dl-asst-on) .es-interactive-floating-overlay,
+  html:not(.dl-asst-on) .es-interactive-floating-window,
+  html:not(.dl-asst-on) [class^='FloatingButton__FloatingButtonContainer-sc']{display:none !important;}
+</style>
+<script id="assistant-visibility-js">
+(function(){
+  var root = document.documentElement;
+  function wanted(){
+    return ["screen-auth", "screen-dashboard"].some(function(id){ var e = document.getElementById(id); return !!e && !e.hidden; });
+  }
+  function update(){ root.classList.toggle("dl-asst-on", wanted()); }
+  ["screen-auth", "screen-dashboard", "screen-wizard", "screen-result", "screen-shared"].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) new MutationObserver(update).observe(e, {attributes:true, attributeFilter:["hidden"]});
+  });
+  update();
+})();
+</script>
 </body>
 </html>
